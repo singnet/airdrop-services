@@ -1,8 +1,8 @@
 """AirdropTables
 
-Revision ID: 700e63da6309
+Revision ID: 6c7a8e26b9db
 Revises: 
-Create Date: 2021-09-24 16:20:35.212780
+Create Date: 2021-09-24 18:15:43.927785
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '700e63da6309'
+revision = '6c7a8e26b9db'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,7 +22,7 @@ def upgrade():
     sa.Column('row_id', sa.INTEGER(), autoincrement=False, nullable=False),
     sa.Column('address', sa.VARCHAR(length=50), nullable=False),
     sa.Column('org_name', sa.VARCHAR(length=256), nullable=False),
-    sa.Column('token_name', sa.VARCHAR(length=50), nullable=False),
+    sa.Column('token_name', sa.VARCHAR(length=128), nullable=False),
     sa.Column('token_type', sa.VARCHAR(length=50), nullable=False),
     sa.Column('contract_address', sa.VARCHAR(length=50), nullable=False),
     sa.Column('portal_link', sa.VARCHAR(length=256), nullable=True),
@@ -61,6 +61,7 @@ def upgrade():
     sa.Column('row_id', sa.BIGINT(), autoincrement=True, nullable=False),
     sa.Column('row_created', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('row_updated', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('airdrop_id', sa.INTEGER(), nullable=False),
     sa.Column('airdrop_window_id', sa.INTEGER(), nullable=False),
     sa.Column('address', sa.VARCHAR(length=50), nullable=False),
     sa.Column('claimable_amount', sa.INTEGER(), nullable=False),
