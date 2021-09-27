@@ -2,8 +2,11 @@ import json
 from http import HTTPStatus
 
 
-def format_response(statusCode, message, data=None):
-    if HTTPStatus.OK.value >= statusCode and statusCode <= HTTPStatus.ALREADY_REPORTED.value:
+def response(statusCode, message, data=None):
+    if (
+        HTTPStatus.OK.value >= statusCode
+        and statusCode <= HTTPStatus.ALREADY_REPORTED.value
+    ):
         body = {"status": statusCode, "data": data, "message": message}
     else:
         body = {
