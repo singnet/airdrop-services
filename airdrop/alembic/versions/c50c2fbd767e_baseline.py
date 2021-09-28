@@ -1,8 +1,8 @@
-"""AirdropTables
+"""baseline
 
-Revision ID: 5bafd29c1ae6
+Revision ID: c50c2fbd767e
 Revises: 
-Create Date: 2021-09-27 10:31:17.001217
+Create Date: 2021-09-28 15:01:48.767444
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '5bafd29c1ae6'
+revision = 'c50c2fbd767e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -56,6 +56,17 @@ def upgrade():
     sa.Column('row_updated', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('airdrop_window_id', sa.BIGINT(), nullable=False),
     sa.Column('rule', sa.TEXT(), nullable=False),
+    sa.ForeignKeyConstraint(['airdrop_window_id'], ['airdrop_window.row_id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('row_id')
+    )
+    op.create_table('airdropwindow_timeline',
+    sa.Column('row_id', sa.BIGINT(), autoincrement=True, nullable=False),
+    sa.Column('row_created', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('row_updated', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('airdrop_window_id', sa.BIGINT(), nullable=False),
+    sa.Column('title', sa.TEXT(), nullable=False),
+    sa.Column('description', sa.TEXT(), nullable=False),
+    sa.Column('date', mysql.TIMESTAMP(), nullable=False),
     sa.ForeignKeyConstraint(['airdrop_window_id'], ['airdrop_window.row_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('row_id')
     )
@@ -122,6 +133,7 @@ def downgrade():
     op.drop_table('user_balance_snapshot')
     op.drop_index(op.f('ix_claim_history_address'), table_name='claim_history')
     op.drop_table('claim_history')
+    op.drop_table('airdropwindow_timeline')
     op.drop_table('airdropwindow_rules')
     op.drop_table('airdrop_window')
     op.drop_table('airdrop')
