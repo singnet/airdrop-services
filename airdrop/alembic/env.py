@@ -2,8 +2,8 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from database.models import Base
-from config.database import DATABASE
+from airdrop.infrastructure.models import Base
+from airdrop.config import NETWORK
 
 from alembic import context
 
@@ -13,8 +13,8 @@ from alembic import context
 config = context.config
 
 MYSQL_CONNECTION_STRING = (
-    f"mysql+pymysql://{DATABASE['DB_USER']}:{DATABASE['DB_PASSWORD']}"
-    f"@{DATABASE['DB_HOST']}:{DATABASE['DB_PORT']}/{DATABASE['DB_NAME']}"
+    f"mysql+pymysql://{NETWORK['db']['DB_USER']}:{NETWORK['db']['DB_PASSWORD']}"
+    f"@{NETWORK['db']['DB_HOST']}:{NETWORK['db']['DB_PORT']}/{NETWORK['db']['DB_NAME']}"
 )
 config.set_main_option("sqlalchemy.url", MYSQL_CONNECTION_STRING)
 # Interpret the config file for Python logging.

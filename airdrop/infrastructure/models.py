@@ -13,7 +13,6 @@ from sqlalchemy.dialects.mysql import TIMESTAMP, BIT
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
-
 Base = declarative_base()
 
 
@@ -76,6 +75,19 @@ class AirdropWindowEligibilityRule(Base, AuditClass):
         nullable=False,
     )
     rule = Column("rule", TEXT, nullable=False)
+
+
+class AirdropWindowTimelines(Base, AuditClass):
+    __tablename__ = "airdropwindow_timeline"
+    airdrop_window_id = Column(
+        BIGINT,
+        ForeignKey("airdrop_window.row_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    title = Column("title", TEXT, nullable=False)
+    description = Column("description", TEXT, nullable=False)
+    date = Column("date", TIMESTAMP(), nullable=False)
+    airdrop_window = relationship(AirdropWindow, backref="timelines")
 
 
 class UserBalanceSnapshot(Base, AuditClass):

@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "AirdropSchedule",
+  "type": "object",
+  "properties": { "limit": { "type": "string" }, "skip": { "type": "string" } }
+}
