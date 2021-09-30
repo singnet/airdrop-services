@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: c50c2fbd767e
+Revision ID: c77ed315d134
 Revises: 
-Create Date: 2021-09-28 15:01:48.767444
+Create Date: 2021-09-30 07:23:02.854761
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'c50c2fbd767e'
+revision = 'c77ed315d134'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -103,6 +103,7 @@ def upgrade():
     sa.Column('airdrop_window_id', sa.BIGINT(), nullable=False),
     sa.Column('address', sa.VARCHAR(length=50), nullable=False),
     sa.Column('is_eligible', mysql.BIT(), nullable=True),
+    sa.Column('registered_at', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['airdrop_window_id'], ['airdrop_window.row_id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('row_id'),
     sa.UniqueConstraint('airdrop_window_id', 'address')

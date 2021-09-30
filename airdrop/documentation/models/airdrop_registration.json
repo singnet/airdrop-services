@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropRegistration",
+    "type": "object",
+    "properties": {
+        "airdrop_window_id": {"type": "string"},
+        "airdrop_id": {"type": "string"},
+        "address": {"type": "string"},
+        "signature": {"type": "string"}
+    }
+  }
+  
