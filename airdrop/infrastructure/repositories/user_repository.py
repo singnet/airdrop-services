@@ -14,12 +14,6 @@ class UserRepository(BaseRepository):
         )
 
     def register_user(self, airdrop_window_id, address):
-        self.session.query(UserRegistration).filter(
-            UserRegistration.address == address
-        ).filter(UserRegistration.airdrop_window_id == airdrop_window_id).filter(
-            UserRegistration.is_eligible == True
-        ).update(
-            {UserRegistration.registered_at: datetime.utcnow()},
-            synchronize_session=False,
-        )
-        self.session.commit()
+        user = UserRegistration(
+            address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow())
+        self.session.add(user)
