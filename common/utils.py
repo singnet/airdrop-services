@@ -6,6 +6,8 @@ import traceback
 import requests
 import web3
 from web3 import Web3
+from eth_account.messages import defunct_hash_message, encode_defunct
+from airdrop.config import NETWORK
 
 from common.logger import get_logger
 
@@ -225,4 +227,24 @@ def send_slack_notification(slack_message, slack_url, slack_channel):
     slack_response = requests.post(url=slack_url, data=json.dumps(payload))
     logger.info(
         f"slack response :: {slack_response.status_code}, {slack_response.text}"
+    )
+
+
+def verify_signature(airdrop_id, airdrop_window_id, address, signature):
+    public_key = recover_address(
+        airdrop_id, airdrop_window_id, address, signature)
+
+    if public_key.lower() != address.lower():
+        raise Exception("Invalid signature")
+
+
+def recover_address(airdrop_id, airdrop_window_id, address, signature):
+    message = web3.Web3.soliditySha3(
+        ["string", "string", "uint256"],
+        [int(airdrop_id), int(airdrop_window_id), str(address)],
+    )
+    hash = defunct_hash_message(message)
+    web3_object = Web3(web3.providers.HTTPProvider(NETWORK['http_provider']))
+    return web3_object.eth.account.recover_message(
+        encode_defunct(hash), signature=signature
     )

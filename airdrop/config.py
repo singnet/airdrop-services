@@ -20,3 +20,7 @@ SLACK_HOOK = {
     "method": "POST",
     "headers": {"Content-Type": "application/json"},
 }
+
+
+class AirdropStrategy:
+    AGIX = "AGIX"

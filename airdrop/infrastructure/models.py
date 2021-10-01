@@ -40,7 +40,8 @@ class Airdrop(Base, AuditClass):
     token_type = Column("token_type", VARCHAR(50), nullable=False)
     contract_address = Column("contract_address", VARCHAR(50), nullable=False)
     portal_link = Column("portal_link", VARCHAR(256), nullable=True)
-    documentation_link = Column("documentation_link", VARCHAR(256), nullable=True)
+    documentation_link = Column(
+        "documentation_link", VARCHAR(256), nullable=True)
     description = Column("description", TEXT, nullable=True)
     github_link_for_contract = Column(
         "github_link_for_contract", VARCHAR(256), nullable=True
@@ -52,7 +53,8 @@ class AirdropWindow(Base, AuditClass):
     airdrop_id = Column(
         BIGINT, ForeignKey("airdrop.row_id", ondelete="CASCADE"), nullable=False
     )
-    airdrop_window_name = Column("airdrop_window_name", VARCHAR(256), nullable=False)
+    airdrop_window_name = Column(
+        "airdrop_window_name", VARCHAR(256), nullable=False)
     description = Column("description", TEXT, nullable=True)
     registration_required = Column("registration_required", BIT, default=True)
     registration_start_period = Column(
@@ -63,8 +65,10 @@ class AirdropWindow(Base, AuditClass):
     )
     snapshot_required = Column("snapshot_required", BIT, default=True)
     first_snapshot_at = Column("first_snapshot_at", TIMESTAMP(), nullable=True)
-    claim_start_period = Column("claim_start_period", TIMESTAMP(), nullable=False)
+    claim_start_period = Column(
+        "claim_start_period", TIMESTAMP(), nullable=False)
     claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=False)
+    airdrop = relationship(Airdrop, backref="windows")
 
 
 class AirdropWindowEligibilityRule(Base, AuditClass):
@@ -110,6 +114,7 @@ class UserRegistration(Base, AuditClass):
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     is_eligible = Column("is_eligible", BIT, default=False)
+    registered_at = Column("registered_at", TIMESTAMP(), nullable=True)
     UniqueConstraint(airdrop_window_id, address)
 
 
@@ -141,5 +146,6 @@ class ClaimHistory(Base, AuditClass):
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     claimable_amount = Column("claimable_amount", INTEGER, nullable=False)
     unclaimed_amount = Column("unclaimed_amount", INTEGER, nullable=False)
-    transaction_status = Column("transaction_status", VARCHAR(50), nullable=False)
+    transaction_status = Column(
+        "transaction_status", VARCHAR(50), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(256), nullable=True)
