@@ -19,12 +19,36 @@ def get_airdrop_schedules(event, context):
         response,
         cors_enabled=True,
     )
-    
+
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def airdrop_registration(event, context):
+def user_registration(event, context):
     logger.info(f"Got Airdrops Event {event}")
     status, response = UserRegistrationServices().register(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def user_eligibility(event, context):
+    logger.info(f"Got Airdrops Event {event}")
+    status, response = UserRegistrationServices().eligibility(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_active_airdrops(event, context):
+    logger.info(f"Got Airdrops Event {event}")
+    status, response = AirdropServices().get_airdrops(request(event))
     return generate_lambda_response(
         status.value,
         status.phrase,

@@ -9,6 +9,56 @@ from common.utils import verify_signature
 
 class UserRegistrationServices:
 
+    def eligibility(self, inputs):
+
+        status = HTTPStatus.BAD_REQUEST
+
+        try:
+            schema = {
+                "type": "object",
+                "properties": {
+                    "airdrop_window_id": {"type": "string"},
+                    "airdrop_id": {"type": "string"},
+                    "address": {"type": "string"},
+                    "signature": {"type": "string"},
+                },
+                "required": ["signature", "address", "airdrop_id", "airdrop_window_id"],
+            }
+
+            validate(instance=inputs, schema=schema)
+
+            airdrop_id = inputs["airdrop_id"]
+            airdrop_window_id = inputs["airdrop_window_id"]
+            address = inputs["address"].lower()
+            signature = inputs["signature"]
+
+            airdrop_window = self.get_user_airdrop_window(
+                airdrop_id, airdrop_window_id
+            )
+
+            if airdrop_window is None:
+                raise Exception(
+                    "Airdrop window is not accepting registration at this moment"
+                )
+
+            is_eligible_user = self.check_user_eligibility(
+                'AGIX', address)
+
+            if not is_eligible_user:
+                raise Exception(
+                    "Address is not eligible for this airdrop"
+                )
+
+            response = 'Address is eligible for Airdrop'
+            status = HTTPStatus.OK
+
+        except ValidationError as e:
+            response = e.message
+        except BaseException as e:
+            response = str(e)
+
+        return status, response
+
     def register(self, inputs):
 
         status = HTTPStatus.BAD_REQUEST
@@ -32,7 +82,7 @@ class UserRegistrationServices:
             address = inputs["address"].lower()
             signature = inputs["signature"]
 
-            verify_signature(airdrop_id, airdrop_window_id, address, signature)
+            # verify_signature(airdrop_id, airdrop_window_id, address, signature)
 
             airdrop_window = self.get_user_airdrop_window(
                 airdrop_id, airdrop_window_id
