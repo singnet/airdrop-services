@@ -68,7 +68,7 @@ package:
 functions:
   get_active_airdrops:
         warmup: true
-        handler: application/handlers/airdrop_handlers.get_active_airdrops
+        handler: airdrop/application/handlers/airdrop_handlers.get_active_airdrops
         role: ${file(./config.${self:provider.stage}.json):ROLE}
         vpc:
           securityGroupIds:
@@ -113,7 +113,7 @@ functions:
                       "application/json": "ErrorMessage"
   get_airdrop_schedules:
     warmup: true
-    handler: application/handlers/airdrop_handlers.get_airdrop_schedules
+    handler: airdrop/application/handlers/airdrop_handlers.get_airdrop_schedules
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -158,7 +158,7 @@ functions:
                   "application/json": "ErrorMessage"
   user_registration:
     warmup: true
-    handler: application/handlers/airdrop_handlers.user_registration
+    handler: airdrop/application/handlers/airdrop_handlers.user_registration
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -203,7 +203,7 @@ functions:
                   "application/json": "ErrorMessage"
   user_eligibility:
     warmup: true
-    handler: application/handlers/airdrop_handlers.user_eligibility
+    handler: airdrop/application/handlers/airdrop_handlers.user_eligibility
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -248,7 +248,7 @@ functions:
                   "application/json": "ErrorMessage"
   airdrop_window_user_details:
     warmup: true
-    handler: application/handlers/airdrop_handlers.airdrop_window_user_details
+    handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_user_details
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
