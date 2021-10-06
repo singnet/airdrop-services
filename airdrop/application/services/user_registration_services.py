@@ -76,7 +76,7 @@ class UserRegistrationServices:
                 )
 
             is_eligible_user = self.check_user_eligibility(
-                'AGIX', address)
+                AirdropStrategy.AGIX, address)
 
             if not is_eligible_user:
                 raise Exception(
@@ -126,7 +126,7 @@ class UserRegistrationServices:
                 )
 
             is_eligible_user = self.check_user_eligibility(
-                'AGIX', address)
+                AirdropStrategy.AGIX, address)
 
             if not is_eligible_user:
                 raise Exception(
