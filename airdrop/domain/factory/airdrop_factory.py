@@ -30,6 +30,7 @@ class AirdropFactory:
         return AirdropUserDetails(
             user.airdrop_window.airdrop_id,
             user.airdrop_window.id,
+            user.airdrop_window.airdrop_window_name,
             user.address,
             str(user.registered_at)
         ).to_dict()
