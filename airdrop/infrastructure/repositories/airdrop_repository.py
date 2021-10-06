@@ -17,6 +17,29 @@ class AirdropRepository(BaseRepository):
                                        registration_end_period=registration_end_period, snapshot_required=snapshot_required, claim_start_period=claim_start_period, claim_end_period=claim_end_period)
         return self.session.add(airdrop_window)
 
+    def get_airdrops(self, limit, skip):
+        try:
+
+            airdrop_window_data = (
+                self.session.query(AirdropWindow)
+                .limit(limit)
+                .offset(skip)
+                .all()
+            )
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+        airdrop_windows = []
+        if airdrop_window_data is not None:
+            airdrop_windows = [
+                AirdropFactory.convert_airdrop_window_model_to_entity_model(
+                    window)
+                for window in airdrop_window_data
+            ]
+        return airdrop_windows
+
     def get_airdrops_schedule(self, limit, skip):
         try:
             timelines_raw_data = (

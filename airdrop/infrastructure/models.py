@@ -116,6 +116,7 @@ class UserRegistration(Base, AuditClass):
     is_eligible = Column("is_eligible", BIT, default=False)
     registered_at = Column("registered_at", TIMESTAMP(), nullable=True)
     UniqueConstraint(airdrop_window_id, address)
+    airdrop_window = relationship(AirdropWindow, backref="users")
 
 
 class UserReward(Base, AuditClass):

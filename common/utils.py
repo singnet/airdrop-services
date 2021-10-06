@@ -239,9 +239,10 @@ def verify_signature(airdrop_id, airdrop_window_id, address, signature):
 
 
 def recover_address(airdrop_id, airdrop_window_id, address, signature):
+    address = Web3.toChecksumAddress(address)
     message = web3.Web3.soliditySha3(
-        ["string", "string", "uint256"],
-        [int(airdrop_id), int(airdrop_window_id), str(address)],
+        ["uint8", "uint8", "address"],
+        [int(airdrop_id), int(airdrop_window_id), address],
     )
     hash = defunct_hash_message(message)
     web3_object = Web3(web3.providers.HTTPProvider(NETWORK['http_provider']))
