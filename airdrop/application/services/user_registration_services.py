@@ -75,8 +75,7 @@ class UserRegistrationServices:
                     "Airdrop window is not accepting registration at this moment"
                 )
 
-            is_eligible_user = self.check_user_eligibility(
-                AirdropStrategy.AGIX, address)
+            is_eligible_user = self.check_user_eligibility()
 
             if not is_eligible_user:
                 raise Exception(
@@ -125,8 +124,7 @@ class UserRegistrationServices:
                     "Airdrop window is not accepting registration at this moment"
                 )
 
-            is_eligible_user = self.check_user_eligibility(
-                AirdropStrategy.AGIX, address)
+            is_eligible_user = self.check_user_eligibility()
 
             if not is_eligible_user:
                 raise Exception(
@@ -162,15 +160,6 @@ class UserRegistrationServices:
             airdrop_window_id, address
         )
 
-    def check_user_eligibility(self, token, address):
-        try:
-            if(token == AirdropStrategy.AGIX):
-                return self.check_agix_airdrop_eligibility(address)
-        except:
-            raise Exception(
-                "Invalid Airdrop"
-            )
-
-    def check_agix_airdrop_eligibility(self, address):
-        # TODO: Implement user eligibility check for AGIX airdrop
+    def check_user_eligibility(self):
         return True
+        # TODO: Implement user eligibility check for AGIX airdrop
