@@ -246,6 +246,6 @@ def recover_address(airdrop_id, airdrop_window_id, address, signature):
     )
     hash = defunct_hash_message(message)
     web3_object = Web3(web3.providers.HTTPProvider(NETWORK['http_provider']))
-    return web3_object.eth.account.recover_message(
-        encode_defunct(hash), signature=signature
+    return web3_object.eth.account.recoverHash(
+        hash, signature=signature
     )
