@@ -55,3 +55,16 @@ def get_active_airdrops(event, context):
         response,
         cors_enabled=True,
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def airdrop_window_user_details(event, context):
+    logger.info(f"Got Airdrops Event {event}")
+    status, response = UserRegistrationServices(
+    ).airdrop_window_user_details(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )

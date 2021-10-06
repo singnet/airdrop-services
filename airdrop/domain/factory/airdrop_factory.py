@@ -1,5 +1,6 @@
 from airdrop.domain.models.airdrop_schedule import AirdropSchedule
 from airdrop.domain.models.airdrop_window import AirdropWindow
+from airdrop.domain.models.airdrop_user_details import AirdropUserDetails
 
 
 class AirdropFactory:
@@ -22,4 +23,13 @@ class AirdropFactory:
             window.description,
             str(window.registration_start_period),
             str(window.registration_end_period),
+        ).to_dict()
+
+    @staticmethod
+    def convert_airdrop_window_user_model_to_entity_model(user):
+        return AirdropUserDetails(
+            user.airdrop_window.airdrop_id,
+            user.airdrop_window.id,
+            user.address,
+            str(user.registered_at)
         ).to_dict()
