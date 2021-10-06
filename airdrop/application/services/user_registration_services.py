@@ -134,13 +134,10 @@ class UserRegistrationServices:
             is_registered_user = self.is_elgible_registered_user(
                 airdrop_window_id, address)
 
-            if is_registered_user is not None:
-                raise Exception(
-                    "Address is already registered for this airdrop window")
+            if is_registered_user is None:
+                UserRepository().register_user(airdrop_window_id, address)
 
-            UserRepository().register_user(airdrop_window_id, address)
-
-            response = 'Address registered for Airdrop'
+            response = HTTPStatus.OK.value
             status = HTTPStatus.OK
         except ValidationError as e:
             response = e.message
