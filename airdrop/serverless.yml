@@ -83,6 +83,10 @@ functions:
           subnetIds:
             - ${file(./config.${self:provider.stage}.json):VPC1}
             - ${file(./config.${self:provider.stage}.json):VPC2}
+        layers:
+            - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+            - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+            - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
         events:
           - http:
               path: /airdrops
@@ -128,6 +132,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     events:
       - http:
           path: /airdrop-schedule
@@ -173,6 +181,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     events:
       - http:
           path: /airdrop/registration
@@ -218,6 +230,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     events:
       - http:
           path: /airdrop/user-eligibility
@@ -263,6 +279,10 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     events:
       - http:
           path: /airdrop/user-details
