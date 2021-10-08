@@ -9,7 +9,7 @@ NETWORK = {
         "DB_PASSWORD": "",
         "DB_NAME": "",
         "DB_PORT": 3306,
-        "DB_LOGGING": True,
+        "DB_LOGGING": False,
     },
 }
 NETWORK_ID = 3
@@ -20,6 +20,9 @@ SLACK_HOOK = {
     "method": "POST",
     "headers": {"Content-Type": "application/json"},
 }
+
+SIGNER_PRIVATE_KEY = 'AIRDROP_SIGNER_PRIVATE_KEY'
+SIGNER_PRIVATE_KEY_STORAGE_REGION = ''
 
 
 class AirdropStrategy:

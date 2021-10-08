@@ -230,6 +230,18 @@ def send_slack_notification(slack_message, slack_url, slack_channel):
     )
 
 
+def generate_claim_signature(amount, airdrop_id, airdrop_window_id, address, contract_address, secret):
+    address = Web3.toChecksumAddress(address)
+    contract_address = Web3.toChecksumAddress(contract_address)
+    message = web3.Web3.soliditySha3(
+        ["string", "uint8", "address", "uint8", "uint8"],
+        ["__airdropclaim", int(amount), address, int(airdrop_id),
+         int(airdrop_window_id), contract_address, secret],
+    )
+
+    return defunct_hash_message(message)
+
+
 def verify_signature(airdrop_id, airdrop_window_id, address, signature):
     public_key = recover_address(
         airdrop_id, airdrop_window_id, address, signature)
