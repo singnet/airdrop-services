@@ -83,7 +83,7 @@ functions:
           subnetIds:
             - ${file(./config.${self:provider.stage}.json):VPC1}
             - ${file(./config.${self:provider.stage}.json):VPC2}
-          layers:
+        layers:
             - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
             - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
             - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
@@ -132,7 +132,7 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      layers:
+    layers:
         - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
         - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
         - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
@@ -181,7 +181,7 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      layers:
+    layers:
         - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
         - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
         - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
@@ -230,7 +230,7 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      layers:
+    layers:
         - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
         - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
         - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
@@ -279,7 +279,7 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
-      layers:
+    layers:
         - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
         - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
         - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
