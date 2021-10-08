@@ -40,3 +40,23 @@ class UserRegistration(TestCase):
         }
         status = UserRegistrationServices.register(inputs)
         self.assertEqual(status, 400)
+
+    def test_airdrop_window_user_eligibility(self):
+        inputs = {
+            "airdrop_window_id": "1",
+            "airdrop_id": "1",
+            "address": "0x176133a958449C28930970989dB5fFFbEdd9F448",
+            "signature": "958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F",
+        }
+        status = UserRegistrationServices.eligibility(inputs)
+        self.assertEqual(status, 200)
+
+    def test_airdrop_window_user_eligibility_with_invalid_info(self):
+        inputs = {
+            "airdrop_window_id": "100",
+            "airdrop_id": "100",
+            "address": "0x176133a958449C28930970989dB5fFFbEdd9F448",
+            "signature": "958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F",
+        }
+        status = UserRegistrationServices.eligibility(inputs)
+        self.assertEqual(status, 400)
