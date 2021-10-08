@@ -234,12 +234,17 @@ def generate_claim_signature(amount, airdrop_id, airdrop_window_id, address, con
     address = Web3.toChecksumAddress(address)
     contract_address = Web3.toChecksumAddress(contract_address)
     message = web3.Web3.soliditySha3(
-        ["string", "uint8", "address", "uint8", "uint8"],
+        ["string", "uint8", "address", "uint8", "uint8", "address", "string"],
         ["__airdropclaim", int(amount), address, int(airdrop_id),
          int(airdrop_window_id), contract_address, secret],
     )
 
     return defunct_hash_message(message)
+
+
+def get_contract_address(self):
+    # TODO: Implement contract address from Network
+    return ''
 
 
 def verify_signature(airdrop_id, airdrop_window_id, address, signature):

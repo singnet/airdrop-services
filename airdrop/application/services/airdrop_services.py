@@ -2,7 +2,7 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
-from common.utils import generate_claim_signature
+from common.utils import generate_claim_signature, get_contract_address
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION
 
 
@@ -15,8 +15,7 @@ class AirdropServices:
             private_key = boto_client.get_parameter_value_from_secrets_manager(
                 secret_name=SIGNER_PRIVATE_KEY)
 
-            # TODO: Get contract address from Network
-            contract_address = ''
+            contract_address = get_contract_address()
 
             return generate_claim_signature(amount, airdrop_id, airdrop_window_id, address, contract_address, private_key)
 
