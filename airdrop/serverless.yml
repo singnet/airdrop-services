@@ -316,4 +316,53 @@ functions:
                   "application/json": "AirdropRegistration"
               - statusCode: "400"
                 responseModels:
+                  "application/json": "ErrorMessage"
+  airdrop_window_claims:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claims
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    layers:
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonCode}
+        - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+        - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+    events:
+      - http:
+          path: /airdrop/claim
+          method: post
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+          documentation:
+            summary: "Airdrop user registration"
+            description: "Airdrop user registration"
+            tags:
+              - "airdrop"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "AirdropRegistration"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "AirdropRegistration Data"
+                  "application/json": "AirdropRegistration"
+                responseModels:
+                  "application/json": "AirdropRegistration"
+              - statusCode: "400"
+                responseModels:
                   "application/json": "ErrorMessage"  

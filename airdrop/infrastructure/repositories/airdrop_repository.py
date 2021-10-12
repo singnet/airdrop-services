@@ -1,11 +1,31 @@
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop
+from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserBalanceSnapshot, UserRegistration, ClaimHistory
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
+from datetime import datetime
+from airdrop.constants import AirdropClaimStatus
 
 
 class AirdropRepository(BaseRepository):
+
+    def is_claimed_airdrop_window(self, address, airdrop_window_id):
+        try:
+            is_claimed_address = (
+                self.session.query(ClaimHistory)
+                .filter(ClaimHistory.airdrop_window_id == airdrop_window_id)
+                .filter(ClaimHistory.address == address)
+                .filter(ClaimHistory.transaction_status != AirdropClaimStatus.FAILED)
+                .first()
+            )
+
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+        if is_claimed_address is not None:
+            raise Exception('Airdrop Already claimed / pending')
 
     def register_airdrop(self, address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract):
         airdrop = Airdrop(
@@ -16,6 +36,47 @@ class AirdropRepository(BaseRepository):
         airdrop_window = AirdropWindow(airdrop_id=airdrop_id, airdrop_window_name=airdrop_window_name, description=description, registration_required=registration_required, registration_start_period=registration_start_period,
                                        registration_end_period=registration_end_period, snapshot_required=snapshot_required, claim_start_period=claim_start_period, claim_end_period=claim_end_period)
         return self.add(airdrop_window)
+
+    def get_token_address(self, airdrop_id):
+        airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
+
+        if airdrop is None:
+            raise Exception("Airdrop not found")
+
+        return airdrop.contract_address
+
+    def get_airdrop_window_claimable_amount(self, airdrop_id, airdrop_window_id, address):
+        try:
+            date_time = datetime.utcnow()
+            is_eligible_user = (
+                self.session.query(UserRegistration, AirdropWindow)
+                .join(
+                    AirdropWindow,
+                    AirdropWindow.id == UserRegistration.airdrop_window_id
+                )
+                .filter(UserRegistration.is_eligible == True)
+                .filter(AirdropWindow.airdrop_id == airdrop_id)
+                .filter(AirdropWindow.id == airdrop_window_id)
+                .filter(AirdropWindow.claim_start_period <= date_time)
+                .filter(AirdropWindow.claim_end_period >= date_time)
+                .first()
+            )
+
+            if is_eligible_user is None:
+                raise Exception('Non eligible user')
+
+            balance_raw_data = self.session.query(UserBalanceSnapshot).filter(UserBalanceSnapshot.address == address).filter(
+                UserBalanceSnapshot.airdrop_window_id == airdrop_window_id).first()
+
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+        if balance_raw_data is not None:
+            return balance_raw_data.balance
+        else:
+            return 0
 
     def get_airdrops(self, limit, skip):
         try:

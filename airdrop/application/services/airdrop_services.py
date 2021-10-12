@@ -2,22 +2,67 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
-from common.utils import generate_claim_signature, get_contract_address
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION
+from common.utils import generate_claim_signature, read_contract_address
+from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, NETWORK_ID
+from airdrop.constants import AIRDROP_ADDR_PATH
+from airdrop.domain.models.airdrop_claim import AirdropClaim
 
 
 class AirdropServices:
 
-    def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, address):
+    def airdrop_window_claims(self, inputs):
+        status = HTTPStatus.BAD_REQUEST
         try:
+
+            schema = {
+                "type": "object",
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id"],
+            }
+
+            validate(instance=inputs, schema=schema)
+
+            user_address = inputs["address"]
+            airdrop_id = inputs["airdrop_id"]
+            airdrop_window_id = inputs["airdrop_window_id"]
+
+            airdrop_repo = AirdropRepository()
+            airdrop_repo.is_claimed_airdrop_window(
+                user_address, airdrop_window_id)
+
+            claimable_amount = AirdropRepository().get_airdrop_window_claimable_amount(
+                airdrop_id, airdrop_window_id, user_address)
+
+            signature = self.get_signature_for_airdrop_window_id(
+                claimable_amount, airdrop_id, airdrop_window_id, user_address)
+
+            response = AirdropClaim(airdrop_id,
+                                    airdrop_window_id, user_address, signature, claimable_amount).to_dict()
+
+            status = HTTPStatus.OK
+            return status, response
+        except ValidationError as e:
+            response = e.message
+        except ValidationError as e:
+            response = {'error': e.message}
+
+        return status, response
+
+    def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_address):
+        try:
+
+            contract_address = read_contract_address(net_id=NETWORK_ID, path=AIRDROP_ADDR_PATH,
+                                                     key='address')
+
+            token_address = AirdropRepository().get_token_address(airdrop_id)
+
             boto_client = BotoUtils(
                 region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)
             private_key = boto_client.get_parameter_value_from_secrets_manager(
                 secret_name=SIGNER_PRIVATE_KEY)
 
-            contract_address = get_contract_address()
-
-            return generate_claim_signature(amount, airdrop_id, airdrop_window_id, address, contract_address, private_key)
+            return generate_claim_signature(
+                amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key)
 
         except BaseException as e:
             raise str(e)
