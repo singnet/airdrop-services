@@ -9,7 +9,7 @@ NETWORK = {
         "DB_PASSWORD": "",
         "DB_NAME": "",
         "DB_PORT": 3306,
-        "DB_LOGGING": False,
+        "DB_LOGGING": True,
     },
 }
 NETWORK_ID = 3
