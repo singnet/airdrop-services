@@ -53,6 +53,9 @@ documentation:
     - name: "AirdropRegistration"
       contentType: "application/json"
       schema: ${file(documentation/models/airdrop_registration.json):AirdropRegistration}
+    - name: "AirdropWindowClaim"
+      contentType: "application/json"
+      schema: ${file(documentation/models/airdrop_window_claim.json):AirdropWindowClaim}      
 
 package:
   patterns:
@@ -347,22 +350,22 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
           documentation:
-            summary: "Airdrop user registration"
-            description: "Airdrop user registration"
+            summary: "Airdrop window claims"
+            description: "Airdrop window claims"
             tags:
               - "airdrop"
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application/json": "AirdropRegistration"
+              "application/json": "AirdropWindowClaim"
             methodResponses:
               - statusCode: "200"
                 responseBody:
-                  description: "AirdropRegistration Data"
-                  "application/json": "AirdropRegistration"
+                  description: "Airdrop Window Claim get signed signature from the service"
+                  "application/json": "AirdropWindowClaim"
                 responseModels:
-                  "application/json": "AirdropRegistration"
+                  "application/json": "AirdropWindowClaim"
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"  
