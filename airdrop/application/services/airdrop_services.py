@@ -43,8 +43,8 @@ class AirdropServices:
             return status, response
         except ValidationError as e:
             response = e.message
-        except ValidationError as e:
-            response = {'error': e.message}
+        except BaseException as e:
+            response = str(e)
 
         return status, response
 
