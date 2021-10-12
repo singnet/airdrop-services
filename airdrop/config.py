@@ -21,6 +21,9 @@ SLACK_HOOK = {
     "headers": {"Content-Type": "application/json"},
 }
 
+SIGNER_PRIVATE_KEY = 'AIRDROP_SIGNER_PRIVATE_KEY'
+SIGNER_PRIVATE_KEY_STORAGE_REGION = ''
+
 
 class AirdropStrategy:
     AGIX = "AGIX"

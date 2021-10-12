@@ -230,6 +230,37 @@ def send_slack_notification(slack_message, slack_url, slack_channel):
     )
 
 
+def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key):
+    user_address = Web3.toChecksumAddress(user_address)
+    token_address = Web3.toChecksumAddress(token_address)
+    contract_address = Web3.toChecksumAddress(contract_address)
+    message = web3.Web3.soliditySha3(
+        ["string", "uint256", "address", "uint256",
+            "uint256", "address", "address"],
+        ["__airdropclaim", int(amount), user_address, int(airdrop_id),
+         int(airdrop_window_id), contract_address, token_address],
+    )
+
+    message_hash = encode_defunct(message)
+
+    web3_object = Web3(web3.providers.HTTPProvider(NETWORK['http_provider']))
+    signed_message = web3_object.eth.account.sign_message(
+        message_hash, private_key=private_key)
+
+    return signed_message.signature.hex()
+
+
+def load_contract(path):
+    with open(path) as f:
+        contract = json.load(f)
+    return contract
+
+
+def read_contract_address(net_id, path, key):
+    contract = load_contract(path)
+    return Web3.toChecksumAddress(contract[str(net_id)][key])
+
+
 def verify_signature(airdrop_id, airdrop_window_id, address, signature):
     public_key = recover_address(
         airdrop_id, airdrop_window_id, address, signature)
