@@ -18,7 +18,7 @@ class BotoUtils:
         try:
             config = Config(retries=dict(max_attempts=2))
             client = boto3.client(
-                service_name='secretsmanager', region_name='ap-south-1', config=config)
+                service_name='secretsmanager', region_name=self.region_name, config=config)
             parameter_value = client.get_secret_value(
                 SecretId=secret_name)['SecretString']
             logger.log(f"Retrieved values {parameter_value}")

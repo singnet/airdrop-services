@@ -37,6 +37,7 @@ class AirdropServices:
         except ValidationError as e:
             response = e.message
         except BaseException as e:
+            print(f"Exception on Airdrop Window Claim {e}")
             response = str(e)
 
         return status, response
@@ -96,7 +97,7 @@ class AirdropServices:
                 amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key)
 
         except BaseException as e:
-            raise str(e)
+            raise e
 
     def get_airdrops(self, inputs):
         status = HTTPStatus.BAD_REQUEST
