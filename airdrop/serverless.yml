@@ -306,7 +306,7 @@ functions:
   airdrop_window_claims:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claims
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    role: ${file(./config.${self:provider.stage}.json):ROLE_WITH_SM}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}

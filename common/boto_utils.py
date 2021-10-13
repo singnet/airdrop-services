@@ -15,13 +15,13 @@ class BotoUtils:
         self.region_name = region_name
 
     def get_parameter_value_from_secrets_manager(self, secret_name):
-        config = Config(retries=dict(max_attempts=2))
-        session = boto3.session.Session()
-        client = session.client(
-            service_name='secretsmanager', region_name=self.region_name, config=config)
         try:
+            config = Config(retries=dict(max_attempts=2))
+            client = boto3.client(
+                service_name='secretsmanager', region_name='ap-south-1', config=config)
             parameter_value = client.get_secret_value(
                 SecretId=secret_name)['SecretString']
+            logger.log(f"Retrieved values {parameter_value}")
         except ClientError as e:
             logger.error(f"Failed to fetch credentials {e}")
             raise e
