@@ -53,6 +53,9 @@ documentation:
     - name: "AirdropRegistration"
       contentType: "application/json"
       schema: ${file(documentation/models/airdrop_registration.json):AirdropRegistration}
+    - name: "AirdropClaimStatus"
+      contentType: "application/json"
+      schema: ${file(documentation/models/airdrop_registration.json):AirdropClaimStatus}
     - name: "AirdropWindowClaim"
       contentType: "application/json"
       schema: ${file(documentation/models/airdrop_window_claim.json):AirdropWindowClaim}      
@@ -344,4 +347,49 @@ functions:
                   "application/json": "AirdropWindowClaim"
               - statusCode: "400"
                 responseModels:
-                  "application/json": "ErrorMessage"  
+                  "application/json": "ErrorMessage"
+  airdrop_window_claim_status:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim_status
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          path: /airdrop/claim-txn
+          method: post
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+          documentation:
+            summary: "Airdrop window claim transaction status"
+            description: "Airdrop window claim transaction status"
+            tags:
+              - "airdrop"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "AirdropClaimStatus"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Airdrop Window claim txn status update"
+                  "application/json": "AirdropClaimStatus"
+                responseModels:
+                  "application/json": "AirdropClaimStatus"
+              - statusCode: "400"
+                responseModels:
+                  "application/json": "ErrorMessage"    

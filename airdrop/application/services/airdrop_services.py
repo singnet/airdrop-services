@@ -10,6 +10,37 @@ from airdrop.domain.models.airdrop_claim import AirdropClaim
 
 class AirdropServices:
 
+    def airdrop_window_claim_status(self, inputs):
+        status = HTTPStatus.BAD_REQUEST
+        try:
+            schema = {
+                "type": "object",
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_status": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_status", "txn_hash", "amount"],
+            }
+
+            validate(instance=inputs, schema=schema)
+
+            user_address = inputs["address"]
+            airdrop_id = inputs["airdrop_id"]
+            airdrop_window_id = inputs["airdrop_window_id"]
+            txn_hash = inputs["txn_hash"]
+            txn_status = inputs["txn_status"]
+            amount = inputs["amount"]
+
+            AirdropRepository().airdrop_window_claim_txn(
+                airdrop_id, airdrop_window_id, user_address, txn_hash, txn_status, amount)
+
+            response = HTTPStatus.OK.phrase
+            status = HTTPStatus.OK
+
+        except ValidationError as e:
+            response = e.message
+        except BaseException as e:
+            response = str(e)
+
+        return status, response
+
     def airdrop_window_claims(self, inputs):
         status = HTTPStatus.BAD_REQUEST
         try:
