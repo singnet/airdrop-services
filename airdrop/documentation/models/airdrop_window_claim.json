@@ -1,10 +1,11 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "AirdropWindowClaim",
-  "type": "object",
-  "properties": {
-    "address": { "type": "string" },
-    "airdrop_id": { "type": "string" },
-    "airdrop_window_id": { "type": "string" }
+  "AirdropWindowClaim": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropWindowClaim",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
   }
 }

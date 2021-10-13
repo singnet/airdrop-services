@@ -1,13 +1,11 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "AirdropClaimStatus",
-  "type": "object",
-  "properties": {
-    "address": { "type": "string" },
-    "airdrop_id": { "type": "string" },
-    "airdrop_window_id": { "type": "string" },
-    "txn_status": { "type": "string" },
-    "txn_hash": { "type": "string" },
-    "amount": { "type": "string" }
+  "AirdropClaimStatus": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropClaimStatus",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
   }
 }
