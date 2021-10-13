@@ -1,0 +1,11 @@
+{
+  "AirdropClaimStatus": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropClaimStatus",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  }
+}

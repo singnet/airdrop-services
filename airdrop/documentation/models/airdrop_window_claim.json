@@ -1,0 +1,11 @@
+{
+  "AirdropWindowClaim": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropWindowClaim",
+    "type": "object",
+    "properties": {
+      "data": {
+      }
+    }
+  }
+}
