@@ -71,10 +71,10 @@ class AirdropServices:
                                     airdrop_window_id, user_address, signature, claimable_amount).to_dict()
 
             status = HTTPStatus.OK
-            return status, response
         except ValidationError as e:
             response = e.message
         except BaseException as e:
+            print(f"Exception on Airdrop Window Claim {e}")
             response = str(e)
 
         return status, response
