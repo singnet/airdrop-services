@@ -57,3 +57,29 @@ class AirdropClaims(TestCase):
         status_code, result = AirdropServices().airdrop_window_claim_status(payload)
 
         self.assertEqual(status_code, HTTPStatus.BAD_REQUEST.value)
+
+    def test_airdrop_window_claim_history(self):
+
+        payload = {
+            "address": "0x176133a958449C28930970989dB5fFFbEdd9F447",
+            "airdrop_id": "1",
+            "airdrop_window_id": "1"
+        }
+
+        status_code, result = AirdropServices().airdrop_window_claim_history(payload)
+
+        self.assertEqual(status_code, HTTPStatus.OK.value)
+
+    def test_airdrop_window_claim_history(self):
+
+        payload = {
+            "address": "0x176133a958449C28930970989dB5fFFbEdd9F417",
+            "airdrop_id": "1",
+            "airdrop_window_id": "1"
+        }
+
+        status_code, result = AirdropServices().airdrop_window_claim_history(payload)
+
+        result_length = result['data']['claims'].__len__()
+
+        self.assertLessEqual(result_length, 1)
