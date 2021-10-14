@@ -5,6 +5,21 @@ from datetime import datetime
 
 
 class UserRepository(BaseRepository):
+
+    def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
+        is_rewards_awarded = (
+            self.session.query(UserReward.id)
+            .filter(UserReward.address == address)
+            .filter(UserReward.airdrop_window_id == airdrop_window_id)
+            .filter(UserReward.airdrop_id == airdrop_id)
+            .first()
+        )
+
+        if is_rewards_awarded is None:
+            return False
+        else:
+            return True
+
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (
             self.session.query(UserRegistration)
@@ -27,13 +42,18 @@ class UserRepository(BaseRepository):
         return user_details
 
     def is_registered_user(self, airdrop_window_id, address):
-        return (
+        is_registered_user = (
             self.session.query(UserRegistration.id)
             .filter(UserRegistration.airdrop_window_id == airdrop_window_id)
             .filter(UserRegistration.address == address)
             .filter(UserRegistration.registered_at != None)
             .first()
         )
+
+        if is_registered_user is None:
+            return False
+        else:
+            return True
 
     def register_user(self, airdrop_window_id, address):
         user = UserRegistration(
