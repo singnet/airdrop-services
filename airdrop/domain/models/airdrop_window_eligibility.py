@@ -13,7 +13,7 @@ class AirdropWindowEligibility:
             "is_eligible": self._is_eligible_user,
             "is_already_registered":  self._is_already_registered,
             "is_airdrop_window_claimed":  self._is_airdrop_window_claimed,
-            "airdrop_claim_status":  self._airdrop_claim_status,
+            "airdrop_window_claim_status":  self._airdrop_claim_status,
             "user_address": self._address,
             "airdrop_id": self._airdrop_id,
             "airdrop_window_id": self._airdrop_window_id,

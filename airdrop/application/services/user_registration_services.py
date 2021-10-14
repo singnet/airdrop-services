@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from jsonschema import validate, ValidationError
 from datetime import datetime
+from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_repository import UserRepository
 from airdrop.domain.models.airdrop_window_eligibility import AirdropWindowEligibility
@@ -85,7 +86,7 @@ class UserRegistrationServices:
             airdrop_claim_status = self.is_airdrop_window_claimed(
                 airdrop_window_id, address)
 
-            if airdrop_claim_status is not None:
+            if airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
                 is_airdrop_window_claimed = True
 
             response = AirdropWindowEligibility(airdrop_id, airdrop_window_id, address, is_eligible_user,
