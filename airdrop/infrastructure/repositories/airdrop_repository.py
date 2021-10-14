@@ -9,6 +9,24 @@ from airdrop.constants import AirdropClaimStatus
 
 class AirdropRepository(BaseRepository):
 
+    def airdrop_window_claim_history(self, airdrop_id, airdrop_window_id, address):
+        try:
+            claim_raw_data = self.session.query(ClaimHistory).filter(
+                ClaimHistory.airdrop_window_id == airdrop_window_id).filter(ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.address == address).all()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+        claim_history = []
+        if claim_raw_data is not None:
+            claim_history = [
+                AirdropFactory.convert_claim_history_model_to_entity_model(
+                    claim)
+                for claim in claim_raw_data
+            ]
+
+        return claim_history
+
     def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, txn_status, amount):
         try:
             is_existing_txn_hash = self.session.query(ClaimHistory).filter(

@@ -21,7 +21,7 @@ class BotoUtils:
                 service_name='secretsmanager', region_name=self.region_name, config=config)
             parameter_value = client.get_secret_value(
                 SecretId=secret_name)['SecretString']
-            logger.log(f"Retrieved values {parameter_value}")
+            print(f"Retrieved values {parameter_value}")
         except ClientError as e:
             logger.error(f"Failed to fetch credentials {e}")
             raise e
