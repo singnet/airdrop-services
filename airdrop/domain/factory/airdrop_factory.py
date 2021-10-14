@@ -1,6 +1,7 @@
 from airdrop.domain.models.airdrop_schedule import AirdropSchedule
 from airdrop.domain.models.airdrop_window import AirdropWindow
 from airdrop.domain.models.airdrop_user_details import AirdropUserDetails
+from airdrop.domain.models.airdrop_claim_history import AirdropClaimHistory
 
 
 class AirdropFactory:
@@ -33,4 +34,15 @@ class AirdropFactory:
             user.airdrop_window.airdrop_window_name,
             user.address,
             str(user.registered_at)
+        ).to_dict()
+
+    @staticmethod
+    def convert_claim_history_model_to_entity_model(claim):
+        return AirdropClaimHistory(
+            claim.airdrop_id,
+            claim.airdrop_window_id,
+            claim.address,
+            claim.transaction_status,
+            claim.transaction_hash,
+            claim.claimable_amount,
         ).to_dict()
