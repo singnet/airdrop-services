@@ -121,6 +121,11 @@ class UserRegistration(Base, AuditClass):
 
 class UserReward(Base, AuditClass):
     __tablename__ = "user_rewards"
+    airdrop_id = Column(
+        BIGINT,
+        ForeignKey("airdrop.row_id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     airdrop_window_id = Column(
         BIGINT,
         ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),

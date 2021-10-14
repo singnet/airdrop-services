@@ -1,9 +1,24 @@
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.models import AirdropWindow
+from airdrop.infrastructure.models import AirdropWindow, ClaimHistory
 from sqlalchemy import and_
 
 
-class AirdropWIndowRepository(BaseRepository):
+class AirdropWindowRepository(BaseRepository):
+
+    def is_airdrop_window_claimed(self, airdrop_window_id, address):
+        claim_history = (
+            self.session.query(
+                ClaimHistory.id, ClaimHistory.transaction_status)
+            .filter(ClaimHistory.address == address)
+            .filter(ClaimHistory.airdrop_window_id == airdrop_window_id)
+            .first()
+        )
+
+        if claim_history is not None:
+            return claim_history.transaction_status
+        else:
+            return None
+
     def is_open_airdrop_window(self, airdrop_id, airdrop_window_id, date_time):
 
         return (

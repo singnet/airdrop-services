@@ -1,9 +1,10 @@
 from http import HTTPStatus
 from jsonschema import validate, ValidationError
 from datetime import datetime
-from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWIndowRepository
+from airdrop.constants import AirdropClaimStatus
+from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_repository import UserRepository
-from airdrop.config import AirdropStrategy
+from airdrop.domain.models.airdrop_window_eligibility import AirdropWindowEligibility
 from common.utils import verify_signature
 
 
@@ -75,14 +76,22 @@ class UserRegistrationServices:
                     "Airdrop window is not accepting registration at this moment"
                 )
 
-            is_eligible_user = self.check_user_eligibility()
+            is_eligible_user = self.check_user_eligibility(
+                user_address=address, airdrop_id=airdrop_id, airdrop_window_id=airdrop_window_id)
 
-            if not is_eligible_user:
-                raise Exception(
-                    "Address is not eligible for this airdrop"
-                )
+            is_already_registered = self.is_elgible_registered_user(
+                airdrop_window_id, address)
 
-            response = 'Address is eligible for Airdrop'
+            is_airdrop_window_claimed = False
+            airdrop_claim_status = self.is_airdrop_window_claimed(
+                airdrop_window_id, address)
+
+            if airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
+                is_airdrop_window_claimed = True
+
+            response = AirdropWindowEligibility(airdrop_id, airdrop_window_id, address, is_eligible_user,
+                                                is_already_registered, is_airdrop_window_claimed, airdrop_claim_status).to_dict()
+
             status = HTTPStatus.OK
 
         except ValidationError as e:
@@ -124,7 +133,8 @@ class UserRegistrationServices:
                     "Airdrop window is not accepting registration at this moment"
                 )
 
-            is_eligible_user = self.check_user_eligibility()
+            is_eligible_user = self.check_user_eligibility(
+                airdrop_id, airdrop_window_id, address)
 
             if not is_eligible_user:
                 raise Exception(
@@ -134,7 +144,7 @@ class UserRegistrationServices:
             is_registered_user = self.is_elgible_registered_user(
                 airdrop_window_id, address)
 
-            if is_registered_user is None:
+            if is_registered_user is False:
                 UserRepository().register_user(airdrop_window_id, address)
 
             response = HTTPStatus.OK.value
@@ -148,7 +158,7 @@ class UserRegistrationServices:
 
     def get_user_airdrop_window(self, airdrop_id, airdrop_window_id):
         now = datetime.utcnow()
-        return AirdropWIndowRepository().is_open_airdrop_window(
+        return AirdropWindowRepository().is_open_airdrop_window(
             airdrop_id, airdrop_window_id, now
         )
 
@@ -157,6 +167,10 @@ class UserRegistrationServices:
             airdrop_window_id, address
         )
 
-    def check_user_eligibility(self):
-        return True
-        # TODO: Implement user eligibility check for AGIX airdrop
+    def is_airdrop_window_claimed(self, airdrop_window_id, address):
+        return AirdropWindowRepository().is_airdrop_window_claimed(
+            airdrop_window_id, address
+        )
+
+    def check_user_eligibility(self, airdrop_id, airdrop_window_id, user_address):
+        return UserRepository().check_rewards_awarded(airdrop_id, airdrop_window_id, user_address)
