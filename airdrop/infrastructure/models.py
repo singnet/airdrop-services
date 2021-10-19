@@ -12,7 +12,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql import TIMESTAMP, BIT
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql.expression import table
 
 Base = declarative_base()
 
