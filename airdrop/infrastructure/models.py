@@ -12,6 +12,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql import TIMESTAMP, BIT
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.expression import table
 
 Base = declarative_base()
 
@@ -68,6 +69,7 @@ class AirdropWindow(Base, AuditClass):
     claim_start_period = Column(
         "claim_start_period", TIMESTAMP(), nullable=False)
     claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=False)
+    total_airdrop_tokens = Column("total_airdrop_tokens", INTEGER, default=0)
     airdrop = relationship(Airdrop, backref="windows")
 
 
@@ -78,7 +80,10 @@ class AirdropWindowEligibilityRule(Base, AuditClass):
         ForeignKey("airdrop_window.row_id", ondelete="CASCADE"),
         nullable=False,
     )
+    title = Column("title", TEXT, nullable=True)
     rule = Column("rule", TEXT, nullable=False)
+    airdrop_window = relationship(
+        AirdropWindow, backref="airdropwindow_rules")
 
 
 class AirdropWindowTimelines(Base, AuditClass):

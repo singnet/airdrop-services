@@ -6,13 +6,15 @@ from airdrop.domain.models.airdrop_claim_history import AirdropClaimHistory
 
 class AirdropFactory:
     @staticmethod
-    def convert_airdrop_schedule_model_to_entity_model(timeline):
+    def convert_airdrop_schedule_model_to_entity_model(airdrop):
         return AirdropSchedule(
-            timeline.airdrop_window_id,
-            timeline.airdrop_window.airdrop_window_name,
-            timeline.title,
-            timeline.description,
-            str(timeline.date),
+            airdrop.id,
+            airdrop.token_name,
+            airdrop.description,
+            airdrop.portal_link,
+            airdrop.documentation_link,
+            airdrop.github_link_for_contract,
+            airdrop.windows
         ).to_dict()
 
     @staticmethod
