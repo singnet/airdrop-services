@@ -1,11 +1,29 @@
 {
-    "AirdropRegistration": {
-      "$schema": "http://json-schema.org/draft-04/schema#",
-      "title": "AirdropRegistration",
-      "type": "object",
-      "properties": {
-        "data": {
-        }
+  "AirdropRegistrationInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropRegistrationInput",
+    "type": "object",
+    "properties": {
+      "airdrop_id": {
+        "type": "string"
+      },
+      "airdrop_window_id": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
       }
     }
+  },
+  "AirdropRegistrationOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropRegistrationOutput",
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string"
+      },
+      "data": {}
+    }
   }
+}
