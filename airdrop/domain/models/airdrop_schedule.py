@@ -1,16 +1,30 @@
+from airdrop.domain.factory.airdrop_window_factory import AirdropWindowFactory
+
+
 class AirdropSchedule:
-    def __init__(self, window_id, window_name, info, description, date):
-        self._window_id = window_id
-        self._window_name = window_name
-        self._info = info
-        self._description = description
-        self._date = date
+    def __init__(self, airdrop_id, token_name, airdrop_description, airdrop_portal_link, airdrop_documentation_link, airdrop_github_link, airdrop_windows):
+        self._airdrop_id = airdrop_id
+        self._token_name = token_name
+        self._airdrop_description = airdrop_description
+        self._airdrop_portal_link = airdrop_portal_link
+        self._airdrop_documentation_link = airdrop_documentation_link
+        self._airdrop_github_link = airdrop_github_link
+        self._airdrop_windows = airdrop_windows
+
+    def get_airdrop_windows(self):
+        return [
+            AirdropWindowFactory.convert_airdrop_window_model_to_entity_model(
+                window)
+            for window in self._airdrop_windows
+        ]
 
     def to_dict(self):
         return {
-            "airdrop_window_id": self._window_id,
-            "airdrop_window_name": self._window_name,
-            "airdrop_schedule_info": self._info,
-            "airdrop_schedule_description": self._description,
-            "airdrop_schedule_date": self._date,
+            "airdrop_id": self._airdrop_id,
+            "token_name": self._token_name,
+            "airdrop_description": self._airdrop_description,
+            "airdrop_portal_link": self._airdrop_portal_link,
+            "airdrop_documentation_link": self._airdrop_documentation_link,
+            "airdrop_github_link_for_contract": self._airdrop_github_link,
+            "airdrop_windows": self.get_airdrop_windows()
         }

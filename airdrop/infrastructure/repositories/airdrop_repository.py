@@ -1,7 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserBalanceSnapshot, UserRegistration, ClaimHistory
+from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserBalanceSnapshot, UserRegistration, ClaimHistory, AirdropWindowEligibilityRule
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
 from airdrop.constants import AirdropClaimStatus
@@ -137,28 +137,27 @@ class AirdropRepository(BaseRepository):
             ]
         return airdrop_windows
 
-    def get_airdrops_schedule(self, limit, skip):
+    def get_airdrops_schedule(self, token_name):
         try:
-            timelines_raw_data = (
-                self.session.query(AirdropWindowTimelines)
+            airdrop_row_data = (
+                self.session.query(Airdrop)
                 .join(
                     AirdropWindow,
-                    AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id,
+                    Airdrop.id == AirdropWindow.airdrop_id,
+                ).join(
+                    AirdropWindowEligibilityRule,
+                    AirdropWindow.id == AirdropWindowEligibilityRule.airdrop_window_id
                 )
-                .limit(limit)
-                .offset(skip)
-                .all()
+                .join(AirdropWindowTimelines, AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id)
+                .filter(Airdrop.token_name == token_name)
+                .first()
             )
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
 
-        airdrop_timelines = []
-        if timelines_raw_data is not None:
-            airdrop_timelines = [
-                AirdropFactory.convert_airdrop_schedule_model_to_entity_model(
-                    timeline)
-                for timeline in timelines_raw_data
-            ]
-        return airdrop_timelines
+        if airdrop_row_data is not None:
+            return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(
+                airdrop_row_data)
+        raise Exception("Invalid token name")

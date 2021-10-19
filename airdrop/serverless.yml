@@ -47,21 +47,36 @@ documentation:
     - name: "ErrorMessage"
       contentType: "application/json"
       schema: ${file(documentation/models/error.json)}
-    - name: "AirdropSchedule"
+    - name: "AirdropScheduleInput"
       contentType: "application/json"
-      schema: ${file(documentation/models/airdrop_schedule.json):AirdropSchedule}
-    - name: "AirdropRegistration"
+      schema: ${file(./documentation/models/airdrop_schedule.json):AirdropScheduleInput}
+    - name: "AirdropScheduleOutput"
       contentType: "application/json"
-      schema: ${file(documentation/models/airdrop_registration.json):AirdropRegistration}
-    - name: "AirdropClaimStatus"
+      schema: ${file(./documentation/models/airdrop_schedule.json):AirdropScheduleOutput}
+    - name: "AirdropRegistrationInput"
       contentType: "application/json"
-      schema: ${file(documentation/models/airdrop_registration.json):AirdropClaimStatus}
-    - name: "AirdropWindowClaim"
+      schema: ${file(./documentation/models/airdrop_registration.json):AirdropRegistrationInput}
+    - name: "AirdropRegistrationOutput"
       contentType: "application/json"
-      schema: ${file(documentation/models/airdrop_window_claim.json):AirdropWindowClaim} 
-    - name: "AirdropClaimHistory"
+      schema: ${file(./documentation/models/airdrop_registration.json):AirdropRegistrationOutput}
+    - name: "AirdropClaimStatusInput"
       contentType: "application/json"
-      schema: ${file(documentation/models/airdrop_window_claim.json):AirdropClaimHistory}      
+      schema: ${file(./documentation/models/airdrop_claim_status.json):AirdropClaimStatusInput}
+    - name: "AirdropClaimStatusOutput"
+      contentType: "application/json"
+      schema: ${file(./documentation/models/airdrop_claim_status.json):AirdropClaimStatusOutput}
+    - name: "AirdropClaimInput"
+      contentType: "application/json"
+      schema: ${file(./documentation/models/airdrop_window_claim.json):AirdropClaimInput} 
+    - name: "AirdropClaimOutput"
+      contentType: "application/json"
+      schema: ${file(./documentation/models/airdrop_window_claim.json):AirdropClaimOutput} 
+    - name: "AirdropClaimHistoryInput"
+      contentType: "application/json"
+      schema: ${file(./documentation/models/airdrop_claim_history.json):AirdropClaimHistoryInput}  
+    - name: "AirdropClaimHistoryOutput"
+      contentType: "application/json"
+      schema: ${file(./documentation/models/airdrop_claim_history.json):AirdropClaimHistoryOutput}    
 
 package:
   patterns:
@@ -115,14 +130,14 @@ functions:
                   - name: "Content-Type"
                     description: "application/json"
                 requestModels:
-                  "application/json": "AirdropSchedule"
+                  "application/json": "AirdropScheduleInput"
                 methodResponses:
                   - statusCode: "200"
                     responseBody:
                       description: "Airdropschedule Data"
-                      "application/json": "AirdropSchedule"
+                      "application/json": "AirdropScheduleOutput"
                     responseModels:
-                      "application/json": "AirdropSchedule"
+                      "application/json": "AirdropScheduleOutput"
                   - statusCode: "400"
                     responseModels:
                       "application/json": "ErrorMessage"
@@ -139,8 +154,8 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          path: /airdrop-schedule
-          method: post
+          path: /airdrop-schedule/{token_name}
+          method: get
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
             headers:
@@ -160,14 +175,14 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application/json": "AirdropSchedule"
+              "application/json": "AirdropScheduleInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
                   description: "Airdropschedule Data"
-                  "application/json": "AirdropSchedule"
+                  "application/json": "AirdropScheduleOutput"
                 responseModels:
-                  "application/json": "AirdropSchedule"
+                  "application/json": "AirdropScheduleOutput"
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
@@ -205,14 +220,14 @@ functions:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application/json": "AirdropRegistration"
+              "application/json": "AirdropRegistrationInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
                   description: "AirdropRegistration Data"
-                  "application/json": "AirdropRegistration"
+                  "application/json": "AirdropRegistrationOutput"
                 responseModels:
-                  "application/json": "AirdropRegistration"
+                  "application/json": "AirdropRegistrationOutput"
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"

@@ -1,11 +1,29 @@
 {
-  "AirdropWindowClaim": {
+  "AirdropClaimInput": {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "title": "AirdropWindowClaim",
+    "title": "AirdropClaimInput",
     "type": "object",
     "properties": {
-      "data": {
+      "airdrop_id": {
+        "type": "string"
+      },
+      "airdrop_window_id": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
       }
+    }
+  },
+  "AirdropClaimOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropClaimOutput",
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string"
+      },
+      "data": {}
     }
   }
 }

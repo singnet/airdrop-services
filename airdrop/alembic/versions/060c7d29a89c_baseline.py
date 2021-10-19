@@ -1,8 +1,8 @@
 """baseline
 
-Revision ID: c77ed315d134
+Revision ID: 060c7d29a89c
 Revises: 
-Create Date: 2021-09-30 07:23:02.854761
+Create Date: 2021-10-19 14:28:19.932468
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = 'c77ed315d134'
+revision = '060c7d29a89c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -47,6 +47,7 @@ def upgrade():
     sa.Column('first_snapshot_at', mysql.TIMESTAMP(), nullable=True),
     sa.Column('claim_start_period', mysql.TIMESTAMP(), nullable=False),
     sa.Column('claim_end_period', mysql.TIMESTAMP(), nullable=False),
+    sa.Column('total_airdrop_tokens', sa.INTEGER(), nullable=True),
     sa.ForeignKeyConstraint(['airdrop_id'], ['airdrop.row_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('row_id')
     )
@@ -55,6 +56,7 @@ def upgrade():
     sa.Column('row_created', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('row_updated', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('airdrop_window_id', sa.BIGINT(), nullable=False),
+    sa.Column('title', sa.TEXT(), nullable=True),
     sa.Column('rule', sa.TEXT(), nullable=False),
     sa.ForeignKeyConstraint(['airdrop_window_id'], ['airdrop_window.row_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('row_id')
@@ -113,10 +115,12 @@ def upgrade():
     sa.Column('row_id', sa.BIGINT(), autoincrement=True, nullable=False),
     sa.Column('row_created', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('row_updated', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('airdrop_id', sa.BIGINT(), nullable=False),
     sa.Column('airdrop_window_id', sa.BIGINT(), nullable=False),
     sa.Column('address', sa.VARCHAR(length=50), nullable=False),
     sa.Column('condition', sa.TEXT(), nullable=True),
     sa.Column('rewards_awarded', sa.INTEGER(), nullable=False),
+    sa.ForeignKeyConstraint(['airdrop_id'], ['airdrop.row_id'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['airdrop_window_id'], ['airdrop_window.row_id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('row_id'),
     sa.UniqueConstraint('airdrop_window_id', 'address')
