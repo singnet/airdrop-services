@@ -157,8 +157,7 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-        airdrop = None
         if airdrop_row_data is not None:
-            airdrop = AirdropFactory.convert_airdrop_schedule_model_to_entity_model(
+            return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(
                 airdrop_row_data)
-        return airdrop
+        raise Exception("Invalid token name")
