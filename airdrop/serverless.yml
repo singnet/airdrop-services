@@ -46,37 +46,37 @@ documentation:
   models:
     - name: "ErrorMessage"
       contentType: "application/json"
-      schema: ${file(./documentation/models/error.json)}
+      schema: ${file(airdrop/documentation/models/error.json)}
     - name: "AirdropScheduleInput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_schedule.json):AirdropScheduleInput}
+      schema: ${file(airdrop/documentation/models/airdrop_schedule.json):AirdropScheduleInput}
     - name: "AirdropScheduleOutput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_schedule.json):AirdropScheduleOutput}
+      schema: ${file(airdrop/documentation/models/airdrop_schedule.json):AirdropScheduleOutput}
     - name: "AirdropRegistrationInput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_registration.json):AirdropRegistrationInput}
+      schema: ${file(airdrop/documentation/models/airdrop_registration.json):AirdropRegistrationInput}
     - name: "AirdropRegistrationOutput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_registration.json):AirdropRegistrationOutput}
+      schema: ${file(airdrop/documentation/models/airdrop_registration.json):AirdropRegistrationOutput}
     - name: "AirdropClaimStatusInput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_claim_status.json):AirdropClaimStatusInput}
+      schema: ${file(airdrop/documentation/models/airdrop_claim_status.json):AirdropClaimStatusInput}
     - name: "AirdropClaimStatusOutput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_claim_status.json):AirdropClaimStatusOutput}
+      schema: ${file(airdrop/documentation/models/airdrop_claim_status.json):AirdropClaimStatusOutput}
     - name: "AirdropClaimInput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_window_claim.json):AirdropClaimInput} 
+      schema: ${file(airdrop/documentation/models/airdrop_window_claim.json):AirdropClaimInput} 
     - name: "AirdropClaimOutput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_window_claim.json):AirdropClaimOutput} 
+      schema: ${file(airdrop/documentation/models/airdrop_window_claim.json):AirdropClaimOutput} 
     - name: "AirdropClaimHistoryInput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_claim_history.json):AirdropClaimHistoryInput}  
+      schema: ${file(airdrop/documentation/models/airdrop_claim_history.json):AirdropClaimHistoryInput}  
     - name: "AirdropClaimHistoryOutput"
       contentType: "application/json"
-      schema: ${file(./documentation/models/airdrop_claim_history.json):AirdropClaimHistoryOutput}    
+      schema: ${file(airdrop/documentation/models/airdrop_claim_history.json):AirdropClaimHistoryOutput}    
 
 package:
   patterns:
