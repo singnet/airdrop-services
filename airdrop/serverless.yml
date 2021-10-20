@@ -46,7 +46,7 @@ documentation:
   models:
     - name: "ErrorMessage"
       contentType: "application/json"
-      schema: ${file(documentation/models/error.json)}
+      schema: ${file(./documentation/models/error.json)}
     - name: "AirdropScheduleInput"
       contentType: "application/json"
       schema: ${file(./documentation/models/airdrop_schedule.json):AirdropScheduleInput}
