@@ -8,7 +8,7 @@ import web3
 from web3 import Web3
 from eth_account.messages import defunct_hash_message, encode_defunct
 from airdrop.config import NETWORK
-
+from http import HTTPStatus
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -86,7 +86,16 @@ def request(event):
 def generate_lambda_response(
     status_code, message, data=None, headers=None, cors_enabled=False
 ):
-    body = {"message": message, "data": data}
+
+    if HTTPStatus.OK.value >= status_code and status_code <= HTTPStatus.ALREADY_REPORTED.value:
+        body = {"status": status_code, "data": data, "message": message}
+    else:
+        body = {
+            "error": {"code": 0, "message": data},
+            "data": None,
+            "status": status_code,
+        }
+
     response = {
         "statusCode": status_code,
         "body": json.dumps(body),
