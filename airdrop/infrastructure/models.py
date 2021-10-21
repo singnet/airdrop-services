@@ -7,6 +7,7 @@ from sqlalchemy import (
     UniqueConstraint,
     INTEGER,
     ForeignKey,
+    JSON
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.mysql import TIMESTAMP, BIT
@@ -46,6 +47,7 @@ class Airdrop(Base, AuditClass):
     github_link_for_contract = Column(
         "github_link_for_contract", VARCHAR(256), nullable=True
     )
+    airdrop_rules = Column("airdrop_rules", JSON, nullable=True)
 
 
 class AirdropWindow(Base, AuditClass):
