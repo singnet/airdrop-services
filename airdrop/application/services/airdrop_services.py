@@ -153,11 +153,11 @@ class AirdropServices:
 
         return status, response
 
-    def get_airdrops_schedule(self, token_name):
+    def get_airdrops_schedule(self, token_address):
         status = HTTPStatus.BAD_REQUEST
 
         try:
-            response = AirdropRepository().get_airdrops_schedule(token_name)
+            response = AirdropRepository().get_airdrops_schedule(token_address)
             status = HTTPStatus.OK
         except ValidationError as e:
             response = e.message
