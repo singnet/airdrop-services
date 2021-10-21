@@ -137,7 +137,7 @@ class AirdropRepository(BaseRepository):
             ]
         return airdrop_windows
 
-    def get_airdrops_schedule(self, token_name):
+    def get_airdrops_schedule(self, token_address):
         try:
             airdrop_row_data = (
                 self.session.query(Airdrop)
@@ -146,7 +146,7 @@ class AirdropRepository(BaseRepository):
                     Airdrop.id == AirdropWindow.airdrop_id,
                 )
                 .join(AirdropWindowTimelines, AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id)
-                .filter(Airdrop.token_name == token_name)
+                .filter(Airdrop.address == token_address)
                 .first()
             )
             self.session.commit()

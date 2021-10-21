@@ -14,7 +14,7 @@ def get_airdrop_schedules(event, context):
     logger.info(f"Got Airdrops Event {event}")
     parameters = event['pathParameters']
     status, response = AirdropServices().get_airdrops_schedule(
-        parameters['token_name'])
+        parameters['token_address'])
     return generate_lambda_response(
         status.value,
         status.phrase,
