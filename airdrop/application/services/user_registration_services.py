@@ -54,9 +54,7 @@ class UserRegistrationServices:
             schema = {
                 "type": "object",
                 "properties": {
-                    "address": {"type": "string"},
-                    "airdrop_id": {"type": "string"},
-                    "airdrop_window_id": {"type": "string"},
+                    "address": {"type": "string"}
                 },
                 "required": ["address", "airdrop_id", "airdrop_window_id"],
             }
