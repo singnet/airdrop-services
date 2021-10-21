@@ -14,6 +14,7 @@ class AirdropFactory:
             airdrop.portal_link,
             airdrop.documentation_link,
             airdrop.github_link_for_contract,
+            airdrop.airdrop_rules,
             airdrop.windows
         ).to_dict()
 

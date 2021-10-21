@@ -144,9 +144,6 @@ class AirdropRepository(BaseRepository):
                 .join(
                     AirdropWindow,
                     Airdrop.id == AirdropWindow.airdrop_id,
-                ).join(
-                    AirdropWindowEligibilityRule,
-                    AirdropWindow.id == AirdropWindowEligibilityRule.airdrop_window_id
                 )
                 .join(AirdropWindowTimelines, AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id)
                 .filter(Airdrop.token_name == token_name)
