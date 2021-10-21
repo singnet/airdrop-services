@@ -55,9 +55,10 @@ class UserRegistrationServices:
                 "type": "object",
                 "properties": {
                     "address": {"type": "string"},
-                    "signature": {"type": "string"},
+                    "airdrop_id": {"type": "string"},
+                    "airdrop_window_id": {"type": "string"},
                 },
-                "required": ["signature", "address", "airdrop_id", "airdrop_window_id"],
+                "required": ["address", "airdrop_id", "airdrop_window_id"],
             }
 
             validate(instance=inputs, schema=schema)
@@ -65,7 +66,6 @@ class UserRegistrationServices:
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"].lower()
-            signature = inputs["signature"]
 
             airdrop_window = self.get_user_airdrop_window(
                 airdrop_id, airdrop_window_id
