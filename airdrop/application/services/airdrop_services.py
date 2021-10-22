@@ -91,14 +91,14 @@ class AirdropServices:
             airdrop_repo.is_claimed_airdrop_window(
                 user_address, airdrop_window_id)
 
-            claimable_amount = AirdropRepository().get_airdrop_window_claimable_amount(
+            claimable_amount, token_address = AirdropRepository().get_airdrop_window_claimable_amount(
                 airdrop_id, airdrop_window_id, user_address)
 
             signature = self.get_signature_for_airdrop_window_id(
                 claimable_amount, airdrop_id, airdrop_window_id, user_address)
 
             response = AirdropClaim(airdrop_id,
-                                    airdrop_window_id, user_address, signature, claimable_amount).to_dict()
+                                    airdrop_window_id, user_address, signature, claimable_amount, token_address).to_dict()
 
             status = HTTPStatus.OK
         except ValidationError as e:
