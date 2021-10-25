@@ -141,51 +141,51 @@ functions:
                   - statusCode: "400"
                     responseModels:
                       "application/json": "ErrorMessage"
-  get_airdrop_schedules:
-    warmup: true
-    handler: airdrop/application/handlers/airdrop_handlers.get_airdrop_schedules
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
-    vpc:
-      securityGroupIds:
-        - ${file(./config.${self:provider.stage}.json):SG1}
-        - ${file(./config.${self:provider.stage}.json):SG2}
-      subnetIds:
-        - ${file(./config.${self:provider.stage}.json):VPC1}
-        - ${file(./config.${self:provider.stage}.json):VPC2}
-    events:
-      - http:
-          path: /airdrop-schedule/{token_address}
-          method: get
-          cors:
-            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-requested-with
-          documentation:
-            summary: "Get Airdrop schedule"
-            description: "Get Airdrop schedule"
-            tags:
-              - "airdrop"
-            requestHeaders:
-              - name: "Content-Type"
-                description: "application/json"
-            requestModels:
-              "application/json": "AirdropScheduleInput"
-            methodResponses:
-              - statusCode: "200"
-                responseBody:
-                  description: "Airdropschedule Data"
-                  "application/json": "AirdropScheduleOutput"
-                responseModels:
-                  "application/json": "AirdropScheduleOutput"
-              - statusCode: "400"
-                responseModels:
-                  "application/json": "ErrorMessage"
+  # get_airdrop_schedules:
+  #   warmup: true
+  #   handler: airdrop/application/handlers/airdrop_handlers.get_airdrop_schedules
+  #   role: ${file(./config.${self:provider.stage}.json):ROLE}
+  #   vpc:
+  #     securityGroupIds:
+  #       - ${file(./config.${self:provider.stage}.json):SG1}
+  #       - ${file(./config.${self:provider.stage}.json):SG2}
+  #     subnetIds:
+  #       - ${file(./config.${self:provider.stage}.json):VPC1}
+  #       - ${file(./config.${self:provider.stage}.json):VPC2}
+  #   events:
+  #     - http:
+  #         path: /airdrop-schedule/{token_address}
+  #         method: get
+  #         cors:
+  #           origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+  #           headers:
+  #             - Content-Type
+  #             - X-Amz-Date
+  #             - Authorization
+  #             - X-Api-Key
+  #             - X-Amz-Security-Token
+  #             - X-Amz-User-Agent
+  #             - x-requested-with
+  #         documentation:
+  #           summary: "Get Airdrop schedule"
+  #           description: "Get Airdrop schedule"
+  #           tags:
+  #             - "airdrop"
+  #           requestHeaders:
+  #             - name: "Content-Type"
+  #               description: "application/json"
+  #           requestModels:
+  #             "application/json": "AirdropScheduleInput"
+  #           methodResponses:
+  #             - statusCode: "200"
+  #               responseBody:
+  #                 description: "Airdropschedule Data"
+  #                 "application/json": "AirdropScheduleOutput"
+  #               responseModels:
+  #                 "application/json": "AirdropScheduleOutput"
+  #             - statusCode: "400"
+  #               responseModels:
+  #                 "application/json": "ErrorMessage"
   user_registration:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.user_registration
