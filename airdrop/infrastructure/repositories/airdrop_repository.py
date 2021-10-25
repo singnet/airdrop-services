@@ -9,10 +9,10 @@ from airdrop.constants import AirdropClaimStatus
 
 class AirdropRepository(BaseRepository):
 
-    def airdrop_window_claim_history(self, airdrop_id, airdrop_window_id, address):
+    def airdrop_window_claim_history(self, airdrop_id, address):
         try:
             claim_raw_data = self.session.query(ClaimHistory).filter(
-                ClaimHistory.airdrop_window_id == airdrop_window_id).filter(ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.address == address).all()
+                ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.address == address).all()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
@@ -104,15 +104,20 @@ class AirdropRepository(BaseRepository):
             balance_raw_data = self.session.query(UserBalanceSnapshot).filter(UserBalanceSnapshot.address == address).filter(
                 UserBalanceSnapshot.airdrop_window_id == airdrop_window_id).first()
 
+            airdrop_row_data = self.session.query(
+                Airdrop.address).filter(Airdrop.id == airdrop_id).first()
+
+            token_address = airdrop_row_data.address
+
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
 
         if balance_raw_data is not None:
-            return balance_raw_data.balance
+            return balance_raw_data.balance, token_address
         else:
-            return 0
+            return 0, token_address
 
     def get_airdrops(self, limit, skip):
         try:

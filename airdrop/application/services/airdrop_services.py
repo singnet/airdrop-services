@@ -15,18 +15,17 @@ class AirdropServices:
         try:
             schema = {
                 "type": "object",
-                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}},
-                "required": ["address", "airdrop_id", "airdrop_window_id"],
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}},
+                "required": ["address", "airdrop_id"],
             }
 
             validate(instance=inputs, schema=schema)
 
             user_address = inputs["address"]
             airdrop_id = inputs["airdrop_id"]
-            airdrop_window_id = inputs["airdrop_window_id"]
 
             claim_history = AirdropRepository().airdrop_window_claim_history(
-                airdrop_id, airdrop_window_id, user_address)
+                airdrop_id, user_address)
 
             response = {"claim_history": claim_history}
             status = HTTPStatus.OK
@@ -91,14 +90,14 @@ class AirdropServices:
             airdrop_repo.is_claimed_airdrop_window(
                 user_address, airdrop_window_id)
 
-            claimable_amount = AirdropRepository().get_airdrop_window_claimable_amount(
+            claimable_amount, token_address = AirdropRepository().get_airdrop_window_claimable_amount(
                 airdrop_id, airdrop_window_id, user_address)
 
             signature = self.get_signature_for_airdrop_window_id(
                 claimable_amount, airdrop_id, airdrop_window_id, user_address)
 
             response = AirdropClaim(airdrop_id,
-                                    airdrop_window_id, user_address, signature, claimable_amount).to_dict()
+                                    airdrop_window_id, user_address, signature, claimable_amount, token_address).to_dict()
 
             status = HTTPStatus.OK
         except ValidationError as e:
