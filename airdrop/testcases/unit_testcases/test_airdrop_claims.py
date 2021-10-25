@@ -3,9 +3,40 @@ from unittest.mock import Mock
 from airdrop.application.services.airdrop_services import AirdropServices
 from http import HTTPStatus
 from airdrop.constants import AirdropClaimStatus
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
+from airdrop.infrastructure.models import AirdropWindow, Airdrop
+from datetime import datetime, timedelta
 
 
 class AirdropClaims(TestCase):
+    def setUp(self):
+
+        org_name = 'SINGNET'
+        token_name = 'AGIX'
+        token_type = 'CONTRACT'
+        portal_link = 'https://ropsten-airdrop.singularitynet.io/'
+        documentation_link = 'https://ropsten-airdrop.singularitynet.io/'
+        description = 'This is a test airdrop'
+        github_link = 'https://github.com/singnet/airdrop-services'
+        airdrop_window_name = 'Test Airdrop Window'
+        airdrop_window_description = 'This is a test airdrop window'
+        registration_required = True
+        registration_start_date = datetime.utcnow()
+        registration_end_date = datetime.utcnow() + timedelta(days=30)
+        snapshot_required = True
+        snapshot_start_date = datetime.utcnow()
+        claim_start_date = datetime.utcnow()
+        claim_end_date = datetime.utcnow() + timedelta(days=30)
+
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        user_address = '0x176133a958449C28930970989dB5fFFbEdd9F449'
+
+        airdrop_repository = AirdropRepository()
+        airdrop = airdrop_repository.register_airdrop(
+            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
+        airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name, airdrop_window_description, registration_required, registration_start_date, registration_end_date, snapshot_required, snapshot_start_date, claim_start_date, claim_end_date)
+
     def test_get_signature_for_airdrop_window_claim(self):
 
         payload = {
@@ -117,3 +148,15 @@ class AirdropClaims(TestCase):
         result_length = result['data']['claims'].__len__()
 
         self.assertLessEqual(result_length, 1)
+
+    def tearDown(self):
+
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        airdrop_repo = AirdropRepository()
+        airdrop = airdrop_repo.get_token_address(token_address)
+        airdrop_repo.session.query(Airdrop).filter(
+            Airdrop.contract_address == contract_address).delete()
+        airdrop_repo.session.query(AirdropWindow).filter(
+            AirdropWindow.airdrop_id == airdrop.id).delete()
