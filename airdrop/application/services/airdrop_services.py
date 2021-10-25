@@ -15,18 +15,17 @@ class AirdropServices:
         try:
             schema = {
                 "type": "object",
-                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}},
-                "required": ["address", "airdrop_id", "airdrop_window_id"],
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}},
+                "required": ["address", "airdrop_id"],
             }
 
             validate(instance=inputs, schema=schema)
 
             user_address = inputs["address"]
             airdrop_id = inputs["airdrop_id"]
-            airdrop_window_id = inputs["airdrop_window_id"]
 
             claim_history = AirdropRepository().airdrop_window_claim_history(
-                airdrop_id, airdrop_window_id, user_address)
+                airdrop_id, user_address)
 
             response = {"claim_history": claim_history}
             status = HTTPStatus.OK
