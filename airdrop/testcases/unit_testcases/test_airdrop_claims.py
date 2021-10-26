@@ -114,6 +114,7 @@ class AirdropClaims(TestCase):
         }
 
         status_code, result = AirdropServices().airdrop_window_claim_history(payload)
+        now = str(datetime.utcnow())
 
         expected_reult = Mock({
             "status": 200,
@@ -125,7 +126,9 @@ class AirdropClaims(TestCase):
                         "user_address": "0x176133a958449C28930970989dB5fFFbEdd9F447",
                         "txn_hash": "0x54990b02618bb025e91f66bd253baa77522aff4b0140440f5aecdd463c24b2fc",
                         "txn_status": "SUCCESS",
-                        "claimable_amount": 100
+                        "claimable_amount": 100,
+                        "registered_at": now,
+                        "is_eligible": True
                     }
                 ]
             },
