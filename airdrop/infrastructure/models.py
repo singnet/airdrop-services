@@ -164,4 +164,4 @@ class ClaimHistory(Base, AuditClass):
     transaction_hash = Column("transaction_hash", VARCHAR(256), nullable=True)
     claimed_on = Column("claimed_on", TIMESTAMP(), nullable=True)
     user_registrations = relationship(
-        UserRegistration, backref="claim_history", primaryjoin=airdrop_window_id == foreign(UserRegistration.airdrop_window_id), lazy="joined")
+        UserRegistration, backref="claim_history", primaryjoin=airdrop_window_id == foreign(UserRegistration.airdrop_window_id), lazy="joined", uselist=False)
