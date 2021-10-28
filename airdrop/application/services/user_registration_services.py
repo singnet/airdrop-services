@@ -77,8 +77,18 @@ class UserRegistrationServices:
             is_eligible_user = self.check_user_eligibility(
                 user_address=address, airdrop_id=airdrop_id, airdrop_window_id=airdrop_window_id)
 
+            if is_eligible_user is False:
+                raise Exception(
+                    "Address is not eligible for this airdrop"
+                )
+
             is_already_registered = self.is_elgible_registered_user(
                 airdrop_window_id, address)
+
+            if is_already_registered is True:
+                raise Exception(
+                    "Address is already registered for this airdrop window"
+                )
 
             is_airdrop_window_claimed = False
             airdrop_claim_status = self.is_airdrop_window_claimed(
