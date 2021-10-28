@@ -15,9 +15,9 @@ class AirdropServices:
         event_name = event['event']
 
         if event_name == AirdropEvents.AIRDROP_CLAIM.value:
-            return self.mark_as_complete_airdrop_window_claim_status(event_data)
+            return self.mark_airdrop_window_as_complete(event_data)
 
-    def mark_as_complete_airdrop_window_claim_status(self, event):
+    def mark_airdrop_window_as_complete(self, event):
         try:
             event_payload = event['json_str']
             user_address = event_payload['claimer']
