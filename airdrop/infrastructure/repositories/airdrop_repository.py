@@ -117,7 +117,7 @@ class AirdropRepository(BaseRepository):
                 raise Exception('Non eligible user')
 
             balance_raw_data = self.session.query(UserReward).filter(UserReward.address == address).filter(
-                UserBalanceSnapshot.airdrop_window_id == airdrop_window_id).first()
+                UserReward.airdrop_window_id == airdrop_window_id).filter(UserReward.airdrop_id == airdrop_id).first()
 
             airdrop_row_data = self.session.query(
                 Airdrop.address).filter(Airdrop.id == airdrop_id).first()
