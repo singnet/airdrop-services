@@ -48,4 +48,6 @@ class AirdropFactory:
             claim.transaction_status,
             claim.transaction_hash,
             claim.claimable_amount,
+            str(claim.claimed_on),
+            claim.user_registrations
         ).to_dict()

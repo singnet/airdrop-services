@@ -47,7 +47,7 @@ class AirdropClaims(TestCase):
 
         status_code, result = AirdropServices().airdrop_window_claims(payload)
 
-        expected_reult = Mock({
+        expected_reult = {
             "status": 200,
             "data": {
                 "claim": {
@@ -60,10 +60,10 @@ class AirdropClaims(TestCase):
                 }
             },
             "message": "OK"
-        })
+        }
 
         self.assertEqual(status_code, HTTPStatus.OK.value)
-        self.assertEqual(expected_reult, result)
+        assert result == expected_reult
 
     def test_get_signature_for_airdrop_window_claim_with_invalid_windows(self):
         payload = {
@@ -114,8 +114,9 @@ class AirdropClaims(TestCase):
         }
 
         status_code, result = AirdropServices().airdrop_window_claim_history(payload)
+        now = str(datetime.utcnow())
 
-        expected_reult = Mock({
+        expected_reult = {
             "status": 200,
             "data": {
                 "claim_history": [
@@ -125,15 +126,17 @@ class AirdropClaims(TestCase):
                         "user_address": "0x176133a958449C28930970989dB5fFFbEdd9F447",
                         "txn_hash": "0x54990b02618bb025e91f66bd253baa77522aff4b0140440f5aecdd463c24b2fc",
                         "txn_status": "SUCCESS",
-                        "claimable_amount": 100
+                        "claimable_amount": 100,
+                        "registered_at": now,
+                        "is_eligible": True
                     }
                 ]
             },
             "message": "OK"
-        })
+        }
 
         self.assertEqual(status_code, HTTPStatus.OK.value)
-        self.assertEqual(expected_reult, result)
+        assert result == expected_reult
 
     def test_airdrop_window_claim_history(self):
 
