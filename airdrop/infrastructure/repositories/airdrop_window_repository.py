@@ -5,6 +5,13 @@ from sqlalchemy import and_
 
 class AirdropWindowRepository(BaseRepository):
 
+    def get_airdrop_window_by_id(self, airdrop_window_id):
+        return (
+            self.session.query(AirdropWindow)
+            .filter(AirdropWindow.id == airdrop_window_id)
+            .first()
+        )
+
     def is_airdrop_window_claimed(self, airdrop_window_id, address):
         claim_history = (
             self.session.query(

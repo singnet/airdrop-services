@@ -65,14 +65,11 @@ class UserRegistrationServices:
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"].lower()
 
-            airdrop_window = self.get_user_airdrop_window(
-                airdrop_id, airdrop_window_id
-            )
+            airdrop_window = AirdropWindowRepository(
+            ).get_airdrop_window_by_id(airdrop_window_id)
 
             if airdrop_window is None:
-                raise Exception(
-                    "Airdrop window is not accepting registration at this moment"
-                )
+                raise Exception("Invalid Airdrop window id")
 
             is_eligible_user = self.check_user_eligibility(
                 user_address=address, airdrop_id=airdrop_id, airdrop_window_id=airdrop_window_id)
