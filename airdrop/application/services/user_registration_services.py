@@ -84,8 +84,12 @@ class UserRegistrationServices:
             if airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
                 is_airdrop_window_claimed = True
 
+            reject_reason = None
+            if not is_eligible_user:
+                reject_reason = UserRepository().get_reject_reason(airdrop_window_id, address)
+
             response = AirdropWindowEligibility(airdrop_id, airdrop_window_id, address, is_eligible_user,
-                                                is_already_registered, is_airdrop_window_claimed, airdrop_claim_status).to_dict()
+                                                is_already_registered, is_airdrop_window_claimed, airdrop_claim_status, reject_reason).to_dict()
 
             status = HTTPStatus.OK
 

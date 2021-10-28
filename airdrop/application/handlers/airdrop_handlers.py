@@ -109,3 +109,16 @@ def airdrop_window_claim_history(event, context):
         response,
         cors_enabled=True,
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def airdrop_event_listener(event, context):
+    logger.info(f"Got Airdrops event listener {event}")
+    status, response = AirdropServices(
+    ).airdrop_listen_to_events(event)
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )

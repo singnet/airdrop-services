@@ -4,11 +4,34 @@ from http import HTTPStatus
 from common.boto_utils import BotoUtils
 from common.utils import generate_claim_signature, read_contract_address
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, NETWORK_ID
-from airdrop.constants import AIRDROP_ADDR_PATH
+from airdrop.constants import AIRDROP_ADDR_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.models.airdrop_claim import AirdropClaim
 
 
 class AirdropServices:
+
+    def airdrop_listen_to_events(self, event):
+        event_data = event['data']
+        event_name = event['event']
+
+        if event_name == AirdropEvents.AIRDROP_CLAIM.value:
+            return self.mark_as_complete_airdrop_window_claim_status(event_data)
+
+    def mark_as_complete_airdrop_window_claim_status(self, event):
+        try:
+            event_payload = event['json_str']
+            user_address = event_payload['claimer']
+            amount = event_payload['amount']
+            airdrop_id = event_payload['airDropId']
+            airdrop_window_id = event_payload['airDropWindowId']
+            txn_hash = event_payload['transactionHash']
+            txn_status = AirdropClaimStatus.SUCCESS.value
+            AirdropRepository().airdrop_window_claim_txn(
+                airdrop_id, airdrop_window_id, user_address, txn_hash, txn_status, amount)
+            return True
+        except BaseException as e:
+            print(f"Exception on Airdrop claim status update {e}")
+            return False
 
     def airdrop_window_claim_history(self, inputs):
         status = HTTPStatus.BAD_REQUEST

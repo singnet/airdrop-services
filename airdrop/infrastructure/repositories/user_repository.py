@@ -41,6 +41,16 @@ class UserRepository(BaseRepository):
 
         return user_details
 
+    def get_reject_reason(self, airdrop_window_id, address):
+        registration = (
+            self.session.query(UserRegistration.reject_reason)
+            .filter(UserRegistration.airdrop_window_id == airdrop_window_id)
+            .filter(UserRegistration.address == address)
+            .first()
+        )
+
+        return registration.reject_reason if registration is not None else None
+
     def is_registered_user(self, airdrop_window_id, address):
         is_registered_user = (
             self.session.query(UserRegistration.id)
