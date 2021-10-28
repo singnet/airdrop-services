@@ -1,7 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserBalanceSnapshot, UserRegistration, ClaimHistory, AirdropWindowEligibilityRule
+from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserBalanceSnapshot, UserRegistration, ClaimHistory, AirdropWindowEligibilityRule, UserReward
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
 from airdrop.constants import AirdropClaimStatus
@@ -116,8 +116,8 @@ class AirdropRepository(BaseRepository):
             if is_eligible_user is None:
                 raise Exception('Non eligible user')
 
-            balance_raw_data = self.session.query(UserBalanceSnapshot).filter(UserBalanceSnapshot.address == address).filter(
-                UserBalanceSnapshot.airdrop_window_id == airdrop_window_id).first()
+            balance_raw_data = self.session.query(UserReward).filter(UserReward.address == address).filter(
+                UserReward.airdrop_window_id == airdrop_window_id).filter(UserReward.airdrop_id == airdrop_id).first()
 
             airdrop_row_data = self.session.query(
                 Airdrop.address).filter(Airdrop.id == airdrop_id).first()
@@ -130,7 +130,7 @@ class AirdropRepository(BaseRepository):
             raise e
 
         if balance_raw_data is not None:
-            return balance_raw_data.balance, token_address
+            return balance_raw_data.rewards_awarded, token_address
         else:
             return 0, token_address
 
