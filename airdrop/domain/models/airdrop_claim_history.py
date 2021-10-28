@@ -10,6 +10,9 @@ class AirdropClaimHistory:
         self._registered_at = str(airdrop_window_registration.registered_at)
         self._is_eligible = airdrop_window_registration.is_eligible
 
+    def is_eligible(self):
+        return True if self._is_eligible else False
+
     def to_dict(self):
         return {
             "airdrop_id": self._airdrop_id,
@@ -20,5 +23,5 @@ class AirdropClaimHistory:
             "claimable_amount": self._claimable_amount,
             "claimed_on": self._claimed_on,
             "registered_at": self._registered_at,
-            "is_eligible": self._is_eligible
+            "is_eligible": self.is_eligible()
         }
