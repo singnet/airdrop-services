@@ -152,6 +152,48 @@ class AirdropClaims(TestCase):
 
         self.assertLessEqual(result_length, 1)
 
+    def test_airdrop_listen_to_events(self):
+
+        payload = {
+            "transactionHash": "0x176133a958449C28930970989dB5fFFbEdd9F417",
+            "json_str": "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x35d603B1433C9fFf79B61c905b07822684834542', 'amount': 0, 'airDropId': 1, 'airDropWindowId': 1}",
+            "event": "Claim"
+        }
+
+        event = {"data": payload}
+
+        response = AirdropServices().airdrop_listen_to_events(event)
+
+        self.assertEqual(response, True)
+
+    def test_airdrop_listen_to_events_with_duplicate_data(self):
+
+        payload = {
+            "transactionHash": "0x176133a958449C28930970989dB5fFFbEdd9F417",
+            "json_str": "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x35d603B1433C9fFf79B61c905b07822684834542', 'amount': 0, 'airDropId': 1, 'airDropWindowId': 1}",
+            "event": "Claim"
+        }
+
+        event = {"data": payload}
+
+        response = AirdropServices().airdrop_listen_to_events(event)
+
+        self.assertEqual(response, False)
+
+    def test_airdrop_listen_to_events_with_invalid_event(self):
+
+        payload = {
+            "transactionHash": "0x176133a958449C28930970989dB5fFFbEdd9F417",
+            "json_str": "{'conversionAuthorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc'}",
+            "event": "NewAuthorizer"
+        }
+
+        event = {"data": payload}
+
+        response = AirdropServices().airdrop_listen_to_events(event)
+
+        self.assertEqual(response, False)
+
     def tearDown(self):
 
         contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'

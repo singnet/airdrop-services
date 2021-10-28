@@ -32,18 +32,29 @@ class AirdropRepository(BaseRepository):
 
     def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, txn_status, amount):
         try:
-            is_existing_txn_hash = self.session.query(ClaimHistory).filter(
+
+            transaction = self.session.query(ClaimHistory).filter(
                 ClaimHistory.transaction_hash == txn_hash).first()
 
-            if is_existing_txn_hash is not None:
-                raise Exception('Duplicate Txn hash')
+            if transaction is not None and transaction.transaction_status == AirdropClaimStatus.SUCCESS.value:
+                raise Exception('Transaction already marked')
 
-            claim_history = ClaimHistory(
-                address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0)
+            if transaction is not None:
+                transaction.transaction_status = txn_status
+                if txn_status == AirdropClaimStatus.SUCCESS.value:
+                    transaction.claimed_on = datetime.now()
+                return self.session.commit()
+            else:
+                claim_history = ClaimHistory(
+                    address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0)
 
-            self.session.commit()
+                if txn_status == AirdropClaimStatus.SUCCESS.value:
+                    claim_history.claimed_on = datetime.now()
 
-            return self.add(claim_history)
+                self.session.commit()
+
+                return self.add(claim_history)
+
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e

@@ -11,3 +11,8 @@ class AirdropClaimStatus(Enum):
     SUCCESS = 'SUCCESS'
     FAILED = 'FAILED'
     NOT_STARTED = 'NOT_STARTED'
+
+
+class AirdropEvents(Enum):
+    AIRDROP_CLAIM = 'Claim'
+    AIRDROP_WINDOW_OPEN = 'AirdropWindowOpen'
