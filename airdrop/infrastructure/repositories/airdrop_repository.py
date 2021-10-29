@@ -72,7 +72,14 @@ class AirdropRepository(BaseRepository):
                 ClaimHistory.transaction_hash == txn_hash).first()
 
             if transaction is not None:
-                raise Exception('Transaction already marked')
+                txn_status = transaction.transaction_status
+                if txn_status == AirdropClaimStatus.PENDING.value:
+                    raise Exception('There is already a pending transaction')
+                elif txn_status == AirdropClaimStatus.SUCCESS.value:
+                    raise Exception(
+                        'You have already claimed successfully for this window')
+                else:
+                    raise Exception('The transaction has failed')
             else:
                 txn_status = AirdropClaimStatus.PENDING.value
                 claim_history = ClaimHistory(
