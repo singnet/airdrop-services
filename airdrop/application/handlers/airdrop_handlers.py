@@ -4,6 +4,7 @@ from common.logger import get_logger
 from common.utils import generate_lambda_response, request
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.application.services.user_registration_services import UserRegistrationServices
+from airdrop.application.services.user_notification_service import UserNotificationService
 
 
 logger = get_logger(__name__)
@@ -128,3 +129,16 @@ def airdrop_event_listener(event, context):
 def airdrop_txn_watcher(event, context):
     logger.info(f"Got Airdrops txn status watcher {event}")
     AirdropServices().airdrop_txn_watcher()
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def user_notifications(event, context):
+    logger.info(f"Got Airdrops user notifications {event}")
+    status, response = UserNotificationService(
+    ).subscribe_to_notifications(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )

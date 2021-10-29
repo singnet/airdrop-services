@@ -4,6 +4,8 @@ from airdrop.infrastructure.models import AirdropWindow, UserRegistration
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.testcases.test_variables import AIRDROP
 from datetime import datetime, timedelta
+from airdrop.application.services.user_notification_service import UserNotificationService
+from http import HTTPStatus
 
 
 class UserRegistration(TestCase):
@@ -60,3 +62,17 @@ class UserRegistration(TestCase):
         }
         status = UserRegistrationServices.eligibility(inputs)
         self.assertEqual(status, 400)
+
+    def test_user_notification_subscription(self):
+        payload = {
+            "email": "email@provider.com",
+        }
+        status = UserNotificationService.subscribe_to_notifications(payload)
+        self.assertEqual(status, HTTPStatus.OK.value)
+
+    def test_user_notification_subscription_with_existing_email(self):
+        payload = {
+            "email": "email@provider.com",
+        }
+        status = UserNotificationService.subscribe_to_notifications(payload)
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST.value)
