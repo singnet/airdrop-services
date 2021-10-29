@@ -196,7 +196,7 @@ class AirdropClaims(TestCase):
         self.assertEqual(response, False)
 
     @patch("airdrop.application.services.airdrop_services.AirdropServices.get_txn_receipt")
-    def test_airdrop_get_txn_receipt_for_txn_hash(self):
+    def test_airdrop_get_txn_receipt_for_success_txn(self):
 
         expected_result = Mock({
             'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
@@ -208,6 +208,41 @@ class AirdropClaims(TestCase):
             'logs': [],
             'logsBloom': '0x0000000000000000000000000000000000000000000000000000',
             'status': 1,
+            'to': '0x5DF9B87991262F6BA471F09758CDE1c0FC1De734',
+            'transactionHash': '0xa649b2b7063eea00942cb1b614ce0b750583a597738b43ae73b3f082d405c663',
+            'transactionIndex': 0,
+        })
+
+        txn_hash = "0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060"
+
+        response = AirdropServices().get_txn_receipt(txn_hash)
+
+        self.assertEqual(response, expected_result)
+
+    @patch("airdrop.application.services.airdrop_services.AirdropServices.get_txn_receipt")
+    def test_airdrop_get_txn_receipt_for_pending_txn_hash(self):
+
+        expected_result = Mock(None)
+
+        txn_hash = "0x5637e466d23afb61ddacc06c1f302d05b878ea0071326d335f9589007788cff5"
+
+        response = AirdropServices().get_txn_receipt(txn_hash)
+
+        self.assertEqual(response, expected_result)
+
+    @patch("airdrop.application.services.airdrop_services.AirdropServices.get_txn_receipt")
+    def test_airdrop_get_txn_receipt_for_failure_txn(self):
+
+        expected_result = Mock({
+            'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
+            'blockNumber': 46147,
+            'contractAddress': None,
+            'cumulativeGasUsed': 21000,
+            'from': '0xA1E4380A3B1f749673E270229993eE55F35663b4',
+            'gasUsed': 21000,
+            'logs': [],
+            'logsBloom': '0x0000000000000000000000000000000000000000000000000000',
+            'status': 0,
             'to': '0x5DF9B87991262F6BA471F09758CDE1c0FC1De734',
             'transactionHash': '0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060',
             'transactionIndex': 0,
