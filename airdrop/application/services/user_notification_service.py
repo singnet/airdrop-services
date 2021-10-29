@@ -1,20 +1,26 @@
-
-from jsonschema import validate, ValidationError
+from jsonschema import validate, ValidationError, FormatChecker
+from http import HTTPStatus
+from airdrop.infrastructure.repositories.user_repository import UserRepository
 
 
 class UserNotificationService:
     def subscribe_to_notifications(self, inputs):
+        status = HTTPStatus.BAD_REQUEST
         try:
             schema = {
                 "type": "object",
                 "properties": {
-                    "address": {"type": "string"},
-                    "airdrop_id": {"type": "string"},
+                    "email": {"type": "string", "format": "email"},
                 },
-                "required": ["address", "airdrop_id"],
+                "required": ["email"],
             }
 
-            validate(instance=inputs, schema=schema)
+            validate(instance=inputs, schema=schema,
+                     format_checker=FormatChecker())
+            email = inputs["email"]
+            UserRepository().subscribe_to_notifications(email)
+            response = HTTPStatus.OK.phrase
+            status = HTTPStatus.OK
         except ValidationError as e:
             response = e.message
         except BaseException as e:

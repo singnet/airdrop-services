@@ -1,10 +1,27 @@
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward
+from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class UserRepository(BaseRepository):
+
+    def subscribe_to_notifications(self, email):
+        try:
+
+            is_existing_email = self.session.query(UserNotifications.id).filter(
+                UserNotifications.email == email).first()
+
+            if is_existing_email is None:
+                user_notifications = UserNotifications(email=email)
+                self.add(user_notifications)
+            else:
+                raise Exception('Email already subscribed to notifications')
+
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
 
     def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
         is_rewards_awarded = (

@@ -145,6 +145,12 @@ class UserReward(Base, AuditClass):
     UniqueConstraint(airdrop_window_id, address)
 
 
+class UserNotifications(Base, AuditClass):
+    __tablename__ = "user_notifications"
+    email = Column("email", VARCHAR(255), nullable=False)
+    UniqueConstraint(email)
+
+
 class ClaimHistory(Base, AuditClass):
     __tablename__ = "claim_history"
     airdrop_id = Column(

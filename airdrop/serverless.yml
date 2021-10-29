@@ -47,6 +47,12 @@ documentation:
     - name: "ErrorMessage"
       contentType: "application/json"
       schema: ${file(airdrop/documentation/models/error.json)}
+    - name: "UserNotificationInput"
+      contentType: "application/json"
+      schema: ${file(airdrop/documentation/models/user_notification.json):UserNotificationInput}
+    - name: "UserNotificationOutput"
+      contentType: "application/json"
+      schema: ${file(airdrop/documentation/models/user_notification.json):UserNotificationOutput}
     - name: "AirdropScheduleInput"
       contentType: "application/json"
       schema: ${file(airdrop/documentation/models/airdrop_schedule.json):AirdropScheduleInput}
@@ -469,7 +475,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - http:
-          path: /airdrop-subscrible-notifications
+          path: /airdrop-notifications
           method: post
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
@@ -482,22 +488,22 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
           documentation:
-            summary: "Airdrop window claim history"
-            description: "Airdrop window claim history"
+            summary: "Airdrop notification subscription"
+            description: "Airdrop notification subscription"
             tags:
               - "airdrop"
             requestHeaders:
               - name: "Content-Type"
                 description: "application/json"
             requestModels:
-              "application/json": "AirdropClaimHistory"
+              "application/json": "UserNotificationInput"
             methodResponses:
               - statusCode: "200"
                 responseBody:
-                  description: "Airdrop Window claim history"
-                  "application/json": "AirdropClaimHistory"
+                  description: "Airdrop notifications"
+                  "application/json": "UserNotificationInput"
                 responseModels:
-                  "application/json": "AirdropClaimHistory"
+                  "application/json": "UserNotificationOutput"
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
