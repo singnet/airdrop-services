@@ -122,3 +122,16 @@ def airdrop_event_listener(event, context):
         response,
         cors_enabled=True,
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def user_notifications(event, context):
+    logger.info(f"Got Airdrops user notifications {event}")
+    status, response = AirdropServices(
+    ).airdrop_listen_to_events(event)
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )
