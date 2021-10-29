@@ -239,6 +239,12 @@ def send_slack_notification(slack_message, slack_url, slack_channel):
     )
 
 
+def get_transaction_receipt_from_blockchain(transaction_hash):
+    web3_object = Web3(web3.providers.HTTPProvider(
+        NETWORK['http_provider']))
+    return web3_object.eth.getTransactionReceipt(transaction_hash)
+
+
 def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key):
     try:
         user_address = Web3.toChecksumAddress(user_address)
