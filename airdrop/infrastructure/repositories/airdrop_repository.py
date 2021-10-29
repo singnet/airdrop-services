@@ -65,15 +65,8 @@ class AirdropRepository(BaseRepository):
             transaction = self.session.query(ClaimHistory).filter(
                 ClaimHistory.transaction_hash == txn_hash).first()
 
-            if transaction is not None:
-                txn_status = transaction.transaction_status
-                if txn_status == AirdropClaimStatus.PENDING.value:
-                    raise Exception('There is already a pending transaction')
-                elif txn_status == AirdropClaimStatus.SUCCESS.value:
-                    raise Exception(
-                        'You have already claimed successfully for this window')
-                else:
-                    raise Exception('The transaction has failed')
+            if transaction is not None and transaction.transaction_hash == txn_hash:
+                raise Exception('Transaction has been saved already')
 
             has_pending_or_success_txn = self.session.query(ClaimHistory).filter(ClaimHistory.address == address).filter(
                 ClaimHistory.airdrop_window_id == airdrop_window_id).filter(ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.transaction_status != AirdropClaimStatus.FAILED.value).first()
