@@ -91,8 +91,8 @@ class AirdropServices:
         try:
             schema = {
                 "type": "object",
-                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_status": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}},
-                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_status", "txn_hash", "amount"],
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_hash", "amount"],
             }
 
             validate(instance=inputs, schema=schema)
@@ -101,11 +101,10 @@ class AirdropServices:
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
             txn_hash = inputs["txn_hash"]
-            txn_status = inputs["txn_status"]
             amount = inputs["amount"]
 
             AirdropRepository().airdrop_window_claim_txn(
-                airdrop_id, airdrop_window_id, user_address, txn_hash, txn_status, amount)
+                airdrop_id, airdrop_window_id, user_address, txn_hash, amount)
 
             response = HTTPStatus.OK.phrase
             status = HTTPStatus.OK
