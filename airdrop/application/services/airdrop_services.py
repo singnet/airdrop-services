@@ -18,7 +18,7 @@ class AirdropServices:
             try:
                 txn_hash = txn.transaction_hash
                 receipt = self.get_txn_receipt(txn_hash)
-                if receipt.status is not None:
+                if receipt is not None:
                     if receipt.status == 1:
                         txn_status = AirdropClaimStatus.SUCCESS.value
                     else:
