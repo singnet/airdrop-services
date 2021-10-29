@@ -68,6 +68,16 @@ class AirdropRepository(BaseRepository):
             if is_valid_address is None:
                 raise Exception('Invalid address')
 
+            has_pending_or_success_txn = self.session.query(ClaimHistory).filter(ClaimHistory.address == address).filter(
+                ClaimHistory.airdrop_window_id == airdrop_window_id).filter(ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.transaction_status != AirdropClaimStatus.FAILED.value).first()
+
+            if has_pending_or_success_txn is not None:
+                status_of_txn = has_pending_or_success_txn.transaction_status
+                if status_of_txn == AirdropClaimStatus.SUCCESS.value:
+                    raise Exception('Airdrop claimed for this window')
+                else:
+                    raise Exception('There is already a pending transaction')
+
             transaction = self.session.query(ClaimHistory).filter(
                 ClaimHistory.transaction_hash == txn_hash).first()
 
