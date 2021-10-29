@@ -467,3 +467,19 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+  airdrop_txn_watcher:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.airdrop_txn_watcher
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-airdrop_txn_watcher
+          enabled: ${file(./config.${self:provider.stage}.json):airdrop_cron_status}

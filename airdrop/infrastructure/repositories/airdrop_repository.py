@@ -1,13 +1,42 @@
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserBalanceSnapshot, UserRegistration, ClaimHistory, AirdropWindowEligibilityRule, UserReward
+from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserRegistration, ClaimHistory, UserReward
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
 from airdrop.constants import AirdropClaimStatus
 
 
 class AirdropRepository(BaseRepository):
+
+    def update_txn_status(self, txn_hash, txn_status):
+        try:
+            transaction = self.session.query(ClaimHistory).filter(
+                ClaimHistory.transaction_hash == txn_hash).first()
+
+            if transaction is not None and txn_status == AirdropClaimStatus.SUCCESS.value:
+                transaction.claimed_on = datetime.utcnow()
+
+            if transaction is not None:
+                transaction.transaction_status = txn_status
+                return self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+    def get_pending_txns(self):
+        try:
+            pending_txns = (
+                self.session.query(ClaimHistory)
+                .filter(ClaimHistory.transaction_status == AirdropClaimStatus.PENDING.value)
+                .all()
+            )
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+        return pending_txns
 
     def airdrop_window_claim_history(self, airdrop_id, address):
         try:
