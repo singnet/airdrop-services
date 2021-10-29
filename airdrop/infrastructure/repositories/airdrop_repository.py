@@ -14,6 +14,9 @@ class AirdropRepository(BaseRepository):
             transaction = self.session.query(ClaimHistory).filter(
                 ClaimHistory.transaction_hash == txn_hash).first()
 
+            if transaction is not None and txn_status == AirdropClaimStatus.SUCCESS.value:
+                transaction.claimed_on = datetime.utcnow()
+
             if transaction is not None:
                 transaction.transaction_status = txn_status
                 return self.session.commit()
