@@ -19,12 +19,17 @@ class AirdropServices:
                 txn_hash = txn.transaction_hash
                 receipt = self.get_txn_receipt(txn_hash)
                 if receipt is not None:
+                    txn_hash_from_receipt = receipt.transactionHash
                     if receipt.status == 1:
-                        txn_status = AirdropClaimStatus.SUCCESS.value
+                        txn_receipt_status = AirdropClaimStatus.SUCCESS.value
                     else:
-                        txn_status = AirdropClaimStatus.FAILED.value
+                        txn_receipt_status = AirdropClaimStatus.FAILED.value
+                    if(txn_hash_from_receipt != txn_hash):
+                        AirdropRepository().mark_txn_as_failed(txn_hash)
 
-                    AirdropRepository().update_txn_status(txn_hash, txn_status)
+                    AirdropRepository().update_txn_status(
+                        txn_hash_from_receipt, txn_receipt_status)
+
             except BaseException as e:
                 print(f"Exception on Airdrop Txn Watcher {e}")
 
