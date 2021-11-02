@@ -56,8 +56,6 @@ class AirdropWindow(Base, AuditClass):
     airdrop_id = Column(
         BIGINT, ForeignKey("airdrop.row_id", ondelete="CASCADE"), nullable=False
     )
-    airdrop_window_identifier = Column(
-        "airdrop_window_id", INTEGER, nullable=False)
     airdrop_window_name = Column(
         "airdrop_window_name", VARCHAR(256), nullable=False)
     description = Column("description", TEXT, nullable=True)
@@ -75,7 +73,6 @@ class AirdropWindow(Base, AuditClass):
     claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=False)
     total_airdrop_tokens = Column("total_airdrop_tokens", INTEGER, default=0)
     airdrop = relationship(Airdrop, backref="windows")
-    UniqueConstraint(airdrop_window_id, name='uq_airdrop_id')
 
 
 class AirdropWindowEligibilityRule(Base, AuditClass):

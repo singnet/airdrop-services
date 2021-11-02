@@ -3,7 +3,7 @@ from airdrop.domain.models.airdrop_window_rule import AirdropWindowRule
 
 
 class AirdropWindow:
-    def __init__(self, airdrop_id, window_id, window_name,  description, registration_start_period, registration_end_period, total_airdrop_tokens, airdrop_window_timeline, airdrop_window_claim_start_period, airdrop_window_claim_end_period, airdropwindow_rules, airdrop_window_identifier):
+    def __init__(self, airdrop_id, window_id, window_name,  description, registration_start_period, registration_end_period, total_airdrop_tokens, airdrop_window_timeline, airdrop_window_claim_start_period, airdrop_window_claim_end_period, airdropwindow_rules):
         self._airdrop_id = airdrop_id
         self._window_id = window_id
         self._window_name = window_name
@@ -15,7 +15,6 @@ class AirdropWindow:
         self._airdrop_window_claim_start_period = airdrop_window_claim_start_period
         self._airdrop_window_claim_end_period = airdrop_window_claim_end_period
         self._airdropwindow_rules = airdropwindow_rules
-        self._airdrop_window_identifier = airdrop_window_identifier
 
     def get_airdrop_window_rules(self):
         return [
@@ -35,7 +34,6 @@ class AirdropWindow:
         return {
             "airdrop_id": self._airdrop_id,
             "airdrop_window_id": self._window_id,
-            "airdrop_window_identifier": self._airdrop_window_identifier,
             "airdrop_window_name": self._window_name,
             "airdrop_window_schedule_description": self._description,
             "airdrop_window_registration_start_period": self._registration_start_period,
