@@ -9,18 +9,6 @@ from airdrop.constants import AirdropClaimStatus
 
 class AirdropRepository(BaseRepository):
 
-    def mark_txn_as_failed(self, txn_hash):
-        try:
-            transaction = self.session.query(ClaimHistory).filter(
-                ClaimHistory.transaction_hash == txn_hash).first()
-
-            if transaction is not None:
-                transaction.transaction_status = AirdropClaimStatus.FAILED.value
-                return self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
-
     def update_txn_status(self, txn_hash, txn_status):
         try:
             transaction = self.session.query(ClaimHistory).filter(
