@@ -66,8 +66,8 @@ class AirdropRepository(BaseRepository):
                 ClaimHistory.transaction_hash == txn_hash).first()
 
             if transaction is not None:
-                existing_txn = transaction.transaction_hash
-                if existing_txn != txn_hash:
+                existing_txn_hash = transaction.transaction_hash
+                if existing_txn_hash != txn_hash:
                     transaction.transaction_hash = txn_hash
                 if txn_status == AirdropClaimStatus.SUCCESS.value:
                     transaction.claimed_on = datetime.utcnow()
