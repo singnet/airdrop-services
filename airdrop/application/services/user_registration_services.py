@@ -71,7 +71,7 @@ class UserRegistrationServices:
             if airdrop_window is None:
                 raise Exception("Invalid Airdrop window id")
 
-            is_eligible_user = self.check_user_eligibility(
+            is_eligible_user, rewards_awards = self.check_user_eligibility(
                 user_address=address, airdrop_id=airdrop_id, airdrop_window_id=airdrop_window_id)
 
             is_already_registered = self.is_elgible_registered_user(
@@ -89,7 +89,7 @@ class UserRegistrationServices:
                 reject_reason = UserRepository().get_reject_reason(airdrop_window_id, address)
 
             response = AirdropWindowEligibility(airdrop_id, airdrop_window_id, address, is_eligible_user,
-                                                is_already_registered, is_airdrop_window_claimed, airdrop_claim_status, reject_reason).to_dict()
+                                                is_already_registered, is_airdrop_window_claimed, airdrop_claim_status, reject_reason, rewards_awards).to_dict()
 
             status = HTTPStatus.OK
 
