@@ -24,11 +24,17 @@ class AirdropServices:
                         txn_receipt_status = AirdropClaimStatus.SUCCESS.value
                     else:
                         txn_receipt_status = AirdropClaimStatus.FAILED.value
-                    if(txn_hash_from_receipt != txn_hash):
-                        AirdropRepository().mark_txn_as_failed(txn_hash)
-
-                    AirdropRepository().update_txn_status(
-                        txn_hash_from_receipt, txn_receipt_status)
+                    if(txn_hash_from_receipt == txn_hash):
+                        AirdropRepository().update_txn_status(txn_hash_from_receipt, txn_receipt_status)
+                    else:
+                        airdrop_id = txn.airdrop_id
+                        airdrop_window_id = txn.airdrop_window_id
+                        user_address = txn.user_address
+                        amount = txn.amount
+                        AirdropRepository().airdrop_window_claim_txn(
+                            airdrop_id, airdrop_window_id, user_address, txn_hash_from_receipt, amount)
+                        print(
+                            f"Transaction hash mismatch {txn_hash_from_receipt} {txn_hash}")
 
             except BaseException as e:
                 print(f"Exception on Airdrop Txn Watcher {e}")
