@@ -71,6 +71,29 @@ class AirdropRepository(BaseRepository):
 
         return claim_history
 
+    def create_or_update_txn(self, airdrop_id, airdrop_window_id, user_address, txn_hash, txn_status, amount):
+        try:
+
+            transaction = self.session.query(ClaimHistory).filter(
+                ClaimHistory.transaction_hash == txn_hash).first()
+
+            if transaction is not None:
+                existing_txn = transaction.transaction_hash
+                if existing_txn != txn_hash:
+                    transaction.transaction_hash = txn_hash
+                if txn_status == AirdropClaimStatus.SUCCESS.value:
+                    transaction.claimed_on = datetime.utcnow()
+                transaction.transaction_status = txn_status
+                return self.session.commit()
+            else:
+                claim_history = ClaimHistory(
+                    address=user_address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0)
+                self.session.commit()
+                return self.add(claim_history)
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
     def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount):
         try:
 

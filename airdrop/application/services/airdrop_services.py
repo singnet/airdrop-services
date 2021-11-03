@@ -51,9 +51,9 @@ class AirdropServices:
         event_name = event['event']
 
         if event_name == AirdropEvents.AIRDROP_CLAIM.value:
-            return self.mark_airdrop_window_as_complete(event_data)
+            return self.update_airdrop_window_claim_status(event_data)
 
-    def mark_airdrop_window_as_complete(self, event):
+    def update_airdrop_window_claim_status(self, event):
         try:
             event_payload = event['json_str']
             user_address = event_payload['claimer']
@@ -62,7 +62,7 @@ class AirdropServices:
             airdrop_window_id = event_payload['airDropWindowId']
             txn_hash = event_payload['transactionHash']
             txn_status = AirdropClaimStatus.SUCCESS.value
-            AirdropRepository().airdrop_window_claim_txn(
+            AirdropRepository().create_or_update_txn(
                 airdrop_id, airdrop_window_id, user_address, txn_hash, txn_status, amount)
             return True
         except BaseException as e:
