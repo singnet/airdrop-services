@@ -25,7 +25,7 @@ class UserRepository(BaseRepository):
 
     def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
         is_rewards_awarded = (
-            self.session.query(UserReward.id)
+            self.session.query(UserReward)
             .filter(UserReward.address == address)
             .filter(UserReward.airdrop_window_id == airdrop_window_id)
             .filter(UserReward.airdrop_id == airdrop_id)
