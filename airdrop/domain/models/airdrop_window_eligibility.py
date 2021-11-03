@@ -20,5 +20,5 @@ class AirdropWindowEligibility:
             "airdrop_id": self._airdrop_id,
             "airdrop_window_id": self._airdrop_window_id,
             "reject_reason": self._reject_reason,
-            "rewards_awards": self._rewards_awards
+            "airdrop_window_rewards": self._rewards_awards
         }
