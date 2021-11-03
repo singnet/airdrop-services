@@ -34,7 +34,7 @@ class AirdropServices:
                         AirdropRepository().airdrop_window_claim_txn(
                             airdrop_id, airdrop_window_id, user_address, txn_hash_from_receipt, amount)
                         print(
-                            f"Transaction hash mismatch {txn_hash_from_receipt} {txn_hash}")
+                            f"Transaction hash mismatch {txn_hash_from_receipt} {txn_hash}, creating new entry")
 
             except BaseException as e:
                 print(f"Exception on Airdrop Txn Watcher {e}")
