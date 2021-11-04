@@ -162,7 +162,6 @@ class AirdropRepository(BaseRepository):
                     AirdropWindow,
                     AirdropWindow.id == UserRegistration.airdrop_window_id
                 )
-                .filter(UserRegistration.is_eligible == True)
                 .filter(UserRegistration.address == address)
                 .filter(AirdropWindow.airdrop_id == airdrop_id)
                 .filter(AirdropWindow.id == airdrop_window_id)

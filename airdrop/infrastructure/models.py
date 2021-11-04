@@ -120,7 +120,6 @@ class UserRegistration(Base, AuditClass):
         nullable=False,
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
-    is_eligible = Column("is_eligible", BIT, default=False)
     registered_at = Column("registered_at", TIMESTAMP(), nullable=True)
     reject_reason = Column("reject_reason", JSON, nullable=True)
     UniqueConstraint(airdrop_window_id, address)
