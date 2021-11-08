@@ -1,15 +1,21 @@
+import unittest
 from unittest import TestCase
-from common.utils import generate_claim_signature, read_contract_address
+from unittest.mock import patch
+
 from airdrop.config import NETWORK_ID
 from airdrop.constants import AIRDROP_ADDR_PATH
+from common.utils import generate_claim_signature, read_contract_address
 
 
 class SignatureCreation(TestCase):
-    def test_valid_signature_creation(self):
 
-        expected_signature = "0x878129aee1f81eea5bab526cc4a61d1a3b6fd728c39644197b2e0049ec817227105f2a46ac3b1e6403cd655d38ad609cca9c78fd93efd184116bd08d535a99891b"
+    @patch('common.utils.read_contract_address')
+    def test_valid_signature_creation(self, read_contract_address):
 
-        private_key = '92b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6676d983776001'
+        expected_signature = "0xdf107f59f19561b5fae0af2c597b965f6face8a67869e1d18f37e37b1a2369250f1a9cbef7eb198ad66c5cc88b72c8416a06cf80655dce526c020a8ffe05405e1b"
+        read_contract_address.return_value = '0x176133a958449C28930970989dB5fFFbEdd9F448'
+
+        private_key = '0aecc010b70ec65590fbfcb5c8c2936d994ff713e67268f12ca6499691c5a1e0'
         airdrop_window_id = "1"
         airdrop_id = "1"
         amount = 100
@@ -23,8 +29,10 @@ class SignatureCreation(TestCase):
 
         self.assertEqual(generated_signature, expected_signature)
 
-    def test_invalid_signature_creation(self):
-        expected_signature = "0x878129aee1f81eea5bab526cc4a61d1a3b6fd728c39644197b2e0049ec817227105f2a46ac3b1e6403cd655d38ad609cca9c78fd93efd184116bd08d535a99891b"
+    @patch('common.utils.read_contract_address')
+    def test_invalid_signature_creation(self, read_contract_address):
+        expected_signature = "0xdf107f59f19561b5fae0af2c597b965f6face8a67869e1d18f37e37b1a2369250f1a9cbef7eb198ad66c5cc88b72c8416a06cf80655dce526c020a8ffe05405e1b"
+        read_contract_address.return_value = '0x176133a958449C28930970989dB5fFFbEdd9F448'
 
         private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
         airdrop_window_id = "1"
