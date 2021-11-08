@@ -12,7 +12,7 @@ class AirdropServices:
 
     def airdrop_listen_to_events(self, event):
         event_data = event['data']
-        event_name = event['event']
+        event_name = event_data['event']
 
         if event_name == AirdropEvents.AIRDROP_CLAIM.value:
             return self.mark_airdrop_window_as_complete(event_data)
@@ -21,10 +21,10 @@ class AirdropServices:
         try:
             event_payload = event['json_str']
             user_address = event_payload['claimer']
-            amount = event_payload['amount']
-            airdrop_id = event_payload['airDropId']
-            airdrop_window_id = event_payload['airDropWindowId']
-            txn_hash = event_payload['transactionHash']
+            amount = int(event_payload['amount'])
+            airdrop_id = str(event_payload['airDropId'])
+            airdrop_window_id = str(event_payload['airDropWindowId'])
+            txn_hash = event['transactionHash']
             txn_status = AirdropClaimStatus.SUCCESS.value
             AirdropRepository().airdrop_window_claim_txn(
                 airdrop_id, airdrop_window_id, user_address, txn_hash, txn_status, amount)
