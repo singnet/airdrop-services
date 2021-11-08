@@ -153,6 +153,18 @@ class AirdropClaims(TestCase):
 
         self.assertLessEqual(result_length, 1)
 
+    def test_airdrop_services_update_airdrop_window_claim_status(self):
+
+        event = {'block_no': 6247992, 'event': 'Claim',
+                 'json_str': "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0x35d603B1433C9fFf79B61c905b07822684834542', 'amount': 0, 'airDropId': 1, 'airDropWindowId': 1}",
+                 'processed': 0,
+                 'transactionHash': "0x62a730ef8a537d09ee9064da3f57ad3ff3027399c91daa531e41a6c4e10af45a",
+                 'logIndex': '43', 'error_code': 200, 'error_msg': ''}
+
+        response = AirdropServices().update_airdrop_window_claim_status(event)
+
+        self.assertEqual(response, True)
+
     def test_airdrop_listen_to_events(self):
 
         payload = {
@@ -195,7 +207,7 @@ class AirdropClaims(TestCase):
 
         self.assertEqual(response, False)
 
-    @patch("airdrop.application.services.airdrop_services.AirdropServices.get_txn_receipt")
+    @ patch("airdrop.application.services.airdrop_services.AirdropServices.get_txn_receipt")
     def test_airdrop_get_txn_receipt_for_success_txn(self):
 
         expected_result = Mock({
