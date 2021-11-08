@@ -2,13 +2,38 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
-from common.utils import generate_claim_signature, read_contract_address
+from common.utils import generate_claim_signature, read_contract_address, get_transaction_receipt_from_blockchain
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, NETWORK_ID
 from airdrop.constants import AIRDROP_ADDR_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.models.airdrop_claim import AirdropClaim
 
 
 class AirdropServices:
+
+    def airdrop_txn_watcher(self):
+
+        pending_txns = AirdropRepository().get_pending_txns()
+
+        for txn in pending_txns:
+            try:
+                txn_hash = txn.transaction_hash
+                receipt = self.get_txn_receipt(txn_hash)
+                if receipt is not None:
+                    if receipt.status == 1:
+                        txn_status = AirdropClaimStatus.SUCCESS.value
+                    else:
+                        txn_status = AirdropClaimStatus.FAILED.value
+
+                    AirdropRepository().update_txn_status(txn_hash, txn_status)
+            except BaseException as e:
+                print(f"Exception on Airdrop Txn Watcher {e}")
+
+    def get_txn_receipt(self, txn_hash):
+        try:
+            return get_transaction_receipt_from_blockchain(txn_hash)
+        except BaseException as e:
+            print(f"Exception on get_txn_receipt {e}")
+            raise e
 
     def airdrop_listen_to_events(self, event):
         event_data = event['data']
@@ -66,8 +91,8 @@ class AirdropServices:
         try:
             schema = {
                 "type": "object",
-                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_status": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}},
-                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_status", "txn_hash", "amount"],
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_hash", "amount"],
             }
 
             validate(instance=inputs, schema=schema)
@@ -76,11 +101,10 @@ class AirdropServices:
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
             txn_hash = inputs["txn_hash"]
-            txn_status = inputs["txn_status"]
             amount = inputs["amount"]
 
             AirdropRepository().airdrop_window_claim_txn(
-                airdrop_id, airdrop_window_id, user_address, txn_hash, txn_status, amount)
+                airdrop_id, airdrop_window_id, user_address, txn_hash, amount)
 
             response = HTTPStatus.OK.phrase
             status = HTTPStatus.OK

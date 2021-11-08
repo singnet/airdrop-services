@@ -126,6 +126,12 @@ def airdrop_event_listener(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def airdrop_txn_watcher(event, context):
+    logger.info(f"Got Airdrops txn status watcher {event}")
+    AirdropServices().airdrop_txn_watcher()
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def user_notifications(event, context):
     logger.info(f"Got Airdrops user notifications {event}")
     status, response = UserNotificationService(

@@ -174,6 +174,3 @@ class AirdropClaims(TestCase):
 
         self.assertEqual(response, None)
 
-
-if __name__ == '__main__':
-    unittest.main()

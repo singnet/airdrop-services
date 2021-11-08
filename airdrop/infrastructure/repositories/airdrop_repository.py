@@ -1,13 +1,42 @@
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserBalanceSnapshot, UserRegistration, ClaimHistory, AirdropWindowEligibilityRule, UserReward
+from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserRegistration, ClaimHistory, UserReward
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
 from airdrop.constants import AirdropClaimStatus
 
 
 class AirdropRepository(BaseRepository):
+
+    def update_txn_status(self, txn_hash, txn_status):
+        try:
+            transaction = self.session.query(ClaimHistory).filter(
+                ClaimHistory.transaction_hash == txn_hash).first()
+
+            if transaction is not None and txn_status == AirdropClaimStatus.SUCCESS.value:
+                transaction.claimed_on = datetime.utcnow()
+
+            if transaction is not None:
+                transaction.transaction_status = txn_status
+                return self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+    def get_pending_txns(self):
+        try:
+            pending_txns = (
+                self.session.query(ClaimHistory)
+                .filter(ClaimHistory.transaction_status == AirdropClaimStatus.PENDING.value)
+                .all()
+            )
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+        return pending_txns
 
     def airdrop_window_claim_history(self, airdrop_id, address):
         try:
@@ -30,30 +59,36 @@ class AirdropRepository(BaseRepository):
 
         return claim_history
 
-    def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, txn_status, amount):
+    def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount):
         try:
+
+            is_valid_address = self.session.query(UserRegistration).filter(
+                UserRegistration.address == address).filter(UserRegistration.is_eligible == True).filter(AirdropWindow.airdrop_id == airdrop_id).filter(UserRegistration.airdrop_window_id == airdrop_window_id).first()
+
+            if is_valid_address is None:
+                raise Exception('Invalid address')
 
             transaction = self.session.query(ClaimHistory).filter(
                 ClaimHistory.transaction_hash == txn_hash).first()
 
-            if transaction is not None and transaction.transaction_status == AirdropClaimStatus.SUCCESS.value:
-                raise Exception('Transaction already marked')
+            if transaction is not None and transaction.transaction_hash == txn_hash:
+                raise Exception('Transaction has been saved already')
 
-            if transaction is not None:
-                transaction.transaction_status = txn_status
-                if txn_status == AirdropClaimStatus.SUCCESS.value:
-                    transaction.claimed_on = datetime.now()
-                return self.session.commit()
-            else:
-                claim_history = ClaimHistory(
-                    address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0)
+            has_pending_or_success_txn = self.session.query(ClaimHistory).filter(ClaimHistory.address == address).filter(
+                ClaimHistory.airdrop_window_id == airdrop_window_id).filter(ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.transaction_status != AirdropClaimStatus.FAILED.value).first()
 
-                if txn_status == AirdropClaimStatus.SUCCESS.value:
-                    claim_history.claimed_on = datetime.now()
+            if has_pending_or_success_txn is not None:
+                status_of_txn = has_pending_or_success_txn.transaction_status
+                if status_of_txn == AirdropClaimStatus.SUCCESS.value:
+                    raise Exception('Airdrop claimed for this window')
+                else:
+                    raise Exception('There is already a pending transaction')
 
-                self.session.commit()
-
-                return self.add(claim_history)
+            txn_status = AirdropClaimStatus.PENDING.value
+            claim_history = ClaimHistory(
+                address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0)
+            self.session.commit()
+            return self.add(claim_history)
 
         except SQLAlchemyError as e:
             self.session.rollback()
