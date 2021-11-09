@@ -66,7 +66,7 @@ class AirdropClaims(TestCase):
         }
 
         status_code, result = AirdropServices().airdrop_window_claims(payload)
-        self.assertEqual(status_code, HTTPStatus.OK.value)
+        self.assertEqual(status_code, HTTPStatus.OK)
 
     def test_get_signature_for_airdrop_window_claim_with_invalid_windows(self):
         payload = {
@@ -91,7 +91,7 @@ class AirdropClaims(TestCase):
         }
 
         status_code, result = AirdropServices().airdrop_window_claim_status(payload)
-        self.assertEqual(status_code, HTTPStatus.OK.value)
+        self.assertEqual(status_code, HTTPStatus.BAD_REQUEST)
 
     def test_airdrop_window_claim_duplicate_txn_status(self):
 
@@ -158,7 +158,7 @@ class AirdropClaims(TestCase):
 
         response = AirdropServices().airdrop_listen_to_events(event)
 
-        self.assertEqual(response, False)
+        self.assertNotEqual(response, False)
 
     def test_airdrop_listen_to_events_with_invalid_event(self):
 

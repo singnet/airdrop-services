@@ -86,7 +86,7 @@ class AirdropRepository(BaseRepository):
         try:
 
             is_valid_address = self.session.query(UserRegistration).filter(
-                UserRegistration.address == address).filter(UserRegistration.is_eligible == True).filter(AirdropWindow.airdrop_id == airdrop_id).filter(UserRegistration.airdrop_window_id == airdrop_window_id).first()
+                UserRegistration.address == address).filter(AirdropWindow.airdrop_id == airdrop_id).filter(UserRegistration.airdrop_window_id == airdrop_window_id).first()
 
             if is_valid_address is None:
                 raise Exception('Invalid address')
