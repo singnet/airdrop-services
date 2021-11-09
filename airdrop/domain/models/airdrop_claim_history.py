@@ -8,10 +8,10 @@ class AirdropClaimHistory:
         self._claimable_amount = claimable_amount
         self._claimed_on = claimed_on
         self._registered_at = str(airdrop_window_registration.registered_at)
-        self._is_eligible = airdrop_window_registration.is_eligible
+        self._is_eligible = None
 
     def is_eligible(self):
-        return True if self._is_eligible else False
+        return True if int(self._claimable_amount) > 0 else False
 
     def to_dict(self):
         return {

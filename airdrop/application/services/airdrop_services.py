@@ -19,12 +19,23 @@ class AirdropServices:
                 txn_hash = txn.transaction_hash
                 receipt = self.get_txn_receipt(txn_hash)
                 if receipt is not None:
+                    txn_hash_from_receipt = receipt.transactionHash
                     if receipt.status == 1:
-                        txn_status = AirdropClaimStatus.SUCCESS.value
+                        txn_receipt_status = AirdropClaimStatus.SUCCESS.value
                     else:
-                        txn_status = AirdropClaimStatus.FAILED.value
+                        txn_receipt_status = AirdropClaimStatus.FAILED.value
+                    if(txn_hash_from_receipt == txn_hash):
+                        AirdropRepository().update_txn_status(txn_hash_from_receipt, txn_receipt_status)
+                    else:
+                        airdrop_id = txn.airdrop_id
+                        airdrop_window_id = txn.airdrop_window_id
+                        user_address = txn.user_address
+                        amount = txn.amount
+                        AirdropRepository().airdrop_window_claim_txn(
+                            airdrop_id, airdrop_window_id, user_address, txn_hash_from_receipt, amount)
+                        print(
+                            f"Transaction hash mismatch {txn_hash_from_receipt} {txn_hash}, creating new entry")
 
-                    AirdropRepository().update_txn_status(txn_hash, txn_status)
             except BaseException as e:
                 print(f"Exception on Airdrop Txn Watcher {e}")
 
@@ -40,9 +51,9 @@ class AirdropServices:
         event_name = event_data['event']
 
         if event_name == AirdropEvents.AIRDROP_CLAIM.value:
-            return self.mark_airdrop_window_as_complete(event_data)
+            return self.update_airdrop_window_claim_status(event_data)
 
-    def mark_airdrop_window_as_complete(self, event):
+    def update_airdrop_window_claim_status(self, event):
         try:
             event_payload = event['json_str']
             user_address = event_payload['claimer']
@@ -51,7 +62,7 @@ class AirdropServices:
             airdrop_window_id = str(event_payload['airDropWindowId'])
             txn_hash = event['transactionHash']
             txn_status = AirdropClaimStatus.SUCCESS.value
-            AirdropRepository().airdrop_window_claim_txn(
+            AirdropRepository().create_or_update_txn(
                 airdrop_id, airdrop_window_id, user_address, txn_hash, txn_status, amount)
             return True
         except BaseException as e:
