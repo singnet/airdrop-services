@@ -138,11 +138,12 @@ class AirdropRepository(BaseRepository):
     def register_airdrop(self, address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract):
         airdrop = Airdrop(
             address=address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type)
-        return self.add(airdrop)
+        self.add(airdrop)
+        return self.session.query(Airdrop).filter_by(address=address).first()
 
-    def register_airdrop_window(self, airdrop_id, airdrop_window_name, description, registration_required, registration_start_period, registration_end_period, snapshot_required, claim_start_period, claim_end_period):
+    def register_airdrop_window(self, airdrop_id, airdrop_window_name, description, registration_required, registration_start_period, registration_end_period, snapshot_required, claim_start_period, claim_end_period, total_airdrop_tokens):
         airdrop_window = AirdropWindow(airdrop_id=airdrop_id, airdrop_window_name=airdrop_window_name, description=description, registration_required=registration_required, registration_start_period=registration_start_period,
-                                       registration_end_period=registration_end_period, snapshot_required=snapshot_required, claim_start_period=claim_start_period, claim_end_period=claim_end_period)
+                                       registration_end_period=registration_end_period, snapshot_required=snapshot_required, claim_start_period=claim_start_period, claim_end_period=claim_end_period, total_airdrop_tokens=total_airdrop_tokens)
         return self.add(airdrop_window)
 
     def get_token_address(self, airdrop_id):
