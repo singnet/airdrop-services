@@ -56,6 +56,7 @@ class AirdropWindow(Base, AuditClass):
     airdrop_id = Column(
         BIGINT, ForeignKey("airdrop.row_id", ondelete="CASCADE"), nullable=False
     )
+    airdrop_window_order = Column("airdrop_window_order", INTEGER, default=1)
     airdrop_window_name = Column(
         "airdrop_window_name", VARCHAR(256), nullable=False)
     description = Column("description", TEXT, nullable=True)

@@ -1,8 +1,8 @@
-"""baseline
+"""BaseLine
 
-Revision ID: 060c7d29a89c
+Revision ID: 7369cbf41001
 Revises: 
-Create Date: 2021-10-19 14:28:19.932468
+Create Date: 2021-11-09 09:27:10.052057
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '060c7d29a89c'
+revision = '7369cbf41001'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,13 +31,23 @@ def upgrade():
     sa.Column('documentation_link', sa.VARCHAR(length=256), nullable=True),
     sa.Column('description', sa.TEXT(), nullable=True),
     sa.Column('github_link_for_contract', sa.VARCHAR(length=256), nullable=True),
+    sa.Column('airdrop_rules', sa.JSON(), nullable=True),
     sa.PrimaryKeyConstraint('row_id')
+    )
+    op.create_table('user_notifications',
+    sa.Column('row_id', sa.BIGINT(), autoincrement=True, nullable=False),
+    sa.Column('row_created', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('row_updated', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('email', sa.VARCHAR(length=255), nullable=False),
+    sa.PrimaryKeyConstraint('row_id'),
+    sa.UniqueConstraint('email')
     )
     op.create_table('airdrop_window',
     sa.Column('row_id', sa.BIGINT(), autoincrement=True, nullable=False),
     sa.Column('row_created', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('row_updated', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('airdrop_id', sa.BIGINT(), nullable=False),
+    sa.Column('airdrop_window_order', sa.INTEGER(), nullable=True),
     sa.Column('airdrop_window_name', sa.VARCHAR(length=256), nullable=False),
     sa.Column('description', sa.TEXT(), nullable=True),
     sa.Column('registration_required', mysql.BIT(), nullable=True),
@@ -83,6 +93,7 @@ def upgrade():
     sa.Column('unclaimed_amount', sa.INTEGER(), nullable=False),
     sa.Column('transaction_status', sa.VARCHAR(length=50), nullable=False),
     sa.Column('transaction_hash', sa.VARCHAR(length=256), nullable=True),
+    sa.Column('claimed_on', mysql.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['airdrop_id'], ['airdrop.row_id'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['airdrop_window_id'], ['airdrop_window.row_id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('row_id')
@@ -104,8 +115,8 @@ def upgrade():
     sa.Column('row_updated', mysql.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('airdrop_window_id', sa.BIGINT(), nullable=False),
     sa.Column('address', sa.VARCHAR(length=50), nullable=False),
-    sa.Column('is_eligible', mysql.BIT(), nullable=True),
     sa.Column('registered_at', mysql.TIMESTAMP(), nullable=True),
+    sa.Column('reject_reason', sa.JSON(), nullable=True),
     sa.ForeignKeyConstraint(['airdrop_window_id'], ['airdrop_window.row_id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('row_id'),
     sa.UniqueConstraint('airdrop_window_id', 'address')
@@ -141,5 +152,6 @@ def downgrade():
     op.drop_table('airdropwindow_timeline')
     op.drop_table('airdropwindow_rules')
     op.drop_table('airdrop_window')
+    op.drop_table('user_notifications')
     op.drop_table('airdrop')
     # ### end Alembic commands ###
