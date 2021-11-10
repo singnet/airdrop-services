@@ -123,7 +123,7 @@ class AirdropRepository(BaseRepository):
                 self.session.query(ClaimHistory)
                 .filter(ClaimHistory.airdrop_window_id == airdrop_window_id)
                 .filter(ClaimHistory.address == address)
-                .filter(ClaimHistory.transaction_status != AirdropClaimStatus.FAILED)
+                .filter(ClaimHistory.transaction_status != AirdropClaimStatus.FAILED.value)
                 .first()
             )
 

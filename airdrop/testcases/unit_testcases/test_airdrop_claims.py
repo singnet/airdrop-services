@@ -40,11 +40,13 @@ class AirdropClaims(TestCase):
     @patch('airdrop.infrastructure.repositories.user_repository.UserRepository.check_rewards_awarded')
     @patch('airdrop.application.services.airdrop_services.AirdropServices.get_signature_for_airdrop_window_id')
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_amount')
-    def test_get_signature_for_airdrop_window_claim(self, mock_get_airdrop_window_claimable_amount, mock_get_signature_for_airdrop_window_id, mock_check_rewards_awarded, mock_recover_address):
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.is_claimed_airdrop_window')
+    def test_get_signature_for_airdrop_window_claim(self, mock_is_claimed_airdrop_window, mock_get_airdrop_window_claimable_amount, mock_get_signature_for_airdrop_window_id, mock_check_rewards_awarded, mock_recover_address):
 
         address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
 
+        mock_is_claimed_airdrop_window.return_value = {}
         mock_check_rewards_awarded.return_value = True, 1000
         mock_get_signature_for_airdrop_window_id.return_value = airdrop_claim_signature
         mock_get_airdrop_window_claimable_amount.return_value = 100, address
