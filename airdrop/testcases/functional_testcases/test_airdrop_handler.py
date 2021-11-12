@@ -4,7 +4,7 @@ from unittest.mock import patch
 from http import HTTPStatus
 from datetime import datetime, timedelta
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
-from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, user_registration, airdrop_window_claims, airdrop_window_claim_status
+from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, user_registration, airdrop_window_claims, airdrop_window_claim_status, user_notifications
 from airdrop.infrastructure.models import UserRegistration
 
 
@@ -142,6 +142,17 @@ class TestAirdropHandler(unittest.TestCase):
             })
         }
         result = airdrop_window_claim_status(event, None)
+        result = json.loads(result['body'])
+        self.assertIsNotNone(result)
+
+    @patch("common.utils.Utils.report_slack")
+    def test_user_notifications(self,  mock_report_slack):
+        event = {
+            "body": json.dumps({
+                "email": "mail@provider.com"
+            })
+        }
+        result = user_notifications(event, None)
         result = json.loads(result['body'])
         self.assertIsNotNone(result)
 
