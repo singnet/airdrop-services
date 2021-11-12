@@ -33,43 +33,6 @@ class Utils:
         resp = requests.post(url=url, data=json.dumps(payload))
         print(resp.status_code, resp.text)
 
-    @staticmethod
-    def remove_http_https_prefix(url):
-        url = url.replace("https://", "")
-        url = url.replace("http://", "")
-        return url
-
-    @staticmethod
-    def get_current_block_no(ws_provider):
-        w3Obj = Web3(web3.providers.WebsocketProvider(ws_provider))
-        return w3Obj.eth.blockNumber
-
-
-def make_response(status_code, body, header=None):
-    return {"statusCode": status_code, "headers": header, "body": body}
-
-
-def validate_dict(data_dict, required_keys, strict=False):
-    for key in required_keys:
-        if key not in data_dict:
-            return False
-
-    if strict:
-        return validate_dict(required_keys, data_dict.keys())
-
-    return True
-
-
-def validate_dict_list(data_list, required_keys):
-    for data in data_list:
-        if not validate_dict(data, required_keys):
-            return False
-    return True
-
-
-def make_response_body(status, data, error):
-    return {"status": status, "data": data, "error": error}
-
 
 def request(event):
     try:
@@ -114,19 +77,6 @@ def generate_lambda_response(
     if headers is not None:
         response["headers"].update(headers)
     return response
-
-
-def extract_payload(method, event):
-    method_found = True
-    payload_dict = None
-    path_parameters = event.get("pathParameters", None)
-    if method == "POST":
-        payload_dict = json.loads(event["body"])
-    elif method == "GET":
-        payload_dict = event.get("queryStringParameters", {})
-    else:
-        method_found = False
-    return method_found, path_parameters, payload_dict
 
 
 def format_error_message(status, error, payload, net_id, handler=None, resource=None):
@@ -195,7 +145,7 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
                 )
 
                 logger.exception(f"{slack_msg}")
-                Utils().report_slack(type=0, slack_msg=slack_msg, SLACK_HOOK=SLACK_HOOK)
+                Utils().report_slack(type=0, slack_message=slack_msg, slack_config=SLACK_HOOK)
                 return generate_lambda_response(
                     status_code=500,
                     message=format_error_message(
@@ -216,14 +166,6 @@ def handle_exception_with_slack_notification(*decorator_args, **decorator_kwargs
 def json_to_file(payload, filename):
     with open(filename, "w") as f:
         f.write(json.dumps(payload, indent=4))
-
-
-def datetime_to_string(given_time):
-    return given_time.strftime("%Y-%m-%d %H:%M:%S")
-
-
-def date_time_for_filename():
-    return datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
 
 def send_slack_notification(slack_message, slack_url, slack_channel):
