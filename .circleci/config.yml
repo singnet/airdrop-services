@@ -8,7 +8,7 @@ jobs:
         command: [--default-authentication-plugin=mysql_native_password]
         environment:
           MYSQL_ROOT_PASSWORD: unittest_pwd
-          MYSQL_HOST: '%'
+          MYSQL_HOST: "%"
           MYSQL_DATABASE: unittest_db
           MYSQL_USER: unittest_root
           MYSQL_PASSWORD: unittest_pwd
@@ -27,7 +27,7 @@ jobs:
             sudo chown root:root -R /usr/local/bin
             sudo chown root:root -R /usr/local/lib/python3.7
       - run:
-      # Our primary container isn't MYSQL so run a sleep command until it's ready.
+          # Our primary container isn't MYSQL so run a sleep command until it's ready.
           name: Waiting for MySQL to be ready
           command: |
             for i in `seq 1 30`;
@@ -59,7 +59,7 @@ jobs:
       - run:
           name: Run unit tests and integration test
           command: |
-            PYTHONPATH=$PWD python -m coverage run -m pytest */testcases/unit_testcases/*.py
+            PYTHONPATH=$PWD python -m coverage run -m pytest */testcases/unit_testcases/*.py */testcases/functional_testcases/*.py
             python -m coverage report -m
             coverage xml -i
             sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner -Dsonar.host.url=https://sonarqube.singularitynet.io -Dsonar.login=${SONAR_TOKEN} $SONAR_SCANNER_OPTS_CUSTOM

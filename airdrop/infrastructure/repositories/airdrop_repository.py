@@ -146,6 +146,11 @@ class AirdropRepository(BaseRepository):
                                        registration_end_period=registration_end_period, snapshot_required=snapshot_required, claim_start_period=claim_start_period, claim_end_period=claim_end_period, total_airdrop_tokens=total_airdrop_tokens)
         return self.add(airdrop_window)
 
+    def register_airdrop_window_timeline(self, airdrop_window_id, title, description, date):
+        airdrop_window_timeline = AirdropWindowTimelines(
+            airdrop_window_id=airdrop_window_id, title=title, description=description, date=date)
+        return self.add(airdrop_window_timeline)
+
     def get_token_address(self, airdrop_id):
         airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
 
