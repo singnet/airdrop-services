@@ -185,31 +185,6 @@ class AirdropServices:
         except BaseException as e:
             raise e
 
-    def get_airdrops(self, inputs):
-        status = HTTPStatus.BAD_REQUEST
-
-        try:
-            schema = {
-                "type": "object",
-                "properties": {"limit": {"type": "string"}, "skip": {"type": "string"}},
-                "required": ["limit", "skip"],
-            }
-
-            validate(instance=inputs, schema=schema)
-
-            skip = inputs["skip"]
-            limit = inputs["limit"]
-
-            airdrops = AirdropRepository().get_airdrops(limit, skip)
-            response = {"airdrops": airdrops}
-            status = HTTPStatus.OK
-        except ValidationError as e:
-            response = e.message
-        except BaseException as e:
-            response = str(e)
-
-        return status, response
-
     def get_airdrops_schedule(self, token_address):
         status = HTTPStatus.BAD_REQUEST
 

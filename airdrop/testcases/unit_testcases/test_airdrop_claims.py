@@ -179,3 +179,8 @@ class AirdropClaims(TestCase):
         response = AirdropServices().airdrop_listen_to_events(event)
 
         self.assertEqual(response, None)
+
+    def test_airdrop_txn_watcher(self):
+
+        response = AirdropServices().airdrop_txn_watcher()
+        self.assertEqual(response, None)

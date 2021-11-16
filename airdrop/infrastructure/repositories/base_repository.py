@@ -38,11 +38,3 @@ class BaseRepository:
         except Exception as e:
             self.session.rollback()
             raise e
-
-    def add_all(self, items):
-        try:
-            self.session.bulk_save_objects(items)
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
