@@ -49,31 +49,6 @@ def user_eligibility(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def get_active_airdrops(event, context):
-    logger.info(f"Got Airdrops Event {event}")
-    status, response = AirdropServices().get_airdrops(request(event))
-    return generate_lambda_response(
-        status.value,
-        status.phrase,
-        response,
-        cors_enabled=True,
-    )
-
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def airdrop_window_user_details(event, context):
-    logger.info(f"Got Airdrops Event {event}")
-    status, response = UserRegistrationServices(
-    ).airdrop_window_user_details(request(event))
-    return generate_lambda_response(
-        status.value,
-        status.phrase,
-        response,
-        cors_enabled=True,
-    )
-
-
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_window_claims(event, context):
     logger.info(f"Got Airdrops Window Claims Events {event}")
     status, response = AirdropServices(

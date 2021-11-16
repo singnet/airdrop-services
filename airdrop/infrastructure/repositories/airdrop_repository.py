@@ -197,29 +197,6 @@ class AirdropRepository(BaseRepository):
         else:
             return 0, token_address
 
-    def get_airdrops(self, limit, skip):
-        try:
-
-            airdrop_window_data = (
-                self.session.query(AirdropWindow)
-                .limit(limit)
-                .offset(skip)
-                .all()
-            )
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
-
-        airdrop_windows = []
-        if airdrop_window_data is not None:
-            airdrop_windows = [
-                AirdropFactory.convert_airdrop_window_model_to_entity_model(
-                    window)
-                for window in airdrop_window_data
-            ]
-        return airdrop_windows
-
     def get_airdrops_schedule(self, token_address):
         try:
             airdrop_row_data = (

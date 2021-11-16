@@ -10,42 +10,6 @@ from common.utils import verify_signature
 
 class UserRegistrationServices:
 
-    def airdrop_window_user_details(self, inputs):
-        status = HTTPStatus.BAD_REQUEST
-
-        try:
-            schema = {
-                "type": "object",
-                "properties": {
-                    "address": {"type": "string"},
-                    "airdrop_window_id": {"type": "string"},
-                },
-                "required": ["address", "airdrop_window_id"],
-            }
-
-            validate(instance=inputs, schema=schema)
-
-            address = inputs["address"]
-            airdrop_window_id = inputs["airdrop_window_id"]
-
-            airdrop_window_user_details = UserRepository().airdrop_window_user_details(
-                airdrop_window_id, address)
-
-            if airdrop_window_user_details is None:
-                raise Exception(
-                    "Address is not registered for this airdrop window"
-                )
-
-            response = airdrop_window_user_details
-            status = HTTPStatus.OK
-
-        except ValidationError as e:
-            response = e.message
-        except BaseException as e:
-            response = str(e)
-
-        return status, response
-
     def eligibility(self, inputs):
 
         status = HTTPStatus.BAD_REQUEST
