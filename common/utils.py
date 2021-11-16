@@ -97,19 +97,6 @@ def json_to_file(payload, filename):
         f.write(json.dumps(payload, indent=4))
 
 
-def send_slack_notification(slack_message, slack_url, slack_channel):
-    payload = {
-        "channel": f"#{slack_channel}",
-        "username": "webhookbot",
-        "text": slack_message,
-        "icon_emoji": ":ghost:",
-    }
-    slack_response = requests.post(url=slack_url, data=json.dumps(payload))
-    logger.info(
-        f"slack response :: {slack_response.status_code}, {slack_response.text}"
-    )
-
-
 def get_transaction_receipt_from_blockchain(transaction_hash):
     web3_object = Web3(web3.providers.HTTPProvider(
         NETWORK['http_provider']))
@@ -137,7 +124,7 @@ def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address
 
         return signed_message.signature.hex()
     except BaseException as e:
-        raise Exception(f"Error while generating claim signature. Error: {e}")
+        raise e(f"Error while generating claim signature. Error: {e}")
 
 
 def load_contract(path):
@@ -165,8 +152,8 @@ def recover_address(airdrop_id, airdrop_window_id, address, signature):
         ["uint8", "uint8", "address"],
         [int(airdrop_id), int(airdrop_window_id), address],
     )
-    hash = defunct_hash_message(message)
+    hash_message = defunct_hash_message(message)
     web3_object = Web3(web3.providers.HTTPProvider(NETWORK['http_provider']))
     return web3_object.eth.account.recoverHash(
-        hash, signature=signature
+        hash_message, signature=signature
     )
