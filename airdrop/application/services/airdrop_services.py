@@ -6,6 +6,7 @@ from common.utils import generate_claim_signature, read_contract_address, get_tr
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, NETWORK_ID
 from airdrop.constants import AIRDROP_ADDR_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.models.airdrop_claim import AirdropClaim
+from airdrop.domain.factory.airdrop_factory import AirdropFactory
 
 
 class AirdropServices:
@@ -189,7 +190,17 @@ class AirdropServices:
         status = HTTPStatus.BAD_REQUEST
 
         try:
-            response = AirdropRepository().get_airdrops_schedule(token_address)
+            airdrop_row_data = AirdropRepository().get_airdrops_schedule(token_address)            
+            # TODO: Make actual call to smart contract to get the Stake info
+            stake_details = {
+                "stake_amount": "100",
+                "stake_start_time": "2021-01-01T00:00:00Z",
+                "stake_end_time": "2021-01-01T00:00:00Z",
+                "stake_is_active": True
+            }
+            
+            AirdropFactory.convert_airdrop_schedule_model_to_entity_model(airdrop_row_data, stake_details)
+            
             status = HTTPStatus.OK
         except ValidationError as e:
             response = e.message

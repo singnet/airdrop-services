@@ -1,13 +1,13 @@
 NETWORK = {
     "name": "test",
-    "http_provider": "https://ropsten.infura.io",
-    "ws_provider": "wss://ropsten.infura.io/ws",
+    "http_provider": "https://ropsten.infura.io/v3/a1b96bbe33004a9d9039ec41d7a8677c",
+    "ws_provider": "wss://ropsten.infura.io/ws/v3/a1b96bbe33004a9d9039ec41d7a8677c",
     "db": {
         "DB_DRIVER": "mysql+pymysql",
         "DB_HOST": "localhost",
-        "DB_USER": "unittest_root",
-        "DB_PASSWORD": "unittest_pwd",
-        "DB_NAME": "airdrop_unittest_db",
+        "DB_USER": "admin",
+        "DB_PASSWORD": "password",
+        "DB_NAME": "airdrop",
         "DB_PORT": 3306,
         "DB_LOGGING": True,
     },
