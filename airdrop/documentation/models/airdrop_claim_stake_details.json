@@ -1,0 +1,29 @@
+{
+  "AirdropClaimStakeInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropClaimStakeInput",
+    "type": "object",
+    "properties": {
+      "airdrop_id": {
+        "type": "string"
+      },
+      "airdrop_window_id": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
+      }
+    }
+  },
+  "AirdropClaimStakeOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropClaimStakeOutput",
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string"
+      },
+      "data": {}
+    }
+  }
+}

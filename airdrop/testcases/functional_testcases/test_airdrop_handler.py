@@ -4,7 +4,7 @@ from unittest.mock import patch
 from http import HTTPStatus
 from datetime import datetime, timedelta
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
-from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, user_registration, airdrop_window_claims, airdrop_window_claim_status, user_notifications
+from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, user_registration, airdrop_window_claims, airdrop_window_claim_status, user_notifications, get_claim_and_stake_details
 from airdrop.infrastructure.models import UserRegistration
 
 
@@ -124,6 +124,19 @@ class TestAirdropHandler(unittest.TestCase):
         claim_signature_object = result['data']
         self.assertEqual(result['status'], HTTPStatus.OK.value)
         self.assertEqual(claim_signature_object['user_address'], address)
+
+    @patch("common.utils.Utils.report_slack")
+    def test_claim_and_stake_details(self,  mock_report_slack):
+        event = {
+            "body": json.dumps({
+                "address": "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8",
+                "airdrop_id": "1",
+                "airdrop_window_id": "1"
+            })
+        }
+        result = get_claim_and_stake_details(event, None)
+        result = json.loads(result['body'])
+        self.assertIsNotNone(result)
 
     @patch("common.utils.Utils.report_slack")
     def test_airdrop_window_claim_update_txn(self,  mock_report_slack):

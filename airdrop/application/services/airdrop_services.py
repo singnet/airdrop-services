@@ -6,9 +6,50 @@ from common.utils import generate_claim_signature, read_contract_address, get_tr
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, NETWORK_ID
 from airdrop.constants import AIRDROP_ADDR_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.models.airdrop_claim import AirdropClaim
+from airdrop.domain.models.airdrop_stake_claim_details import AirdropStakeClaimDetails
 
 
 class AirdropServices:
+
+    def get_claim_and_stake_details(self, inputs):
+        status = HTTPStatus.BAD_REQUEST
+        try:
+            schema = {
+                "type": "object",
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_id": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id"],
+            }
+
+            validate(instance=inputs, schema=schema)
+
+            airdrop_id = inputs["airdrop_id"]
+            airdrop_window_id = inputs["airdrop_window_id"]
+            address = inputs["address"]
+
+            claimable_amount = AirdropRepository().get_airdrop_window_claimable_amount(
+                airdrop_id, airdrop_window_id, address)
+            stake_amount, is_stake_window_is_open, stake_window_start_time, stake_window_end_time = self.get_stake_window_details(
+                airdrop_id, airdrop_window_id, address)
+            stake_claim_details = AirdropStakeClaimDetails(
+                airdrop_id, airdrop_window_id, claimable_amount, stake_amount, is_stake_window_is_open, stake_window_start_time, stake_window_end_time).to_dict()
+
+            response = {"stake_claim_details": stake_claim_details}
+            status = HTTPStatus.OK
+
+        except ValidationError as e:
+            response = e.message
+        except BaseException as e:
+            print(f"Exception on Airdrop Window History {e}")
+            response = str(e)
+        return status, response
+
+    def get_stake_window_details(self, airdrop_id, airdrop_window_id, address):
+        # TODO: Call the smart contract to get the details
+        stake_amount = 0
+        is_stake_window_is_open = False
+        stake_window_start_time = 0
+        stake_window_end_time = 0
+        return stake_amount, is_stake_window_is_open, stake_window_start_time, stake_window_end_time
 
     def airdrop_txn_watcher(self):
 

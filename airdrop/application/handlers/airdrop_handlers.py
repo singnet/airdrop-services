@@ -117,3 +117,15 @@ def user_notifications(event, context):
         response,
         cors_enabled=True,
     )
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def get_claim_and_stake_details(event, context):
+    logger.info(f"Got Airdrop Claim and Stake details against the address {event}")
+    status, response = AirdropServices(
+    ).get_claim_and_stake_details(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )

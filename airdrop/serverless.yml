@@ -83,6 +83,12 @@ documentation:
     - name: "AirdropClaimHistoryOutput"
       contentType: "application/json"
       schema: ${file(airdrop/documentation/models/airdrop_claim_history.json):AirdropClaimHistoryOutput}
+    - name: "AirdropClaimStakeInput"
+      contentType: "application/json"
+      schema: ${file(airdrop/documentation/models/airdrop_claim_stake_details.json):AirdropClaimStakeInput}
+    - name: "AirdropClaimStakeOutput"
+      contentType: "application/json"
+      schema: ${file(airdrop/documentation/models/airdrop_claim_stake_details.json):AirdropClaimStakeOutput}
 
 package:
   patterns:
@@ -414,6 +420,51 @@ functions:
                   "application/json": "UserNotificationInput"
                 responseModels:
                   "application/json": "UserNotificationOutput"
+              - statusCode: "400"
+                responseModels:
+                  "application/json": "ErrorMessage"
+  airdrop_claim_and_stake:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.get_claim_and_stake_details
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          path: /airdrop/claim-and-stake
+          method: post
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+          documentation:
+            summary: "Airdrop claim and stake details"
+            description: "Airdrop claim and stake details"
+            tags:
+              - "airdrop"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "AirdropClaimStakeInput"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Airdrop notifications"
+                  "application/json": "AirdropClaimStakeInput"
+                responseModels:
+                  "application/json": "AirdropClaimStakeOutput"
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
