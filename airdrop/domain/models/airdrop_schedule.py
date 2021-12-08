@@ -2,7 +2,7 @@ from airdrop.domain.factory.airdrop_window_factory import AirdropWindowFactory
 
 
 class AirdropSchedule:
-    def __init__(self, airdrop_id, token_name, airdrop_description, airdrop_portal_link, airdrop_documentation_link, airdrop_github_link, rules, airdrop_windows, stake_details):
+    def __init__(self, airdrop_id, token_name, airdrop_description, airdrop_portal_link, airdrop_documentation_link, airdrop_github_link, rules, airdrop_windows):
         self._airdrop_id = airdrop_id
         self._token_name = token_name
         self._airdrop_description = airdrop_description
@@ -11,7 +11,6 @@ class AirdropSchedule:
         self._airdrop_github_link = airdrop_github_link
         self._rules = rules
         self._airdrop_windows = airdrop_windows
-        self._stake_details = stake_details
 
     def get_airdrop_windows(self):
         return [

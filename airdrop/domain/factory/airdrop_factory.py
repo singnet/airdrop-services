@@ -6,7 +6,7 @@ from airdrop.domain.models.airdrop_claim_history import AirdropClaimHistory
 
 class AirdropFactory:
     @staticmethod
-    def convert_airdrop_schedule_model_to_entity_model(airdrop, stake_details):
+    def convert_airdrop_schedule_model_to_entity_model(airdrop):
         return AirdropSchedule(
             airdrop.id,
             airdrop.token_name,
@@ -16,7 +16,6 @@ class AirdropFactory:
             airdrop.github_link_for_contract,
             airdrop.airdrop_rules,
             airdrop.windows
-            stake_details
         ).to_dict()
 
     @staticmethod
