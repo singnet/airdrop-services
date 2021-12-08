@@ -16,7 +16,7 @@ class AirdropServices:
         try:
             schema = {
                 "type": "object",
-                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_id": {"type": "string"}},
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}},
                 "required": ["address", "airdrop_id", "airdrop_window_id"],
             }
 
