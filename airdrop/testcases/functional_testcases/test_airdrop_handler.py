@@ -126,7 +126,7 @@ class TestAirdropHandler(unittest.TestCase):
         self.assertEqual(claim_signature_object['user_address'], address)
 
     @patch("common.utils.Utils.report_slack")
-    def test_claim_and_stake_details(self,  mock_report_slack):
+    def test_get_claim_and_stake_details_with_non_eligible_user(self,  mock_report_slack):
         event = {
             "body": json.dumps({
                 "address": "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8",
@@ -147,7 +147,7 @@ class TestAirdropHandler(unittest.TestCase):
 
     @patch("common.utils.Utils.report_slack")
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_amount')
-    def test_claim_and_stake_details(self, mock_get_airdrop_window_claimable_amount, mock_report_slack):
+    def test_get_claim_and_stake_details(self, mock_get_airdrop_window_claimable_amount, mock_report_slack):
         address = "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8"
         mock_get_airdrop_window_claimable_amount.return_value = 100, address
         event = {
