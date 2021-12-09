@@ -26,7 +26,7 @@ class AirdropServices:
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"]
 
-            claimable_amount = AirdropRepository().get_airdrop_window_claimable_amount(
+            claimable_amount, wallet_address = AirdropRepository().get_airdrop_window_claimable_amount(
                 airdrop_id, airdrop_window_id, address)
             stake_amount, is_stake_window_is_open, stake_window_start_time, stake_window_end_time = self.get_stake_window_details(
                 airdrop_id, airdrop_window_id, address)

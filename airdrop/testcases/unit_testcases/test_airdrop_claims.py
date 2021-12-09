@@ -165,7 +165,7 @@ class AirdropClaims(TestCase):
         response = AirdropServices().airdrop_listen_to_events(event)
 
         self.assertNotEqual(response, False)
-    
+
     @patch('common.utils.recover_address')
     @patch('airdrop.infrastructure.repositories.user_repository.UserRepository.check_rewards_awarded')
     @patch('airdrop.application.services.airdrop_services.AirdropServices.get_signature_for_airdrop_window_id')
@@ -187,7 +187,20 @@ class AirdropClaims(TestCase):
             "airdrop_window_id": "1"
         }
 
+        expected_result = {
+            "stake_claim_details": {
+                "airdrop_id": "1",
+                "airdrop_window_id": "1",
+                "claimable_amount": 100,
+                "stake_amount": 0,
+                "is_stake_window_is_open": False,
+                "stake_window_start_time": 0,
+                "stake_window_end_time": 0
+            }
+        }
+
         status_code, result = AirdropServices().get_claim_and_stake_details(payload)
+        self.assertEquals(expected_result, result)
         self.assertEqual(status_code, HTTPStatus.OK)
 
     @patch('common.utils.recover_address')

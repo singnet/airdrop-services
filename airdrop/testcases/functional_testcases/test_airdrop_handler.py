@@ -136,7 +136,48 @@ class TestAirdropHandler(unittest.TestCase):
         }
         result = get_claim_and_stake_details(event, None)
         result = json.loads(result['body'])
+        expected_result = {
+            "error": {"code": 0, "message": "Non eligible user"},
+            "data": None,
+            "status": 400
+        }
+
         self.assertIsNotNone(result)
+        self.assertEquals(result, expected_result)
+
+    @patch("common.utils.Utils.report_slack")
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_amount')
+    def test_claim_and_stake_details(self, mock_get_airdrop_window_claimable_amount, mock_report_slack):
+        address = "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8"
+        mock_get_airdrop_window_claimable_amount.return_value = 100, address
+        event = {
+            "body": json.dumps({
+                "address": address,
+                "airdrop_id": "1",
+                "airdrop_window_id": "1"
+            })
+        }
+
+        expected_result = {
+            "status": 200,
+            "data": {
+                "stake_claim_details": {
+                    "airdrop_id": "1",
+                    "airdrop_window_id": "1",
+                    "claimable_amount": 100,
+                    "stake_amount": 0,
+                    "is_stake_window_is_open": False,
+                    "stake_window_start_time": 0,
+                    "stake_window_end_time": 0
+                }
+            },
+            "message": "OK"
+        }
+
+        result = get_claim_and_stake_details(event, None)
+        result = json.loads(result['body'])
+        self.assertIsNotNone(result)
+        self.assertEquals(result, expected_result)
 
     @patch("common.utils.Utils.report_slack")
     def test_airdrop_window_claim_update_txn(self,  mock_report_slack):
