@@ -46,9 +46,9 @@ class AirdropServices:
     def get_stake_window_details(self, airdrop_id):
 
         try:
-            airdrop = AirdropRepository().get_token_address(airdrop_id)
+            token = AirdropRepository().get_token_name(airdrop_id)
 
-            if(airdrop.token_name == TokenName.AGIX.value):
+            if(token == TokenName.AGIX.value):
                 return self.get_agix_stake_window_details()
             else:
                 raise Exception("Invalid token type")

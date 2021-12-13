@@ -147,9 +147,11 @@ class TestAirdropHandler(unittest.TestCase):
 
     @patch("common.utils.Utils.report_slack")
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_amount')
-    def test_get_claim_and_stake_details(self, mock_get_airdrop_window_claimable_amount, mock_report_slack):
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_token_name')
+    def test_get_claim_and_stake_details(self, mock_get_token_name, mock_get_airdrop_window_claimable_amount, mock_report_slack):
         address = "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8"
         mock_get_airdrop_window_claimable_amount.return_value = 100, address
+        mock_get_token_name.return_value = 'AGIX'
         event = {
             "body": json.dumps({
                 "address": address,

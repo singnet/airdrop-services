@@ -159,6 +159,14 @@ class AirdropRepository(BaseRepository):
 
         return airdrop.contract_address
 
+    def get_token_name(self, airdrop_id):
+        airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
+
+        if airdrop is None:
+            raise Exception("Airdrop not found")
+
+        return airdrop.token_name
+
     def get_airdrop_window_claimable_amount(self, airdrop_id, airdrop_window_id, address):
         try:
             date_time = datetime.utcnow()
