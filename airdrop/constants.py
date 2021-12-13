@@ -16,3 +16,7 @@ class AirdropClaimStatus(Enum):
 class AirdropEvents(Enum):
     AIRDROP_CLAIM = 'Claim'
     AIRDROP_WINDOW_OPEN = 'AirdropWindowOpen'
+
+
+class TokenName(Enum):
+    AGIX = 'AGIX'

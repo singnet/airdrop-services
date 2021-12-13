@@ -4,7 +4,7 @@ from http import HTTPStatus
 from common.boto_utils import BotoUtils
 from common.utils import generate_claim_signature, read_contract_address, get_transaction_receipt_from_blockchain
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, NETWORK_ID
-from airdrop.constants import AIRDROP_ADDR_PATH, AirdropEvents, AirdropClaimStatus
+from airdrop.constants import AIRDROP_ADDR_PATH, AirdropEvents, AirdropClaimStatus, TokenName
 from airdrop.domain.models.airdrop_claim import AirdropClaim
 from airdrop.domain.models.airdrop_stake_claim_details import AirdropStakeClaimDetails
 
@@ -29,7 +29,7 @@ class AirdropServices:
             claimable_amount, wallet_address = AirdropRepository().get_airdrop_window_claimable_amount(
                 airdrop_id, airdrop_window_id, address)
             stake_amount, is_stake_window_is_open, stake_window_start_time, stake_window_end_time = self.get_stake_window_details(
-                airdrop_id, airdrop_window_id, address)
+                airdrop_id)
             stake_claim_details = AirdropStakeClaimDetails(
                 airdrop_id, airdrop_window_id, claimable_amount, stake_amount, is_stake_window_is_open, stake_window_start_time, stake_window_end_time).to_dict()
 
@@ -43,7 +43,19 @@ class AirdropServices:
             response = str(e)
         return status, response
 
-    def get_stake_window_details(self, airdrop_id, airdrop_window_id, address):
+    def get_stake_window_details(self, airdrop_id):
+
+        try:
+            airdrop = AirdropRepository().get_token_address(airdrop_id)
+
+            if(airdrop.token_name == TokenName.AGIX.value):
+                return self.get_agix_stake_window_details()
+            else:
+                raise Exception("Invalid token type")
+        except BaseException as e:
+            raise Exception(str(e))
+
+    def get_agix_stake_window_details(self):
         # TODO: Call the smart contract to get the details
         stake_amount = 0
         is_stake_window_is_open = False
