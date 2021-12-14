@@ -135,9 +135,9 @@ class AirdropRepository(BaseRepository):
         if is_claimed_address is not None:
             raise Exception('Airdrop Already claimed / pending')
 
-    def register_airdrop(self, address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract):
+    def register_airdrop(self, address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract, check_eligibility=False):
         airdrop = Airdrop(
-            address=address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type)
+            address=address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type, check_eligibility=check_eligibility)
         self.add(airdrop)
         return self.session.query(Airdrop).filter_by(address=address).first()
 

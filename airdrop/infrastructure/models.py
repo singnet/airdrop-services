@@ -48,6 +48,7 @@ class Airdrop(Base, AuditClass):
     github_link_for_contract = Column(
         "github_link_for_contract", VARCHAR(256), nullable=True
     )
+    check_eligibility = Column("check_eligibility", BIT, default=False)
     airdrop_rules = Column("airdrop_rules", JSON, nullable=True)
 
 
@@ -111,6 +112,8 @@ class UserBalanceSnapshot(Base, AuditClass):
     )
     address = Column("address", VARCHAR(50), nullable=False)
     balance = Column("balance", BIGINT, nullable=False)
+    staked = Column("staked", BIGINT, nullable=False)
+    snapshot_index = Column("snapshot_index", INTEGER, nullable=False)
 
 
 class UserRegistration(Base, AuditClass):
