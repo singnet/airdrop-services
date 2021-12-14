@@ -1,0 +1,9 @@
+SQLAlchemy==1.4.22
+alembic==1.5.8
+PyMySQL==1.0.2
+jsonschema==3.2.0
+cryptography==3.4.7
+web3==5.24.0
+requests==2.26.0
+jsonschema==3.2.0
+boto3==1.18.60
