@@ -1,0 +1,23 @@
+{
+  "UserNotificationInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "UserNotificationInput",
+    "type": "object",
+    "properties": {
+      "email": {
+        "type": "string"
+      }
+    }
+  },
+  "UserNotificationOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "UserNotificationOutput",
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string"
+      },
+      "data": {}
+    }
+  }
+}

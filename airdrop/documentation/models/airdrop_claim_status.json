@@ -1,0 +1,29 @@
+{
+  "AirdropClaimStatusInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropClaimStatusInput",
+    "type": "object",
+    "properties": {
+      "airdrop_id": {
+        "type": "string"
+      },
+      "airdrop_window_id": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
+      }
+    }
+  },
+  "AirdropClaimStatusOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropClaimStatusOutput",
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string"
+      },
+      "data": {}
+    }
+  }
+}

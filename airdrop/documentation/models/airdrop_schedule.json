@@ -1,0 +1,21 @@
+{
+  "AirdropScheduleInput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropScheduleInput",
+    "type": "object",
+    "properties": {
+      "data": {}
+    }
+  },
+  "AirdropScheduleOutput": {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "AirdropScheduleOutput",
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string"
+      },
+      "data": {}
+    }
+  }
+}
