@@ -225,4 +225,4 @@ class AirdropRepository(BaseRepository):
         if airdrop_row_data is not None:
             return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(
                 airdrop_row_data)
-        raise Exception("Invalid token address")
+        raise Exception("Invalid airdrop id")
