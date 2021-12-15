@@ -20,12 +20,13 @@ class AirdropServices:
                 txn_hash = txn.transaction_hash
                 receipt = self.get_txn_receipt(txn_hash)
                 if receipt is not None:
+                    print(f"Receipt for txn {txn_hash} is {str(receipt)}")
                     txn_hash_from_receipt = receipt.transactionHash
                     if receipt.status == 1:
                         txn_receipt_status = AirdropClaimStatus.SUCCESS.value
                     else:
                         txn_receipt_status = AirdropClaimStatus.FAILED.value
-                    if(txn_hash_from_receipt == txn_hash):
+                    if(txn_hash_from_receipt.lower() == txn_hash.lower()):
                         AirdropRepository().update_txn_status(txn_hash_from_receipt, txn_receipt_status)
                     else:
                         airdrop_id = txn.airdrop_id
