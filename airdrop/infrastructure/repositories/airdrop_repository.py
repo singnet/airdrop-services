@@ -152,8 +152,7 @@ class AirdropRepository(BaseRepository):
         return self.add(airdrop_window_timeline)
 
     def get_contract_address(self, airdrop_id):
-        airdrop = self.session.query(Airdrop).filter_by(
-            airdrop_id=airdrop_id).first()
+        airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
 
         if airdrop is None:
             raise Exception('Airdrop not found')
