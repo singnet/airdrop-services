@@ -6,6 +6,7 @@ from common.utils import generate_claim_signature, read_contract_address, get_tr
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, NETWORK_ID
 from airdrop.constants import AIRDROP_ADDR_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.models.airdrop_claim import AirdropClaim
+from airdrop.config import NUNET_TOKEN_ADDRESS
 
 
 class AirdropServices:
@@ -169,10 +170,10 @@ class AirdropServices:
     def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_address):
         try:
 
-            contract_address = read_contract_address(net_id=NETWORK_ID, path=AIRDROP_ADDR_PATH,
-                                                     key='address')
+            contract_address = AirdropRepository().get_airdrop_contract_address(airdrop_id)
 
-            token_address = AirdropRepository().get_token_address(airdrop_id)
+            # TODO: Read from database address & rename column to token address
+            token_address = NUNET_TOKEN_ADDRESS
 
             boto_client = BotoUtils(
                 region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)
