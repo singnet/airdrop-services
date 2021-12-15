@@ -170,7 +170,7 @@ class AirdropServices:
     def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_address):
         try:
 
-            contract_address = AirdropRepository().get_airdrop_contract_address(airdrop_id)
+            contract_address = AirdropRepository().get_contract_address(airdrop_id)
 
             # TODO: Read from database address & rename column to token address
             token_address = NUNET_TOKEN_ADDRESS
