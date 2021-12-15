@@ -214,7 +214,7 @@ class AirdropRepository(BaseRepository):
                     Airdrop.id == AirdropWindow.airdrop_id,
                 )
                 .join(AirdropWindowTimelines, AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id)
-                .filter(Airdrop.address == token_address)
+                .filter(Airdrop.id == airdrop_id)
                 .first()
             )
             self.session.commit()

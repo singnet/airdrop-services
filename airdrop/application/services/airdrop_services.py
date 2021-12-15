@@ -187,11 +187,11 @@ class AirdropServices:
         except BaseException as e:
             raise e
 
-    def get_airdrops_schedule(self, token_address):
+    def get_airdrops_schedule(self, airdrop_id):
         status = HTTPStatus.BAD_REQUEST
 
         try:
-            response = AirdropRepository().get_airdrops_schedule(token_address)
+            response = AirdropRepository().get_airdrops_schedule(airdrop_id)
             status = HTTPStatus.OK
         except ValidationError as e:
             response = e.message
