@@ -10,7 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "singularitynet-airdrop-contracts": "../external_packages/npm-module_Airdrop/",
-    "nunet-occam-contracts": "../external_packages/npm-module_Occam/"
+    "singularitynet-airdrop-contracts": "../external_packages/singularitynet-airdrop-contracts/"
   }
 }
