@@ -205,7 +205,7 @@ class AirdropRepository(BaseRepository):
         else:
             return 0, token_address
 
-    def get_airdrops_schedule(self, token_address):
+    def get_airdrops_schedule(self, airdrop_id):
         try:
             airdrop_row_data = (
                 self.session.query(Airdrop)
