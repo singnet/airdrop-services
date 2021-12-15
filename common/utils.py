@@ -108,6 +108,11 @@ def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address
         user_address = Web3.toChecksumAddress(user_address)
         token_address = Web3.toChecksumAddress(token_address)
         contract_address = Web3.toChecksumAddress(contract_address)
+
+        print("Generate claim signature user_address: ", user_address)
+        print("Generate claim signature token_address: ", token_address)
+        print("Generate claim signature contract_address: ", contract_address)
+
         message = web3.Web3.soliditySha3(
             ["string", "uint256", "address", "uint256",
                 "uint256", "address", "address"],
