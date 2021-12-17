@@ -2,9 +2,16 @@ from airdrop.domain.models.airdrop_schedule import AirdropSchedule
 from airdrop.domain.models.airdrop_window import AirdropWindow
 from airdrop.domain.models.airdrop_user_details import AirdropUserDetails
 from airdrop.domain.models.airdrop_claim_history import AirdropClaimHistory
+from airdrop.domain.models.airdrop_stake_claim import AirdropStakeClaim
 
 
 class AirdropFactory:
+    @staticmethod
+    def convert_stake_claim_details_to_model(airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name):
+        return AirdropStakeClaim(
+            airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name
+        ).to_dict()
+
     @staticmethod
     def convert_airdrop_schedule_model_to_entity_model(airdrop):
         return AirdropSchedule(

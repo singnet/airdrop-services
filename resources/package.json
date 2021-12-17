@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "singularitynet-airdrop-contracts": "../external_packages/singularitynet-airdrop-contracts/"
+    "singularitynet-airdrop-contracts": "../external_packages/singularitynet-airdrop-contracts/",
+    "singularitynet-staking-contract": "../external_packages/singularitynet-staking-contract/"
   }
 }
