@@ -164,6 +164,7 @@ class ClaimHistory(Base, AuditClass):
         nullable=False,
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
+    type = Column("type", VARCHAR(50), nullable=True)
     claimable_amount = Column("claimable_amount", INTEGER, nullable=False)
     unclaimed_amount = Column("unclaimed_amount", INTEGER, nullable=False)
     transaction_status = Column(

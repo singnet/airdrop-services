@@ -82,7 +82,7 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-    def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount):
+    def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount, action_type):
         try:
 
             is_valid_address = self.session.query(UserRegistration).filter(
@@ -109,7 +109,7 @@ class AirdropRepository(BaseRepository):
 
             txn_status = AirdropClaimStatus.PENDING.value
             claim_history = ClaimHistory(
-                address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0)
+                address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0, type=action_type)
             self.session.commit()
             return self.add(claim_history)
 
