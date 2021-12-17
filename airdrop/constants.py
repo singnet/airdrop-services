@@ -2,7 +2,7 @@ import os
 from enum import Enum
 
 COMMON_CNTRCT_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'resources', 'node_modules'))
+    os.path.join(os.path.dirname(__file__), '..', 'resources'))
 AIRDROP_ADDR_PATH = COMMON_CNTRCT_PATH + \
     '/singularitynet-airdrop-contracts/networks/SingularityAirdrop.json'
 STAKING_CONTRACT_PATH = COMMON_CNTRCT_PATH + '/singularitynet-staking-contract'
