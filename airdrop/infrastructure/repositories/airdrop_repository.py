@@ -199,9 +199,9 @@ class AirdropRepository(BaseRepository):
                 UserReward.airdrop_window_id == airdrop_window_id).filter(UserReward.airdrop_id == airdrop_id).first()
 
             airdrop_row_data = self.session.query(
-                Airdrop.address).filter(Airdrop.id == airdrop_id).first()
+                Airdrop.token_address).filter(Airdrop.id == airdrop_id).first()
 
-            token_address = airdrop_row_data.address
+            token_address = airdrop_row_data.token_address
 
             self.session.commit()
         except SQLAlchemyError as e:
