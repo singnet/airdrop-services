@@ -156,28 +156,27 @@ class AirdropRepository(BaseRepository):
             airdrop = self.session.query(
                 Airdrop).filter_by(id=airdrop_id).first()
             self.session.commit()
-
-            if airdrop is None:
-                raise Exception('Airdrop not found')
-
-            return airdrop.contract_address
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+
+        if airdrop is None:
+            raise Exception('Airdrop not found')
+        return airdrop.contract_address
 
     def get_token_address(self, airdrop_id):
         try:
             airdrop = self.session.query(
                 Airdrop).filter_by(id=airdrop_id).first()
             self.session.commit()
-
-            if airdrop is None:
-                raise Exception("Airdrop not found")
-
-            return airdrop.token_address
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+
+        if airdrop is None:
+            raise Exception("Airdrop not found")
+
+        return airdrop.token_address
 
     def get_staking_contract_address(self, airdrop_id):
         try:
@@ -242,10 +241,10 @@ class AirdropRepository(BaseRepository):
                 .first()
             )
             self.session.commit()
-            if airdrop_row_data is not None:
-                return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(airdrop_row_data)
-            else:
-                raise Exception('Non eligible user')
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+        if airdrop_row_data is not None:
+            return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(airdrop_row_data)
+        else:
+            raise Exception('Non eligible user')
