@@ -15,7 +15,7 @@ def get_airdrop_schedules(event, context):
     logger.info(f"Got Airdrops Event {event}")
     parameters = event['pathParameters']
     status, response = AirdropServices().get_airdrops_schedule(
-        parameters['token_address'])
+        parameters['airdrop_id'])
     return generate_lambda_response(
         status.value,
         status.phrase,
@@ -28,6 +28,18 @@ def get_airdrop_schedules(event, context):
 def user_registration(event, context):
     logger.info(f"Got Airdrops Event {event}")
     status, response = UserRegistrationServices().register(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def airdrop_window_stake_details(event, context):
+    logger.info(f"Got Airdrops Window Stake details {event}")
+    status, response = AirdropServices().get_airdrop_window_stake_details(request(event))
     return generate_lambda_response(
         status.value,
         status.phrase,

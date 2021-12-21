@@ -82,7 +82,7 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-    def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount):
+    def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount, action_type):
         try:
 
             is_valid_address = self.session.query(UserRegistration).filter(
@@ -109,7 +109,7 @@ class AirdropRepository(BaseRepository):
 
             txn_status = AirdropClaimStatus.PENDING.value
             claim_history = ClaimHistory(
-                address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0)
+                address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0, type=action_type)
             self.session.commit()
             return self.add(claim_history)
 
@@ -151,13 +151,21 @@ class AirdropRepository(BaseRepository):
             airdrop_window_id=airdrop_window_id, title=title, description=description, date=date)
         return self.add(airdrop_window_timeline)
 
+    def get_contract_address(self, airdrop_id):
+        airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
+
+        if airdrop is None:
+            raise Exception('Airdrop not found')
+
+        return airdrop.contract_address
+
     def get_token_address(self, airdrop_id):
         airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
 
         if airdrop is None:
             raise Exception("Airdrop not found")
 
-        return airdrop.contract_address
+        return airdrop.address
 
     def get_airdrop_window_claimable_amount(self, airdrop_id, airdrop_window_id, address):
         try:
@@ -197,7 +205,7 @@ class AirdropRepository(BaseRepository):
         else:
             return 0, token_address
 
-    def get_airdrops_schedule(self, token_address):
+    def get_airdrops_schedule(self, airdrop_id):
         try:
             airdrop_row_data = (
                 self.session.query(Airdrop)
@@ -206,7 +214,7 @@ class AirdropRepository(BaseRepository):
                     Airdrop.id == AirdropWindow.airdrop_id,
                 )
                 .join(AirdropWindowTimelines, AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id)
-                .filter(Airdrop.address == token_address)
+                .filter(Airdrop.id == airdrop_id)
                 .first()
             )
             self.session.commit()
@@ -217,4 +225,4 @@ class AirdropRepository(BaseRepository):
         if airdrop_row_data is not None:
             return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(
                 airdrop_row_data)
-        raise Exception("Invalid token address")
+        raise Exception("Invalid airdrop id")
