@@ -213,13 +213,11 @@ class AirdropRepository(BaseRepository):
             if is_eligible_user is None:
                 raise Exception('Non eligible user')
 
-            balance_raw_data = self.session.query(UserReward).filter(UserReward.address == address).filter(
+            balance_raw_data = self.session.query(UserReward, Airdrop).join(
+                Airdrop,
+                Airdrop.id == UserReward.airdrop_id,
+            ).filter(UserReward.address == address).filter(
                 UserReward.airdrop_window_id == airdrop_window_id).filter(UserReward.airdrop_id == airdrop_id).first()
-
-            airdrop_row_data = self.session.query(
-                Airdrop.token_address).filter(Airdrop.id == airdrop_id).first()
-
-            token_address = airdrop_row_data.token_address
 
             self.session.commit()
         except SQLAlchemyError as e:
@@ -227,9 +225,10 @@ class AirdropRepository(BaseRepository):
             raise e
 
         if balance_raw_data is not None:
-            return balance_raw_data.rewards_awarded, token_address
+            token_address = balance_raw_data.Airdrop.token_address
+            return balance_raw_data.UserReward.rewards_awarded, token_address
         else:
-            return 0, token_address
+            return 0, ''
 
     def get_airdrops_schedule(self, airdrop_id):
         try:
