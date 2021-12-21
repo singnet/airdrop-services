@@ -28,7 +28,7 @@ class UserRegistration(TestCase):
 
         airdrop_repo = AirdropRepository()
         airdrop = airdrop_repo.register_airdrop(
-            address=token_address, org_name='SINGNET', token_name='AGIX', token_type='Contract', contract_address=contract_address, portal_link='https://beta.singularitynet.io', documentation_link='https://beta.singularitynet.io', github_link_for_contract='https://github.com/singnet', description='Long description')
+            token_address=token_address, org_name='SINGNET', token_name='AGIX', token_type='Contract', contract_address=contract_address, portal_link='https://beta.singularitynet.io', documentation_link='https://beta.singularitynet.io', github_link_for_contract='https://github.com/singnet', description='Long description')
 
         airdrop_repo.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
                                              registration_start_period=registration_start_window, registration_end_period=one_month_later, snapshot_required=True, claim_start_period=now, claim_end_period=one_month_later, total_airdrop_tokens=1000000)
