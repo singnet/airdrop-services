@@ -137,7 +137,7 @@ class AirdropRepository(BaseRepository):
 
     def register_airdrop(self, address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract):
         airdrop = Airdrop(
-            address=address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type)
+            token_address=address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type)
         self.add(airdrop)
         return self.session.query(Airdrop).filter_by(address=address).first()
 
