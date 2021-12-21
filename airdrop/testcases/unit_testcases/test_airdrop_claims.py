@@ -30,10 +30,11 @@ class AirdropClaims(TestCase):
         contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
+        stakable_token_name = 'AGIX'
 
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
-            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
+            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
         airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
