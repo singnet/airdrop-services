@@ -2,10 +2,12 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
-from common.utils import generate_claim_signature, read_contract_address, get_transaction_receipt_from_blockchain
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, NETWORK_ID
-from airdrop.constants import AIRDROP_ADDR_PATH, AirdropEvents, AirdropClaimStatus
+from common.utils import generate_claim_signature, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
+from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, STAKING_CONTRACT_ADDRESS, MAX_STAKE_LIMIT, STAKING_TOKEN_NAME
+from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
+from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.domain.models.airdrop_claim import AirdropClaim
+from airdrop.config import NUNET_TOKEN_ADDRESS
 
 
 class AirdropServices:
@@ -19,12 +21,13 @@ class AirdropServices:
                 txn_hash = txn.transaction_hash
                 receipt = self.get_txn_receipt(txn_hash)
                 if receipt is not None:
-                    txn_hash_from_receipt = receipt.transactionHash
+                    print(f"Receipt for txn {txn_hash} is {str(receipt)}")
+                    txn_hash_from_receipt = receipt.transactionHash.hex()
                     if receipt.status == 1:
                         txn_receipt_status = AirdropClaimStatus.SUCCESS.value
                     else:
                         txn_receipt_status = AirdropClaimStatus.FAILED.value
-                    if(txn_hash_from_receipt == txn_hash):
+                    if(txn_hash_from_receipt.lower() == txn_hash.lower()):
                         AirdropRepository().update_txn_status(txn_hash_from_receipt, txn_receipt_status)
                     else:
                         airdrop_id = txn.airdrop_id
@@ -69,6 +72,59 @@ class AirdropServices:
             print(f"Exception on Airdrop claim status update {e}")
             return False
 
+    def get_airdrop_window_stake_details(self, inputs):
+        status = HTTPStatus.BAD_REQUEST
+        try:
+            schema = {
+                "type": "object",
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id"],
+            }
+
+            validate(instance=inputs, schema=schema)
+
+            user_address = inputs["address"]
+            airdrop_id = inputs["airdrop_id"]
+            airdrop_window_id = inputs["airdrop_id"]
+
+            address = get_checksum_address(user_address)
+
+            rewards, user_address = AirdropRepository().get_airdrop_window_claimable_amount(
+                airdrop_id, airdrop_window_id, address)
+
+            is_stakable, stakable_amount = self.get_stake_info(address)
+            claimable_tokens_to_wallet = rewards
+            stakable_tokens = stakable_amount
+
+            if(is_stakable):
+                if(stakable_tokens > MAX_STAKE_LIMIT):
+                    stakable_tokens = MAX_STAKE_LIMIT
+                claimable_tokens_to_wallet = abs(
+                    claimable_tokens_to_wallet - stakable_tokens)
+
+            stake_details = AirdropFactory.convert_stake_claim_details_to_model(
+                airdrop_id, airdrop_window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, STAKING_TOKEN_NAME)
+
+            response = {"stake_details": stake_details}
+            status = HTTPStatus.OK
+
+        except ValidationError as e:
+            response = e.message
+        except BaseException as e:
+            print(f"Exception on Airdrop Window History {e}")
+            response = str(e)
+
+        return status, response
+
+    def get_stake_info(self, address):
+        contract = get_contract_instance(
+            STAKING_CONTRACT_PATH, STAKING_CONTRACT_ADDRESS, contract_name='STAKING')
+
+        is_stakable, amount, rewards_computation_index, bonus_amount = contract.functions.getStakeInfo(
+            address).call()
+
+        return is_stakable, amount
+
     def airdrop_window_claim_history(self, inputs):
         status = HTTPStatus.BAD_REQUEST
         try:
@@ -102,8 +158,8 @@ class AirdropServices:
         try:
             schema = {
                 "type": "object",
-                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}},
-                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_hash", "amount"],
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}, "type": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_hash", "amount", "type"],
             }
 
             validate(instance=inputs, schema=schema)
@@ -113,9 +169,10 @@ class AirdropServices:
             airdrop_window_id = inputs["airdrop_window_id"]
             txn_hash = inputs["txn_hash"]
             amount = inputs["amount"]
+            type = inputs["type"]
 
             AirdropRepository().airdrop_window_claim_txn(
-                airdrop_id, airdrop_window_id, user_address, txn_hash, amount)
+                airdrop_id, airdrop_window_id, user_address, txn_hash, amount, type)
 
             response = HTTPStatus.OK.phrase
             status = HTTPStatus.OK
@@ -169,10 +226,10 @@ class AirdropServices:
     def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_address):
         try:
 
-            contract_address = read_contract_address(net_id=NETWORK_ID, path=AIRDROP_ADDR_PATH,
-                                                     key='address')
+            contract_address = AirdropRepository().get_contract_address(airdrop_id)
 
-            token_address = AirdropRepository().get_token_address(airdrop_id)
+            # TODO: Read from database address & rename column to token address
+            token_address = NUNET_TOKEN_ADDRESS
 
             boto_client = BotoUtils(
                 region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)
@@ -185,11 +242,11 @@ class AirdropServices:
         except BaseException as e:
             raise e
 
-    def get_airdrops_schedule(self, token_address):
+    def get_airdrops_schedule(self, airdrop_id):
         status = HTTPStatus.BAD_REQUEST
 
         try:
-            response = AirdropRepository().get_airdrops_schedule(token_address)
+            response = AirdropRepository().get_airdrops_schedule(airdrop_id)
             status = HTTPStatus.OK
         except ValidationError as e:
             response = e.message
