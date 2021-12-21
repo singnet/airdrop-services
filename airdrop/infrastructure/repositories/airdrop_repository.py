@@ -184,14 +184,13 @@ class AirdropRepository(BaseRepository):
             airdrop = self.session.query(
                 Airdrop).filter_by(id=airdrop_id).first()
             self.session.commit()
-
-            if airdrop is None:
-                raise Exception("Airdrop not found")
-
-            return airdrop.staking_contract_address, airdrop.stakable_token_name
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+
+        if airdrop is None:
+            raise Exception("Airdrop not found")
+        return airdrop.staking_contract_address, airdrop.stakable_token_name
 
     def get_airdrop_window_claimable_info(self, airdrop_id, airdrop_window_id, address):
         try:
@@ -210,9 +209,6 @@ class AirdropRepository(BaseRepository):
                 .first()
             )
 
-            if is_eligible_user is None:
-                raise Exception('Non eligible user')
-
             balance_raw_data = self.session.query(UserReward, Airdrop).join(
                 Airdrop,
                 Airdrop.id == UserReward.airdrop_id,
@@ -223,6 +219,9 @@ class AirdropRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+
+        if is_eligible_user is None:
+            raise Exception('Non eligible user')
 
         if balance_raw_data is not None:
             token_address = balance_raw_data.Airdrop.token_address
