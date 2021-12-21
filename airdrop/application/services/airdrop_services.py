@@ -88,7 +88,7 @@ class AirdropServices:
 
             address = get_checksum_address(user_address)
 
-            rewards, user_address = AirdropRepository().get_airdrop_window_claimable_amount(
+            rewards, user_address = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, address)
 
             staking_contract_address, stakable_token_name = AirdropRepository(
@@ -208,7 +208,7 @@ class AirdropServices:
             airdrop_repo.is_claimed_airdrop_window(
                 user_address, airdrop_window_id)
 
-            claimable_amount, token_address = AirdropRepository().get_airdrop_window_claimable_amount(
+            claimable_amount, token_address = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_address)
 
             signature = self.get_signature_for_airdrop_window_id(
