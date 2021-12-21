@@ -3,7 +3,7 @@ from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
 from common.utils import generate_claim_signature, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, MAX_STAKE_LIMIT, STAKING_TOKEN_NAME
+from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, MAX_STAKE_LIMIT
 from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.domain.models.airdrop_claim import AirdropClaim
@@ -91,7 +91,7 @@ class AirdropServices:
             rewards, user_address = AirdropRepository().get_airdrop_window_claimable_amount(
                 airdrop_id, airdrop_window_id, address)
 
-            staking_contract_address = AirdropRepository(
+            staking_contract_address, staking_token_name = AirdropRepository(
             ).get_staking_contract_address(airdrop_id)
 
             is_stakable, stakable_amount = self.get_stake_info(
@@ -106,7 +106,7 @@ class AirdropServices:
                     claimable_tokens_to_wallet - stakable_tokens)
 
             stake_details = AirdropFactory.convert_stake_claim_details_to_model(
-                airdrop_id, airdrop_window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, STAKING_TOKEN_NAME)
+                airdrop_id, airdrop_window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, staking_token_name)
 
             response = {"stake_details": stake_details}
             status = HTTPStatus.OK
