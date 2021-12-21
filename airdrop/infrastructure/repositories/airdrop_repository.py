@@ -135,9 +135,9 @@ class AirdropRepository(BaseRepository):
         if is_claimed_address is not None:
             raise Exception('Airdrop Already claimed / pending')
 
-    def register_airdrop(self, token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract):
+    def register_airdrop(self, token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract, stakable_token_name):
         airdrop = Airdrop(
-            token_address=token_address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type)
+            token_address=token_address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type, stakable_token_name=stakable_token_name)
         self.add(airdrop)
         return self.session.query(Airdrop).filter_by(token_address=token_address).first()
 
@@ -173,7 +173,7 @@ class AirdropRepository(BaseRepository):
         if airdrop is None:
             raise Exception("Airdrop not found")
 
-        return airdrop.staking_contract_address, airdrop.staking_token_name
+        return airdrop.staking_contract_address, airdrop.stakable_token_name
 
     def get_airdrop_window_claimable_amount(self, airdrop_id, airdrop_window_id, address):
         try:
