@@ -18,9 +18,22 @@ class UserRegistration(TestCase):
 
     def setUp(self):
 
+        org_name = 'SINGNET'
+        token_name = 'AGIX'
+        token_type = 'CONTRACT'
+        portal_link = 'https://ropsten-airdrop.singularitynet.io/'
+        documentation_link = 'https://ropsten-airdrop.singularitynet.io/'
+        description = 'This is a test airdrop'
+        github_link = 'https://github.com/singnet/airdrop-services'
+        registration_start_date = datetime.utcnow() - timedelta(days=2)
+        registration_end_date = datetime.utcnow() + timedelta(days=30)
+        claim_start_date = datetime.utcnow() - timedelta(days=2)
+        claim_end_date = datetime.utcnow() + timedelta(days=30)
+
         contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         user_address = '0xCc3cD60FF9936B7C9272a649b24f290ADa562469'
+        stakable_token_name = 'AGIX'
 
         now = datetime.utcnow()
         one_month_later = now + timedelta(days=30)
@@ -29,7 +42,7 @@ class UserRegistration(TestCase):
 
         airdrop_repo = AirdropRepository()
         airdrop = airdrop_repo.register_airdrop(
-            token_address=token_address, org_name='SINGNET', token_name='AGIX', token_type='Contract', contract_address=contract_address, portal_link='https://beta.singularitynet.io', documentation_link='https://beta.singularitynet.io', github_link_for_contract='https://github.com/singnet', description='Long description', stakable_token_name=stakable_token_name)
+            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
 
         airdrop_repo.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
                                              registration_start_period=registration_start_window, registration_end_period=one_month_later, snapshot_required=True, claim_start_period=now, claim_end_period=one_month_later, total_airdrop_tokens=1000000)
