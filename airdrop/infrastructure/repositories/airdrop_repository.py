@@ -82,7 +82,7 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-    def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount, action_type):
+    def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount, blockchain_method):
         try:
 
             is_valid_address = self.session.query(UserRegistration).filter(
@@ -109,7 +109,7 @@ class AirdropRepository(BaseRepository):
 
             txn_status = AirdropClaimStatus.PENDING.value
             claim_history = ClaimHistory(
-                address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0, type=action_type)
+                address=address, airdrop_window_id=airdrop_window_id, airdrop_id=airdrop_id, transaction_status=txn_status, transaction_hash=txn_hash, claimable_amount=amount, unclaimed_amount=0, blockchain_method=blockchain_method)
             self.session.commit()
             return self.add(claim_history)
 
@@ -135,11 +135,11 @@ class AirdropRepository(BaseRepository):
         if is_claimed_address is not None:
             raise Exception('Airdrop Already claimed / pending')
 
-    def register_airdrop(self, address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract):
+    def register_airdrop(self, token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link_for_contract, stakable_token_name):
         airdrop = Airdrop(
-            address=address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type)
+            token_address=token_address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type, stakable_token_name=stakable_token_name)
         self.add(airdrop)
-        return self.session.query(Airdrop).filter_by(address=address).first()
+        return self.session.query(Airdrop).filter_by(token_address=token_address).first()
 
     def register_airdrop_window(self, airdrop_id, airdrop_window_name, description, registration_required, registration_start_period, registration_end_period, snapshot_required, claim_start_period, claim_end_period, total_airdrop_tokens):
         airdrop_window = AirdropWindow(airdrop_id=airdrop_id, airdrop_window_name=airdrop_window_name, description=description, registration_required=registration_required, registration_start_period=registration_start_period,
@@ -152,22 +152,46 @@ class AirdropRepository(BaseRepository):
         return self.add(airdrop_window_timeline)
 
     def get_contract_address(self, airdrop_id):
-        airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
+        try:
+            airdrop = self.session.query(
+                Airdrop).filter_by(id=airdrop_id).first()
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
 
         if airdrop is None:
             raise Exception('Airdrop not found')
-
         return airdrop.contract_address
 
     def get_token_address(self, airdrop_id):
-        airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
+        try:
+            airdrop = self.session.query(
+                Airdrop).filter_by(id=airdrop_id).first()
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
 
         if airdrop is None:
             raise Exception("Airdrop not found")
 
-        return airdrop.address
+        return airdrop.token_address
 
-    def get_airdrop_window_claimable_amount(self, airdrop_id, airdrop_window_id, address):
+    def get_staking_contract_address(self, airdrop_id):
+        try:
+            airdrop = self.session.query(
+                Airdrop).filter_by(id=airdrop_id).first()
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+        if airdrop is None:
+            raise Exception("Airdrop not found")
+        return airdrop.staking_contract_address, airdrop.stakable_token_name
+
+    def get_airdrop_window_claimable_info(self, airdrop_id, airdrop_window_id, address):
         try:
             date_time = datetime.utcnow()
             is_eligible_user = (
@@ -184,26 +208,25 @@ class AirdropRepository(BaseRepository):
                 .first()
             )
 
-            if is_eligible_user is None:
-                raise Exception('Non eligible user')
-
-            balance_raw_data = self.session.query(UserReward).filter(UserReward.address == address).filter(
+            balance_raw_data = self.session.query(UserReward, Airdrop).join(
+                Airdrop,
+                Airdrop.id == UserReward.airdrop_id,
+            ).filter(UserReward.address == address).filter(
                 UserReward.airdrop_window_id == airdrop_window_id).filter(UserReward.airdrop_id == airdrop_id).first()
-
-            airdrop_row_data = self.session.query(
-                Airdrop.address).filter(Airdrop.id == airdrop_id).first()
-
-            token_address = airdrop_row_data.address
 
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
 
+        if is_eligible_user is None:
+            raise Exception('Non eligible user')
+
         if balance_raw_data is not None:
-            return balance_raw_data.rewards_awarded, token_address
+            token_address = balance_raw_data.Airdrop.token_address
+            return balance_raw_data.UserReward.rewards_awarded, token_address
         else:
-            return 0, token_address
+            return 0, ''
 
     def get_airdrops_schedule(self, airdrop_id):
         try:
@@ -221,8 +244,7 @@ class AirdropRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-
         if airdrop_row_data is not None:
-            return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(
-                airdrop_row_data)
-        raise Exception("Invalid airdrop id")
+            return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(airdrop_row_data)
+        else:
+            raise Exception('Non eligible user')
