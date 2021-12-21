@@ -36,12 +36,13 @@ class AuditClass(object):
 
 class Airdrop(Base, AuditClass):
     __tablename__ = "airdrop"
-    address = Column("address", VARCHAR(50), nullable=False)
+    token_address = Column("token_address", VARCHAR(50), nullable=False)
     org_name = Column("org_name", VARCHAR(256), nullable=False)
     token_name = Column("token_name", VARCHAR(128), nullable=False)
-    token_address = Column("token_address", VARCHAR(128), nullable=True)
     token_type = Column("token_type", VARCHAR(50), nullable=False)
     contract_address = Column("contract_address", VARCHAR(50), nullable=False)
+    staking_contract_address = Column(
+        "staking_contract_address", VARCHAR(50), nullable=True)
     portal_link = Column("portal_link", VARCHAR(256), nullable=True)
     documentation_link = Column(
         "documentation_link", VARCHAR(256), nullable=True)

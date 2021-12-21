@@ -3,7 +3,7 @@ from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
 from common.utils import generate_claim_signature, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, STAKING_CONTRACT_ADDRESS, MAX_STAKE_LIMIT, STAKING_TOKEN_NAME
+from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, MAX_STAKE_LIMIT, STAKING_TOKEN_NAME
 from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.domain.models.airdrop_claim import AirdropClaim
@@ -92,7 +92,11 @@ class AirdropServices:
             rewards, user_address = AirdropRepository().get_airdrop_window_claimable_amount(
                 airdrop_id, airdrop_window_id, address)
 
-            is_stakable, stakable_amount = self.get_stake_info(address)
+            staking_contract_address = AirdropRepository(
+            ).get_staking_contract_address(airdrop_id)
+
+            is_stakable, stakable_amount = self.get_stake_info(
+                staking_contract_address, address)
             claimable_tokens_to_wallet = rewards
             stakable_tokens = stakable_amount
 
@@ -116,9 +120,9 @@ class AirdropServices:
 
         return status, response
 
-    def get_stake_info(self, address):
+    def get_stake_info(self, staking_contract_address, address):
         contract = get_contract_instance(
-            STAKING_CONTRACT_PATH, STAKING_CONTRACT_ADDRESS, contract_name='STAKING')
+            STAKING_CONTRACT_PATH, staking_contract_address, contract_name='STAKING')
 
         is_stakable, amount, rewards_computation_index, bonus_amount = contract.functions.getStakeInfo(
             address).call()
@@ -228,8 +232,7 @@ class AirdropServices:
 
             contract_address = AirdropRepository().get_contract_address(airdrop_id)
 
-            # TODO: Read from database address & rename column to token address
-            token_address = NUNET_TOKEN_ADDRESS
+            token_address = AirdropRepository().get_token_address(airdrop_id)
 
             boto_client = BotoUtils(
                 region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)

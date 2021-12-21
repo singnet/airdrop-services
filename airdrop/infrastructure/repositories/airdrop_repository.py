@@ -165,7 +165,15 @@ class AirdropRepository(BaseRepository):
         if airdrop is None:
             raise Exception("Airdrop not found")
 
-        return airdrop.address
+        return airdrop.token_address
+
+    def get_staking_contract_address(self, airdrop_id):
+        airdrop = self.session.query(Airdrop).filter_by(id=airdrop_id).first()
+
+        if airdrop is None:
+            raise Exception("Airdrop not found")
+
+        return airdrop.staking_contract_address
 
     def get_airdrop_window_claimable_amount(self, airdrop_id, airdrop_window_id, address):
         try:
