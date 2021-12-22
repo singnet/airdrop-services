@@ -226,7 +226,7 @@ class AirdropRepository(BaseRepository):
             total_rewards = balance_data['total_rewards']
             return str(total_rewards), address
         else:
-            return 0, address
+            return 0, ''
 
     def get_airdrops_schedule(self, airdrop_id):
         try:
