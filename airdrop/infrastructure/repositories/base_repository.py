@@ -25,7 +25,6 @@ default_session = Session()
 class BaseRepository:
     def __init__(self):
         self.session = default_session
-        self.engine = engine
 
     def add(self, item):
         try:
