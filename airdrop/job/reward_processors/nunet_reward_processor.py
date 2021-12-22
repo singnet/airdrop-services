@@ -41,7 +41,7 @@ class NunetRewardProcessor:
         self.__insert_reward = "insert into user_rewards (airdrop_id, airdrop_window_id, address, rewards_awarded, score, row_created, row_updated) "+\
                           "values(%s,%s,%s,%s,%s, current_timestamp, current_timestamp) "+\
                           "on duplicate key update rewards_awarded = %s, score = %s, row_updated = current_timestamp"
-        self.__insert_audit = "insert into user_rewards_audit (airdrop_id, airdrop_window_id, snapshot_guid, address, balance, staked, score, log10_score, rewards_awarded, message, row_created, row_updated) "+\
+        self.__insert_audit = "insert into user_rewards_audit (airdrop_id, airdrop_window_id, snapshot_guid, address, balance, staked, score, normalized_score, rewards_awarded, message, row_created, row_updated) "+\
                           "values(%s,%s,%s,%s,%s, current_timestamp, current_timestamp) "+\
                           "on duplicate key update rewards_awarded = %s, score = %s, row_updated = current_timestamp"
         self.__rows_to_insert = []

@@ -151,8 +151,8 @@ class UserReward(Base, AuditClass):
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     condition = Column("condition", TEXT, nullable=True)
     rewards_awarded = Column("rewards_awarded", BIGINT, nullable=False)
-    score = Column("score", DECIMAL(10,5), nullable=False)
-    log10_score = Column("log10_score", DECIMAL(10,8), nullable=False)    
+    score = Column("score", DECIMAL(10,8), nullable=False)
+    normalized_score = Column("normalized_score", DECIMAL(10,8), nullable=False)    
     UniqueConstraint(airdrop_window_id, address)
 
 class UserRewardAudit(Base, AuditClass):
@@ -171,7 +171,7 @@ class UserRewardAudit(Base, AuditClass):
     balance = Column("balance", BIGINT, nullable=False)
     staked = Column("staked", BIGINT, nullable=False)    
     score = Column("score", DECIMAL(10,8), nullable=False)
-    log10_score = Column("log10_score", DECIMAL(10,8), nullable=False)
+    normalized_score = Column("normalized_score", DECIMAL(10,8), nullable=False)
     rewards_awarded = Column("rewards_awarded", BIGINT, nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
     comment = Column("comment", VARCHAR(512))

@@ -103,7 +103,8 @@ package:
 
 functions:
   process_eligibility:
-    warmup: true
+    timeout: 300
+    warmup: false
     handler: airdrop/application/job/eligibility.process_eligibility
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonCode_Layer}
