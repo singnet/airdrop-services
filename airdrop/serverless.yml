@@ -104,7 +104,7 @@ package:
 functions:
   process_eligibility:
     warmup: true
-    handler: airdrop/application/cron/eligibility.process_eligibility
+    handler: airdrop/application/job/eligibility.process_eligibility
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonCode_Layer}
       - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib_Layer}
