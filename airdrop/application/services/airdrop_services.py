@@ -3,11 +3,10 @@ from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
 from common.utils import generate_claim_signature, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, STAKING_CONTRACT_ADDRESS, MAX_STAKE_LIMIT, STAKING_TOKEN_NAME
+from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, MAX_STAKE_LIMIT
 from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.domain.models.airdrop_claim import AirdropClaim
-from airdrop.config import NUNET_TOKEN_ADDRESS
 
 
 class AirdropServices:
@@ -89,10 +88,14 @@ class AirdropServices:
 
             address = get_checksum_address(user_address)
 
-            rewards, user_address = AirdropRepository().get_airdrop_window_claimable_amount(
+            rewards, user_address = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, address)
 
-            is_stakable, stakable_amount = self.get_stake_info(address)
+            staking_contract_address, stakable_token_name = AirdropRepository(
+            ).get_staking_contract_address(airdrop_id)
+
+            is_stakable, stakable_amount = self.get_stake_info(
+                staking_contract_address, address)
             claimable_tokens_to_wallet = rewards
             stakable_tokens = stakable_amount
 
@@ -103,7 +106,7 @@ class AirdropServices:
                     claimable_tokens_to_wallet - stakable_tokens)
 
             stake_details = AirdropFactory.convert_stake_claim_details_to_model(
-                airdrop_id, airdrop_window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, STAKING_TOKEN_NAME)
+                airdrop_id, airdrop_window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, stakable_token_name)
 
             response = {"stake_details": stake_details}
             status = HTTPStatus.OK
@@ -116,9 +119,9 @@ class AirdropServices:
 
         return status, response
 
-    def get_stake_info(self, address):
+    def get_stake_info(self, staking_contract_address, address):
         contract = get_contract_instance(
-            STAKING_CONTRACT_PATH, STAKING_CONTRACT_ADDRESS, contract_name='STAKING')
+            STAKING_CONTRACT_PATH, staking_contract_address, contract_name='STAKING')
 
         is_stakable, amount, rewards_computation_index, bonus_amount = contract.functions.getStakeInfo(
             address).call()
@@ -158,8 +161,8 @@ class AirdropServices:
         try:
             schema = {
                 "type": "object",
-                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}, "type": {"type": "string"}},
-                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_hash", "amount", "type"],
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}, "txn_hash": {"type": "string"}, "amount": {"type": "string"}, "blockchain_method": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id", "txn_hash", "amount", "blockchain_method"],
             }
 
             validate(instance=inputs, schema=schema)
@@ -169,10 +172,10 @@ class AirdropServices:
             airdrop_window_id = inputs["airdrop_window_id"]
             txn_hash = inputs["txn_hash"]
             amount = inputs["amount"]
-            type = inputs["type"]
+            blockchain_method = inputs["blockchain_method"]
 
             AirdropRepository().airdrop_window_claim_txn(
-                airdrop_id, airdrop_window_id, user_address, txn_hash, amount, type)
+                airdrop_id, airdrop_window_id, user_address, txn_hash, amount, blockchain_method)
 
             response = HTTPStatus.OK.phrase
             status = HTTPStatus.OK
@@ -205,7 +208,7 @@ class AirdropServices:
             airdrop_repo.is_claimed_airdrop_window(
                 user_address, airdrop_window_id)
 
-            claimable_amount, token_address = AirdropRepository().get_airdrop_window_claimable_amount(
+            claimable_amount, token_address = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_address)
 
             signature = self.get_signature_for_airdrop_window_id(
@@ -228,8 +231,7 @@ class AirdropServices:
 
             contract_address = AirdropRepository().get_contract_address(airdrop_id)
 
-            # TODO: Read from database address & rename column to token address
-            token_address = NUNET_TOKEN_ADDRESS
+            token_address = AirdropRepository().get_token_address(airdrop_id)
 
             boto_client = BotoUtils(
                 region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)
