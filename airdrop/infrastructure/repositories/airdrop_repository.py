@@ -1,4 +1,5 @@
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
 
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
 from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserRegistration, ClaimHistory, UserReward
@@ -208,12 +209,6 @@ class AirdropRepository(BaseRepository):
                 .first()
             )
 
-            balance_raw_data = self.session.query(UserReward, Airdrop).join(
-                Airdrop,
-                Airdrop.id == UserReward.airdrop_id,
-            ).filter(UserReward.address == address).filter(
-                UserReward.airdrop_window_id == airdrop_window_id).filter(UserReward.airdrop_id == airdrop_id).first()
-
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
@@ -222,11 +217,25 @@ class AirdropRepository(BaseRepository):
         if is_eligible_user is None:
             raise Exception('Non eligible user')
 
-        if balance_raw_data is not None:
-            token_address = balance_raw_data.Airdrop.token_address
-            return balance_raw_data.UserReward.rewards_awarded, token_address
+        balance_raw_data = self.fetch_total_rewards_amount(airdrop_id, address)
+
+        if len(balance_raw_data) > 0:
+            balance_data = balance_raw_data[0]
+            total_rewards = balance_data['total_rewards']
+            return str(total_rewards), address
         else:
             return 0, ''
+
+    def fetch_total_rewards_amount(self, airdrop_id, address):
+        try:
+            query = text("select SUM(ur.rewards_awarded) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and ur.airdrop_window_id not in (select airdrop_window_id from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING'));")
+            result = self.session.execute(
+                query, {'address': address, 'airdrop_id': airdrop_id})
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        return result.fetchall()
 
     def get_airdrops_schedule(self, airdrop_id):
         try:

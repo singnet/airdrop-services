@@ -15,11 +15,6 @@ connection_string = URL.create(
 
 engine = create_engine(
     url=connection_string,
-    pool_size=1,
-    max_overflow=0,
-    pool_recycle=3600,
-    pool_pre_ping=True,
-    pool_use_lifo=True,
     echo=NETWORK['db']["DB_LOGGING"],
 )
 
