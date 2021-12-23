@@ -29,7 +29,7 @@ class UserRepository(BaseRepository):
         balance_raw_data = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
         if len(balance_raw_data) > 0:
             balance_data = balance_raw_data[0]
-            total_rewards = balance_data['total_rewards']
+            total_rewards = balance_data['total_rewards'] if balance_data['total_rewards'] is not None else 0
             return True, str(total_rewards)
         else:
             return False, 0
