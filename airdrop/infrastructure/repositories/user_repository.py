@@ -1,4 +1,5 @@
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
@@ -25,16 +26,7 @@ class UserRepository(BaseRepository):
             raise e
 
     def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
-        try:
-            query = text("select SUM(ur.rewards_awarded) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and ur.airdrop_window_id not in (select airdrop_window_id from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING'));")
-            result = self.session.execute(
-                query, {'address': address, 'airdrop_id': airdrop_id})
-            self.session.commit()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
-
-        balance_raw_data = result.fetchall()
+        balance_raw_data = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
         if len(balance_raw_data) > 0:
             balance_data = balance_raw_data[0]
             total_rewards = balance_data['total_rewards']
