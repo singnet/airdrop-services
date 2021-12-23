@@ -12,6 +12,17 @@ NETWORK = {
         "DB_LOGGING": True,
     },
 }
+
+BALANCE_DB_CONFIG = {
+    "DB_DRIVER": "mysql+pymysql",
+    "DB_HOST": "localhost",
+    "DB_USER": "unittest_root",
+    "DB_PASSWORD": "unittest_pwd",
+    "DB_NAME":"token_balances",
+    "DB_PORT": 3306,
+    "DB_LOGGING": True,    
+}
+
 NETWORK_ID = 3
 SLACK_HOOK = {
     "hostname": "",
