@@ -3,6 +3,7 @@ from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserR
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
 
 
 class UserRepository(BaseRepository):
@@ -24,21 +25,22 @@ class UserRepository(BaseRepository):
             raise e
 
     def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
-        is_rewards_awarded = (
-            self.session.query(UserReward)
-            .filter(UserReward.address == address)
-            .filter(UserReward.airdrop_window_id == airdrop_window_id)
-            .filter(UserReward.airdrop_id == airdrop_id)
-            .first()
-        )
+        try:
+            query = text("select SUM(ur.rewards_awarded) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and ur.airdrop_window_id not in (select airdrop_window_id from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING'));")
+            result = self.session.execute(
+                query, {'address': address, 'airdrop_id': airdrop_id})
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
 
-        rewards_awards = 0
-
-        if is_rewards_awarded is None:
-            return False, rewards_awards
+        balance_raw_data = result.fetchall()
+        if len(balance_raw_data) > 0:
+            balance_data = balance_raw_data[0]
+            total_rewards = balance_data['total_rewards']
+            return True, str(total_rewards)
         else:
-            rewards_awards = is_rewards_awarded.rewards_awarded
-            return True, rewards_awards
+            return False, 0
 
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (
