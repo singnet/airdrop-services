@@ -42,7 +42,6 @@ class EligibilityProcessor:
         if (force and number_of_rows > 0) or number_of_rows >= 50:
             self._airdrop_db.bulk_query(self.__insert_snapshot, self.__rows_to_insert)
             self.__rows_to_insert.clear()       
-            print(f"*****{(time.process_time() - start)} seconds. Inserted {number_of_rows} rows")
         
         if(len(values) > 0):
             self.__rows_to_insert.append(tuple(values))
@@ -69,10 +68,11 @@ class EligibilityProcessor:
             return
         
         logger.info(f"Processing eligibility for windows {self._active_airdrop_window_map.keys()}. Snapshot Index is {self._snapshot_guid}")
-        #self.__populate_snapshot()
+        self.__populate_snapshot()
         
         for window in self._active_airdrop_window_map:
             processor_name = self._active_airdrop_window_map[window]["rewards_processor"]
+            logger.info(f"Processing eligibility for window {window} using processor {processor_name} with snapshot {self._snapshot_guid}")
             processor_class = locate("airdrop.job.reward_processors."+processor_name)
             processor = processor_class(self._airdrop_db, self._active_airdrop_window_map[window]["airdrop_id"],window, self._snapshot_guid)
             processor.process_rewards()
