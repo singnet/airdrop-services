@@ -6,12 +6,18 @@ import traceback
 import requests
 import web3
 from web3 import Web3
+from enum import Enum
 from eth_account.messages import defunct_hash_message, encode_defunct
 from airdrop.config import NETWORK
 from http import HTTPStatus
 from common.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class ContractType(Enum):
+    STAKING = "STAKING"
+    AIRDROP = "AIRDROP"
 
 
 class Utils:
@@ -108,6 +114,11 @@ def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address
         user_address = Web3.toChecksumAddress(user_address)
         token_address = Web3.toChecksumAddress(token_address)
         contract_address = Web3.toChecksumAddress(contract_address)
+
+        print("Generate claim signature user_address: ", user_address)
+        print("Generate claim signature token_address: ", token_address)
+        print("Generate claim signature contract_address: ", contract_address)
+
         message = web3.Web3.soliditySha3(
             ["string", "uint256", "address", "uint256",
                 "uint256", "address", "address"],
@@ -136,6 +147,43 @@ def load_contract(path):
 def read_contract_address(net_id, path, key):
     contract = load_contract(path)
     return Web3.toChecksumAddress(contract[str(net_id)][key])
+
+
+def get_checksum_address(address):
+    return Web3.toChecksumAddress(address)
+
+
+def get_contract_file_paths(base_path, contract_name):
+    logger.info(f"base_path: {base_path}")
+
+    if contract_name == ContractType.STAKING.value:
+        json_file = "SDAOBondedTokenStake.json"
+    elif contract_name == ContractType.AIRDROP.value:
+        json_file = "SingularityAirdrop.json"
+    else:
+        raise Exception("Invalid contract Type {}".format(contract_name))
+
+    contract_network_path = base_path + "/{}/{}".format("networks", json_file)
+    contract_abi_path = base_path + "/{}/{}".format("abi", json_file)
+
+    return contract_network_path, contract_abi_path
+
+
+def contract_instance(contract_abi, address):
+    provider = Web3.HTTPProvider(NETWORK['http_provider'])
+    web3_object = Web3(provider)
+    return web3_object.eth.contract(abi=contract_abi, address=address)
+
+
+def get_contract_instance(base_path, contract_address, contract_name):
+    contract_network_path, contract_abi_path = get_contract_file_paths(
+        base_path, contract_name)
+
+    contract_abi = load_contract(contract_abi_path)
+    logger.debug(f"contract address is {contract_address}")
+    provider = Web3.HTTPProvider(NETWORK['http_provider'])
+    web3_object = Web3(provider)
+    return web3_object.eth.contract(abi=contract_abi, address=contract_address)
 
 
 def verify_signature(airdrop_id, airdrop_window_id, address, signature):
