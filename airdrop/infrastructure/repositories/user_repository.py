@@ -1,8 +1,10 @@
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
 
 
 class UserRepository(BaseRepository):
@@ -24,21 +26,13 @@ class UserRepository(BaseRepository):
             raise e
 
     def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
-        is_rewards_awarded = (
-            self.session.query(UserReward)
-            .filter(UserReward.address == address)
-            .filter(UserReward.airdrop_window_id == airdrop_window_id)
-            .filter(UserReward.airdrop_id == airdrop_id)
-            .first()
-        )
-
-        rewards_awards = 0
-
-        if is_rewards_awarded is None:
-            return False, rewards_awards
+        balance_raw_data = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
+        if len(balance_raw_data) > 0:
+            balance_data = balance_raw_data[0]
+            total_rewards = balance_data['total_rewards'] if balance_data['total_rewards'] is not None else 0
+            return True, str(total_rewards)
         else:
-            rewards_awards = is_rewards_awarded.rewards_awarded
-            return True, rewards_awards
+            return False, 0
 
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (

@@ -57,5 +57,5 @@ class AirdropFactory:
             claim.claimable_amount,
             str(claim.claimed_on),
             claim.user_registrations,
-            claim.type
+            claim.blockchain_method
         ).to_dict()
