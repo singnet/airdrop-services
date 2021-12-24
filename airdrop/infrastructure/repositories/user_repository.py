@@ -4,7 +4,6 @@ from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserR
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import text
 
 
 class UserRepository(BaseRepository):
@@ -26,14 +25,39 @@ class UserRepository(BaseRepository):
             raise e
 
     def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
+        date_time = datetime.utcnow()
+
+        try:
+            is_eligible = (
+                self.session.query(UserRegistration, AirdropWindow)
+                .join(
+                    AirdropWindow,
+                    AirdropWindow.id == UserRegistration.airdrop_window_id
+                )
+                .filter(UserRegistration.address == address)
+                .filter(AirdropWindow.airdrop_id == airdrop_id)
+                .filter(AirdropWindow.id == airdrop_window_id)
+                .filter(AirdropWindow.claim_start_period <= date_time)
+                .filter(AirdropWindow.claim_end_period >= date_time)
+                .first()
+            )
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
         balance_raw_data = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
+
+        if is_eligible is None:
+            eligible_for_window = False
+        else:
+            eligible_for_window = True
+
         if len(balance_raw_data) > 0:
             balance_data = balance_raw_data[0]
             total_rewards = balance_data['total_rewards'] if balance_data['total_rewards'] is not None else 0
-            is_eligible = True if total_rewards > 0 else False
-            return is_eligible, str(total_rewards)
+            return eligible_for_window, str(total_rewards)
         else:
-            return False, 0
+            return eligible_for_window, 0
 
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (
