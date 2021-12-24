@@ -30,7 +30,8 @@ class UserRepository(BaseRepository):
         if len(balance_raw_data) > 0:
             balance_data = balance_raw_data[0]
             total_rewards = balance_data['total_rewards'] if balance_data['total_rewards'] is not None else 0
-            return True, str(total_rewards)
+            is_eligible = True if total_rewards > 0 else False
+            return is_eligible, str(total_rewards)
         else:
             return False, 0
 
