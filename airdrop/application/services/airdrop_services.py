@@ -3,7 +3,7 @@ from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
 from common.utils import generate_claim_signature, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, MAX_STAKE_LIMIT, SIGNER_KEY_ARN
+from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, MAX_STAKE_LIMIT
 from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.domain.models.airdrop_claim import AirdropClaim
@@ -235,10 +235,8 @@ class AirdropServices:
 
             boto_client = BotoUtils(
                 region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)
-            private_key_json = boto_client.get_parameter_value_from_secrets_manager(
-                secret_name=SIGNER_KEY_ARN)
-
-            private_key = private_key_json[SIGNER_PRIVATE_KEY]
+            private_key = boto_client.get_parameter_value_from_secrets_manager(
+                secret_name=SIGNER_PRIVATE_KEY)
 
             return generate_claim_signature(
                 amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key)
