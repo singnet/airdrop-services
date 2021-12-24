@@ -25,20 +25,13 @@ class UserRepository(BaseRepository):
             raise e
 
     def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
-        date_time = datetime.utcnow()
 
         try:
             is_eligible = (
-                self.session.query(UserRegistration, AirdropWindow)
-                .join(
-                    AirdropWindow,
-                    AirdropWindow.id == UserRegistration.airdrop_window_id
-                )
-                .filter(UserRegistration.address == address)
-                .filter(AirdropWindow.airdrop_id == airdrop_id)
-                .filter(AirdropWindow.id == airdrop_window_id)
-                .filter(AirdropWindow.claim_start_period <= date_time)
-                .filter(AirdropWindow.claim_end_period >= date_time)
+                self.session.query(UserReward)
+                .filter(UserReward.address == address)
+                .filter(UserReward.airdrop_id == airdrop_id)
+                .filter(UserReward.airdrop_window_id == airdrop_window_id)
                 .first()
             )
         except SQLAlchemyError as e:
