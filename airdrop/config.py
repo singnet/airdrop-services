@@ -18,9 +18,9 @@ BALANCE_DB_CONFIG = {
     "DB_HOST": "localhost",
     "DB_USER": "unittest_root",
     "DB_PASSWORD": "unittest_pwd",
-    "DB_NAME":"token_balances",
+    "DB_NAME": "token_balances",
     "DB_PORT": 3306,
-    "DB_LOGGING": True,    
+    "DB_LOGGING": True,
 }
 
 NETWORK_ID = 3
@@ -32,6 +32,7 @@ SLACK_HOOK = {
     "headers": {"Content-Type": "application/json"},
 }
 
+SIGNER_KEY_ARN = ""
 SIGNER_PRIVATE_KEY = 'AIRDROP_SIGNER_PRIVATE_KEY'
 SIGNER_PRIVATE_KEY_STORAGE_REGION = ''
 
