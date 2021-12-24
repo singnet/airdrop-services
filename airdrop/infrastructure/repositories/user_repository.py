@@ -25,7 +25,6 @@ class UserRepository(BaseRepository):
             raise e
 
     def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
-
         try:
             is_eligible = (
                 self.session.query(UserReward)
@@ -40,10 +39,10 @@ class UserRepository(BaseRepository):
 
         balance_raw_data = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
-        if is_eligible is None:
-            eligible_for_window = False
-        else:
+        if is_eligible is not None and is_eligible.rewards_awarded > 0:
             eligible_for_window = True
+        else:
+            eligible_for_window = False
 
         if len(balance_raw_data) > 0:
             balance_data = balance_raw_data[0]
