@@ -63,8 +63,8 @@ class AirdropServices:
             event_payload = ast.literal_eval(event["json_str"])
             user_address = event_payload['claimer']
             amount = event_payload['amount']
-            airdrop_id = str(event_payload['airDropId'])
-            airdrop_window_id = str(event_payload['airDropWindowId'])
+            airdrop_id = event_payload['airDropId']
+            airdrop_window_id = event_payload['airDropWindowId']
             txn_hash = event['transactionHash']
             txn_status = AirdropClaimStatus.SUCCESS.value
             AirdropRepository().create_or_update_txn(
