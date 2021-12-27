@@ -25,12 +25,11 @@ BALANCE_DB_CONFIG = {
 
 NETWORK_ID = 3
 SLACK_HOOK = {
-    'hostname': '',
-    'path': '',
+    "hostname": "",
     "port": 443,
+    "path": "",
     "method": "POST",
     "headers": {"Content-Type": "application/json"},
-    "channel_name": "",
 }
 
 SIGNER_KEY_ARN = ""
