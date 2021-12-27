@@ -60,7 +60,7 @@ class AirdropServices:
 
     def update_airdrop_window_claim_status(self, event):
         try:
-            event_payload = ast.literal_eval(json.loads(event["json_str"]))
+            event_payload = json.loads(event["json_str"])
             user_address = event_payload['claimer']
             amount = event_payload['amount']
             airdrop_id = str(event_payload['airDropId'])
