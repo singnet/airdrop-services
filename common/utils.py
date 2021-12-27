@@ -11,6 +11,7 @@ from eth_account.messages import defunct_hash_message, encode_defunct
 from airdrop.config import NETWORK
 from http import HTTPStatus
 from common.logger import get_logger
+from airdrop.config import SLACK_HOOK
 
 logger = get_logger(__name__)
 
@@ -27,7 +28,7 @@ class Utils:
     def report_slack(self, type, slack_message, slack_config):
         url = slack_config["hostname"] + slack_config["path"]
         prefix = self.msg_type.get(type, "")
-        slack_channel = slack_config.get("channel", "contract-index-alerts")
+        slack_channel = slack_config.get("channel", SLACK_HOOK['channel_name'])
         print(url)
         payload = {
             "channel": f"#{slack_channel}",
