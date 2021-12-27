@@ -1,3 +1,6 @@
+import json
+import ast
+
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
@@ -57,9 +60,11 @@ class AirdropServices:
 
     def update_airdrop_window_claim_status(self, event):
         try:
-            event_payload = event['json_str']
+            event_payload = json.loads(event["json_str"])
+            event_payload = ast.literal_eval(event_payload)
             user_address = event_payload['claimer']
-            amount = int(event_payload['amount'])
+            user_address = event_payload['claimer']
+            amount = event_payload['amount']
             airdrop_id = str(event_payload['airDropId'])
             airdrop_window_id = str(event_payload['airDropWindowId'])
             txn_hash = event['transactionHash']
