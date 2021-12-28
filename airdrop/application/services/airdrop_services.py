@@ -51,7 +51,7 @@ class AirdropServices:
             print(f"Exception on get_txn_receipt {e}")
             raise e
 
-    def airdrop_listen_to_events(self, event):
+    def airdrop_event_consumer(self, event):
         response = {}
         status = HTTPStatus.BAD_REQUEST
 

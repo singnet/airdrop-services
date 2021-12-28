@@ -103,7 +103,7 @@ def airdrop_window_claim_history(event, context):
 def airdrop_event_consumer(event, context):
     logger.info(f"Got Airdrops event listener {event}")
     status, response = AirdropServices(
-    ).airdrop_listen_to_events(event)
+    ).airdrop_event_consumer(event)
     return generate_lambda_response(
         status.value,
         status.phrase,
