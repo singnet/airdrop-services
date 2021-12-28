@@ -219,14 +219,14 @@ class AirdropServices:
             airdrop_repo.is_claimed_airdrop_window(
                 user_address, airdrop_window_id)
 
-            claimable_amount, token_address = AirdropRepository().get_airdrop_window_claimable_info(
+            claimable_amount, user_wallet_address, contract_address, token_address, staking_contract_address = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_address)
 
             signature = self.get_signature_for_airdrop_window_id(
-                claimable_amount, airdrop_id, airdrop_window_id, user_address)
+                claimable_amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address)
 
             response = AirdropClaim(airdrop_id,
-                                    airdrop_window_id, user_address, signature, claimable_amount, token_address).to_dict()
+                                    airdrop_window_id, user_wallet_address, signature, claimable_amount, token_address, contract_address, staking_contract_address).to_dict()
 
             status = HTTPStatus.OK
         except ValidationError as e:
@@ -237,12 +237,8 @@ class AirdropServices:
 
         return status, response
 
-    def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_address):
+    def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address):
         try:
-
-            contract_address = AirdropRepository().get_contract_address(airdrop_id)
-
-            token_address = AirdropRepository().get_token_address(airdrop_id)
 
             boto_client = BotoUtils(
                 region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)
@@ -250,7 +246,7 @@ class AirdropServices:
                 secret_name=SIGNER_PRIVATE_KEY)
 
             return generate_claim_signature(
-                amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key)
+                amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address, private_key)
 
         except BaseException as e:
             raise e
