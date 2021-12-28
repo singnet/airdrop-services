@@ -140,7 +140,7 @@ class AirdropClaims(TestCase):
 
         self.assertEqual(result_length, 0)
 
-    def test_airdrop_listen_to_events(self):
+    def test_airdrop_event_consumer(self):
 
         payload = {
             "transactionHash": "0x176133a958449C28930970989dB5fFFbEdd9F417",
@@ -150,11 +150,12 @@ class AirdropClaims(TestCase):
 
         event = {"data": payload}
 
-        response = AirdropServices().airdrop_listen_to_events(event)
+        status, response = AirdropServices().airdrop_event_consumer(event)
 
-        self.assertEqual(response, True)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(response, {})
 
-    def test_airdrop_listen_to_events_with_duplicate_data(self):
+    def test_airdrop_event_consumer_with_duplicate_data(self):
 
         payload = {
             "transactionHash": "0x176133a958449C28930970989dB5fFFbEdd9F417",
@@ -164,11 +165,11 @@ class AirdropClaims(TestCase):
 
         event = {"data": payload}
 
-        response = AirdropServices().airdrop_listen_to_events(event)
+        status, response = AirdropServices().airdrop_event_consumer(event)
 
         self.assertNotEqual(response, False)
 
-    def test_airdrop_listen_to_events_with_invalid_event(self):
+    def test_airdrop_event_consumer_with_invalid_event(self):
 
         payload = {
             "transactionHash": "0x176133a958449C28930970989dB5fFFbEdd9F417",
@@ -178,9 +179,9 @@ class AirdropClaims(TestCase):
 
         event = {"data": payload}
 
-        response = AirdropServices().airdrop_listen_to_events(event)
+        status, response = AirdropServices().airdrop_event_consumer(event)
 
-        self.assertEqual(response, None)
+        self.assertEqual(response, "Unsupported event")
 
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
     @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_info')

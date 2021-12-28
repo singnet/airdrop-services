@@ -485,7 +485,7 @@ functions:
                   "application/json": "ErrorMessage"
   airdrop_event_listener:
     warmup: true
-    handler: airdrop/application/handlers/airdrop_handlers.airdrop_event_listener
+    handler: airdrop/application/handlers/airdrop_handlers.airdrop_event_consumer
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

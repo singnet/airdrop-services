@@ -51,12 +51,20 @@ class AirdropServices:
             print(f"Exception on get_txn_receipt {e}")
             raise e
 
-    def airdrop_listen_to_events(self, event):
+    def airdrop_event_consumer(self, event):
+        response = {}
+        status = HTTPStatus.BAD_REQUEST
+
         event_data = event['data']
         event_name = event_data['event']
 
         if event_name == AirdropEvents.AIRDROP_CLAIM.value:
-            return self.update_airdrop_window_claim_status(event_data)
+            self.update_airdrop_window_claim_status(event_data)
+            status = HTTPStatus.OK
+        else:
+            response = "Unsupported event"
+
+        return status, response
 
     def update_airdrop_window_claim_status(self, event):
         try:
