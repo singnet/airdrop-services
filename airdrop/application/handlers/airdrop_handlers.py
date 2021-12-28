@@ -100,7 +100,7 @@ def airdrop_window_claim_history(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def airdrop_event_listener(event, context):
+def airdrop_event_consumer(event, context):
     logger.info(f"Got Airdrops event listener {event}")
     status, response = AirdropServices(
     ).airdrop_listen_to_events(event)
