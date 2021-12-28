@@ -164,7 +164,7 @@ class AirdropClaims(TestCase):
 
         event = {"data": payload}
 
-        response = AirdropServices().airdrop_listen_to_events(event)
+        status, response = AirdropServices().airdrop_listen_to_events(event)
 
         self.assertNotEqual(response, False)
 
@@ -178,9 +178,9 @@ class AirdropClaims(TestCase):
 
         event = {"data": payload}
 
-        response = AirdropServices().airdrop_listen_to_events(event)
+        status, response = AirdropServices().airdrop_listen_to_events(event)
 
-        self.assertEqual(response, None)
+        self.assertEqual(response, "Unsupported event")
 
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
     @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_info')
