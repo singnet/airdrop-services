@@ -150,9 +150,10 @@ class AirdropClaims(TestCase):
 
         event = {"data": payload}
 
-        response = AirdropServices().airdrop_listen_to_events(event)
+        status, response = AirdropServices().airdrop_listen_to_events(event)
 
-        self.assertEqual(response, HTTPStatus.OK)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(response, {})
 
     def test_airdrop_listen_to_events_with_duplicate_data(self):
 
