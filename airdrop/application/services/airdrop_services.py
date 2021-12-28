@@ -1,3 +1,6 @@
+import json
+import ast
+
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
@@ -48,20 +51,28 @@ class AirdropServices:
             print(f"Exception on get_txn_receipt {e}")
             raise e
 
-    def airdrop_listen_to_events(self, event):
+    def airdrop_event_consumer(self, event):
+        response = {}
+        status = HTTPStatus.BAD_REQUEST
+
         event_data = event['data']
         event_name = event_data['event']
 
         if event_name == AirdropEvents.AIRDROP_CLAIM.value:
-            return self.update_airdrop_window_claim_status(event_data)
+            self.update_airdrop_window_claim_status(event_data)
+            status = HTTPStatus.OK
+        else:
+            response = "Unsupported event"
+
+        return status, response
 
     def update_airdrop_window_claim_status(self, event):
         try:
-            event_payload = event['json_str']
+            event_payload = ast.literal_eval(event["json_str"])
             user_address = event_payload['claimer']
-            amount = int(event_payload['amount'])
-            airdrop_id = str(event_payload['airDropId'])
-            airdrop_window_id = str(event_payload['airDropWindowId'])
+            amount = event_payload['amount']
+            airdrop_id = event_payload['airDropId']
+            airdrop_window_id = event_payload['airDropWindowId']
             txn_hash = event['transactionHash']
             txn_status = AirdropClaimStatus.SUCCESS.value
             AirdropRepository().create_or_update_txn(
