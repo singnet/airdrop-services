@@ -99,7 +99,7 @@ class AirdropServices:
 
             address = get_checksum_address(user_address)
 
-            rewards, user_address = AirdropRepository().get_airdrop_window_claimable_info(
+            rewards, user_address, contract_address, token_address, staking_contract_address = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, address)
 
             staking_contract_address, stakable_token_name = AirdropRepository(
