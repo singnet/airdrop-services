@@ -192,16 +192,20 @@ class AirdropRepository(BaseRepository):
             raise Exception("Airdrop not found")
         return airdrop.staking_contract_address, airdrop.stakable_token_name
 
-    def get_airdrop_window_claimable_info(self, airdrop_id, airdrop_window_id, address):
+    def get_airdrop_window_claimable_info(self, airdrop_id, airdrop_window_id, user_wallet_address):
         try:
             date_time = datetime.utcnow()
-            is_eligible_user = (
-                self.session.query(UserRegistration, AirdropWindow)
+            claim_info = (
+                self.session.query(UserRegistration, AirdropWindow, Airdrop)
                 .join(
                     AirdropWindow,
                     AirdropWindow.id == UserRegistration.airdrop_window_id
                 )
-                .filter(UserRegistration.address == address)
+                .join(
+                    Airdrop,
+                    AirdropWindow.airdrop_id == Airdrop.id
+                )
+                .filter(UserRegistration.address == user_wallet_address)
                 .filter(AirdropWindow.airdrop_id == airdrop_id)
                 .filter(AirdropWindow.id == airdrop_window_id)
                 .filter(AirdropWindow.claim_start_period <= date_time)
@@ -214,17 +218,23 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-        if is_eligible_user is None:
+        if claim_info is None:
             raise Exception('Non eligible user')
 
-        balance_raw_data = self.fetch_total_rewards_amount(airdrop_id, address)
+        total_rewards = 0
+        contract_address = claim_info.Airdrop.contract_address
+        token_address = claim_info.Airdrop.token_address
+        staking_contract_address = claim_info.Airdrop.staking_contract_address
+
+        balance_raw_data = self.fetch_total_rewards_amount(
+            airdrop_id, user_wallet_address)
 
         if len(balance_raw_data) > 0:
             balance_data = balance_raw_data[0]
-            total_rewards = balance_data['total_rewards'] if balance_data['total_rewards'] is not None else 0
-            return str(total_rewards), address
-        else:
-            return 0, ''
+            total_rewards = str(
+                balance_data['total_rewards']) if balance_data['total_rewards'] is not None else 0
+
+        return total_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
 
     def fetch_total_rewards_amount(self, airdrop_id, address):
         try:

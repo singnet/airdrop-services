@@ -101,12 +101,15 @@ class TestAirdropHandler(unittest.TestCase):
     def test_airdrop_window_claim(self, mock_is_claimed_airdrop_window, mock_get_airdrop_window_claimable_info, mock_get_signature_for_airdrop_window_id, mock_check_rewards_awarded, mock_recover_address, mock_report_slack):
         address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
 
         mock_recover_address.return_value = address
         mock_is_claimed_airdrop_window.return_value = {}
         mock_check_rewards_awarded.return_value = True, 1000
         mock_get_signature_for_airdrop_window_id.return_value = airdrop_claim_signature
-        mock_get_airdrop_window_claimable_info.return_value = 100, address
+        mock_get_airdrop_window_claimable_info.return_value = 100, address, contract_address, token_address, staking_contract_address
 
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
@@ -117,7 +120,10 @@ class TestAirdropHandler(unittest.TestCase):
                 "address": address,
                 "airdrop_id": airdrop_id,
                 "airdrop_window_id": airdrop_window_id,
-                "signature": "9e05e94577b949a56279637ff74dfcff2c28408f049"
+                "signature": "9e05e94577b949a56279637ff74dfcff2c28408f049",
+                "token_address": token_address,
+                "contract_address": contract_address,
+                "staking_contract_address": staking_contract_address
             })
         }
         result = airdrop_window_claims(event, None)
