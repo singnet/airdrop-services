@@ -59,6 +59,7 @@ jobs:
       - run:
           name: Run unit tests and integration test
           command: |
+            rm -rf /home/circleci/singnet/rep-10* | true
             PYTHONPATH=$PWD python -m coverage run -m pytest */testcases/unit_testcases/*.py */testcases/functional_testcases/*.py
             python -m coverage report -m
             coverage xml -i
