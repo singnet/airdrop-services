@@ -47,11 +47,14 @@ class AirdropClaims(TestCase):
 
         address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
 
         mock_is_claimed_airdrop_window.return_value = {}
         mock_check_rewards_awarded.return_value = True, 1000
         mock_get_signature_for_airdrop_window_id.return_value = airdrop_claim_signature
-        mock_get_airdrop_window_claimable_info.return_value = 100, address
+        mock_get_airdrop_window_claimable_info.return_value = 100, address, contract_address, token_address, staking_contract_address
 
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
@@ -188,7 +191,11 @@ class AirdropClaims(TestCase):
     def test_get_airdrop_window_stake_details_only_claimable_details(self, mock_get_stake_info, mock_get_airdrop_window_claimable_info):
 
         address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
-        mock_get_airdrop_window_claimable_info.return_value = 20000, address
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        mock_get_airdrop_window_claimable_info.return_value = 20000, address, contract_address, token_address, staking_contract_address
         mock_get_stake_info.return_value = True, 20000
 
         event = {
@@ -218,7 +225,11 @@ class AirdropClaims(TestCase):
     def test_get_airdrop_window_stake_details_can_claim_and_stake_equal_tokens(self, mock_get_stake_info, mock_get_airdrop_window_claimable_info):
 
         address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
-        mock_get_airdrop_window_claimable_info.return_value = 40000, address
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        mock_get_airdrop_window_claimable_info.return_value = 40000, address, contract_address, token_address, staking_contract_address
         mock_get_stake_info.return_value = True, 20000
 
         event = {
@@ -249,7 +260,11 @@ class AirdropClaims(TestCase):
 
         rewards = 40000
         address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
-        mock_get_airdrop_window_claimable_info.return_value = rewards, address
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        mock_get_airdrop_window_claimable_info.return_value = rewards, address, contract_address, token_address, staking_contract_address
         mock_get_stake_info.return_value = True, 100000
 
         event = {
@@ -281,7 +296,11 @@ class AirdropClaims(TestCase):
     def test_get_airdrop_window_stake_details_cannot_stake(self, mock_get_stake_info, mock_get_airdrop_window_claimable_info):
 
         address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
-        mock_get_airdrop_window_claimable_info.return_value = 1000, address
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        mock_get_airdrop_window_claimable_info.return_value = 1000, address, contract_address, token_address, staking_contract_address
         mock_get_stake_info.return_value = False, 0
 
         event = {
