@@ -74,7 +74,8 @@ class AirdropClaims(TestCase):
         }
 
         expected_response = {'airdrop_id': '1', 'airdrop_window_id': '1', 'user_address': '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8',
-                             'signature': '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F', 'claimable_amount': 100, 'token_address': '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'}
+                             'signature': '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F', 'claimable_amount': 100,
+                             'contract_address': '0x5e94577b949a56279637ff74dfcff2c28408f049', 'staking_contract_address': '0x5e94577b949a56279637ff74dfcff2c28408f049', 'token_address': '0x5e94577b949a56279637ff74dfcff2c28408f049'}
 
         status_code, result = AirdropServices().airdrop_window_claims(payload)
         self.assertEqual(expected_response, result)
