@@ -140,21 +140,20 @@ class AirdropServices:
             raise e("Exception on get_stake_info {}".format(e))
 
     def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount, is_user_can_stake, already_staked_amount):
+        # User can stake if stake window is open and user can stake
         is_stakable = True if is_user_can_stake and is_stake_window_is_open else False
 
         allowed_amount_for_stake = max_stake_amount - already_staked_amount
 
-        print(f"max_stake_amount {max_stake_amount}")
-        print(f"already_staked_amount {already_staked_amount}")
-        print(f"airdrop_rewards {airdrop_rewards}")
-        print(f"allowed_amount_for_stake {allowed_amount_for_stake}")
         if(airdrop_rewards <= allowed_amount_for_stake):
             # If airdrop rewards is less than allowed amount for stake then stake the full airdrop rewards
             stakable_amount = airdrop_rewards
         else:
             stakable_amount = allowed_amount_for_stake
 
+        # Amount user can claim to wallet after staking
         tranfer_to_wallet = airdrop_rewards - stakable_amount
+
         return is_stakable, stakable_amount, tranfer_to_wallet
 
     def get_stake_details_of_address(self, contract_address, user_wallet):
@@ -179,13 +178,14 @@ class AirdropServices:
             stakemap = contract.functions.stakeMap(
                 current_stakemap_index).call()
 
-            now = datetime.now()
             stake_submission_start_period = int(stakemap[0])
             stake_submission_end_period = int(stakemap[1])
+            max_stake_amount = stakemap[3]
+            now = datetime.now()
 
+            # Check if stake window is open or not if stake start & end period is in between current time
             is_stake_window_open = now <= datetime.fromtimestamp(
                 stake_submission_end_period) and now >= datetime.fromtimestamp(stake_submission_start_period)
-            max_stake_amount = stakemap[3]
 
             return is_stake_window_open, max_stake_amount
         except BaseException as e:
