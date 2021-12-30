@@ -194,22 +194,9 @@ class AirdropRepository(BaseRepository):
 
     def get_airdrop_window_claimable_info(self, airdrop_id, airdrop_window_id, user_wallet_address):
         try:
-            date_time = datetime.utcnow()
-            claim_info = (
-                self.session.query(UserRegistration, AirdropWindow, Airdrop)
-                .join(
-                    AirdropWindow,
-                    AirdropWindow.id == UserRegistration.airdrop_window_id
-                )
-                .join(
-                    Airdrop,
-                    AirdropWindow.airdrop_id == Airdrop.id
-                )
-                .filter(UserRegistration.address == user_wallet_address)
+            airdrop = (
+                self.session.query(Airdrop)
                 .filter(AirdropWindow.airdrop_id == airdrop_id)
-                .filter(AirdropWindow.id == airdrop_window_id)
-                .filter(AirdropWindow.claim_start_period <= date_time)
-                .filter(AirdropWindow.claim_end_period >= date_time)
                 .first()
             )
 
@@ -218,13 +205,13 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-        if claim_info is None:
-            raise Exception('Non eligible user')
+        if airdrop is None:
+            raise Exception('Invalid Airdrop')
 
         total_rewards = 0
-        contract_address = claim_info.Airdrop.contract_address
-        token_address = claim_info.Airdrop.token_address
-        staking_contract_address = claim_info.Airdrop.staking_contract_address
+        contract_address = airdrop.contract_address
+        token_address = airdrop.token_address
+        staking_contract_address = airdrop.staking_contract_address
 
         balance_raw_data = self.fetch_total_rewards_amount(
             airdrop_id, user_wallet_address)
@@ -238,7 +225,7 @@ class AirdropRepository(BaseRepository):
 
     def fetch_total_rewards_amount(self, airdrop_id, address):
         try:
-            query = text("select sum(ur.rewards_awarded) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and ur.airdrop_window_id not in (select airdrop_window_id from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING')) and ur.airdrop_window_id > (select ifnull (max(airdrop_window_id), -1) from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING'));")
+            query = text("select sum(ur.rewards_awarded) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and exists ( select 1 from airdrop_window aw3 where current_timestamp <= aw3.claim_end_period and aw3.airdrop_id = :airdrop_id and aw3.claim_start_period <= current_timestamp ) and ur.airdrop_window_id > ( select ifnull (max(airdrop_window_id), -1) from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING')) and ur.airdrop_window_id in ( SELECT airdrop_window_id FROM user_registrations ur2 WHERE ur2.address = :address and ur2.airdrop_window_id in ( select row_id from airdrop_window aw2 where aw2.airdrop_id = :airdrop_id));")
             result = self.session.execute(
                 query, {'address': address, 'airdrop_id': airdrop_id})
             self.session.commit()
