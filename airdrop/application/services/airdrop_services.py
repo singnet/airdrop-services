@@ -180,14 +180,14 @@ class AirdropServices:
 
             stake_submission_start_period = int(stakemap[0])
             stake_submission_end_period = int(stakemap[1])
-            max_stake_amount = stakemap[3]
+            max_stakable_amount = stakemap[3]
             now = datetime.now()
 
             # Check if stake window is open or not if stake start & end period is in between current time
             is_stake_window_open = now <= datetime.fromtimestamp(
                 stake_submission_end_period) and now >= datetime.fromtimestamp(stake_submission_start_period)
 
-            return is_stake_window_open, max_stake_amount
+            return is_stake_window_open, max_stakable_amount
         except BaseException as e:
             raise e("Exception on get_stake_window_info {}".format(e))
 
