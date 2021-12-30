@@ -194,22 +194,9 @@ class AirdropRepository(BaseRepository):
 
     def get_airdrop_window_claimable_info(self, airdrop_id, airdrop_window_id, user_wallet_address):
         try:
-            date_time = datetime.utcnow()
-            claim_info = (
-                self.session.query(UserRegistration, AirdropWindow, Airdrop)
-                .join(
-                    AirdropWindow,
-                    AirdropWindow.id == UserRegistration.airdrop_window_id
-                )
-                .join(
-                    Airdrop,
-                    AirdropWindow.airdrop_id == Airdrop.id
-                )
-                .filter(UserRegistration.address == user_wallet_address)
+            airdrop = (
+                self.session.query(Airdrop)
                 .filter(AirdropWindow.airdrop_id == airdrop_id)
-                .filter(AirdropWindow.id == airdrop_window_id)
-                .filter(AirdropWindow.claim_start_period <= date_time)
-                .filter(AirdropWindow.claim_end_period >= date_time)
                 .first()
             )
 
@@ -218,13 +205,13 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-        if claim_info is None:
-            raise Exception('Non eligible user')
+        if airdrop is None:
+            raise Exception('Invalid Airdrop')
 
         total_rewards = 0
-        contract_address = claim_info.Airdrop.contract_address
-        token_address = claim_info.Airdrop.token_address
-        staking_contract_address = claim_info.Airdrop.staking_contract_address
+        contract_address = airdrop.contract_address
+        token_address = airdrop.token_address
+        staking_contract_address = airdrop.staking_contract_address
 
         balance_raw_data = self.fetch_total_rewards_amount(
             airdrop_id, user_wallet_address)

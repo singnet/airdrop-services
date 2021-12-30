@@ -133,19 +133,19 @@ class AirdropServices:
                 contract_address, user_wallet_address)
 
             is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_and_claimable_amounts(
-                airdrop_rewards, is_stake_window_is_open, max_stake_amount, is_user_can_stake, already_staked_amount)
+                airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount)
 
             return is_stakable, stakable_amount, tranfer_to_wallet
         except BaseException as e:
             raise e("Exception on get_stake_info {}".format(e))
 
-    def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount, is_user_can_stake, already_staked_amount):
-        # User can stake if stake window is open and user can stake
-        is_stakable = True if is_user_can_stake and is_stake_window_is_open else False
+    def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount):
+
         tranfer_to_wallet = 0
         stakable_amount = 0
 
-        if is_stakable:
+        # User can stake if stake window is open and user can stake
+        if is_stake_window_is_open:
             allowed_amount_for_stake = max_stake_amount - already_staked_amount
             if(airdrop_rewards <= allowed_amount_for_stake):
                 # If airdrop rewards is less than allowed amount for stake then stake the full airdrop rewards
@@ -158,7 +158,7 @@ class AirdropServices:
         else:
             tranfer_to_wallet = airdrop_rewards
 
-        return is_stakable, stakable_amount, tranfer_to_wallet
+        return is_stake_window_is_open, stakable_amount, tranfer_to_wallet
 
     def get_stake_details_of_address(self, contract_address, user_wallet):
         try:
