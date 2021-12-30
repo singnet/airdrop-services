@@ -3,7 +3,6 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 from airdrop.application.services.airdrop_services import AirdropServices
 from http import HTTPStatus
-from airdrop.config import MAX_STAKE_LIMIT
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.models import AirdropWindow, Airdrop
