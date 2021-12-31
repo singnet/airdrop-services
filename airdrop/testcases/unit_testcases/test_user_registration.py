@@ -40,12 +40,21 @@ class UserRegistration(TestCase):
         registration_start_window = now - timedelta(days=2)
         stakable_token_name = 'AGIX'
 
-        airdrop_repo = AirdropRepository()
-        airdrop = airdrop_repo.register_airdrop(
-            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
+        occam_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f048'
+        occam_token_address = '0x5e94577b949a56279637ff74dfcff2c28408f048'
+        occam_user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
+        occam_stakable_token_name = 'AGIX'
 
-        airdrop_repo.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
-                                             registration_start_period=registration_start_window, registration_end_period=one_month_later, snapshot_required=True, claim_start_period=now, claim_end_period=one_month_later, total_airdrop_tokens=1000000)
+        airdrop_repository = AirdropRepository()
+        airdrop = airdrop_repository.register_airdrop(
+            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
+        airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
+                                                   registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
+
+        nunet_occam_airdrop = airdrop_repository.register_airdrop(
+            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, occam_stakable_token_name)
+        airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
+                                                   registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
     @patch('common.utils.recover_address')
     @patch('airdrop.infrastructure.repositories.user_repository.UserRepository.check_rewards_awarded')

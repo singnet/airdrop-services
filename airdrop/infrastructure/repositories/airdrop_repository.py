@@ -196,7 +196,7 @@ class AirdropRepository(BaseRepository):
         try:
             airdrop = (
                 self.session.query(Airdrop)
-                .filter(AirdropWindow.airdrop_id == airdrop_id)
+                .filter(Airdrop.id == airdrop_id)
                 .first()
             )
 

@@ -29,13 +29,21 @@ class TestAirdropHandler(unittest.TestCase):
         user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         stakable_token_name = 'AGIX'
 
+        occam_contract_address = '0x6e94577b949a56279637ff74dfcff2c28408f049'
+        occam_token_address = '0x5e93577b949a56279637ff74dfcff2c28408f049'
+        occam_user_address = '0xEA6741dDe714fd979de3EdF0F56AA9716B898ec8'
+        occam_stakable_token_name = 'AGIX'
+
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
             token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
         airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
-        airdrop_repository.register_airdrop_window_timeline(
-            airdrop_window_id="1", title="Airdrop window 1", description="Long description", date=now)
+
+        nunet_occam_airdrop = airdrop_repository.register_airdrop(
+            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, occam_stakable_token_name)
+        airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
+                                                   registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
     @patch("common.utils.Utils.report_slack")
     def test_get_airdrop_schedules(self, mock_report_slack):
