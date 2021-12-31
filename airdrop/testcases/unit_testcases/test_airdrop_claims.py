@@ -275,7 +275,7 @@ class AirdropClaims(TestCase):
                 "address": user_wallet_address,
                 "claimable_tokens_to_wallet": airdrop_rewards,
                 "stakable_tokens": 0,
-                "is_stakable": True,
+                "is_stakable": False,
                 "stakable_token_name": "AGIX",
                 "airdrop_rewards": airdrop_rewards
             }
