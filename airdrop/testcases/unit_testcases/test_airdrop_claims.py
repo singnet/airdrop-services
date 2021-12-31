@@ -222,7 +222,8 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": airdrop_rewards,
                 "stakable_tokens": 0,
                 "is_stakable": False,
-                "stakable_token_name": "AGIX"
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
             }
         }
 
@@ -265,7 +266,8 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": airdrop_rewards,
                 "stakable_tokens": 0,
                 "is_stakable": True,
-                "stakable_token_name": "AGIX"
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
             }
         }
 
@@ -308,7 +310,8 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": 5000,
                 "stakable_tokens": 5000,
                 "is_stakable": True,
-                "stakable_token_name": "AGIX"
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
             }
         }
 
@@ -351,7 +354,8 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": 0,
                 "stakable_tokens": airdrop_rewards,
                 "is_stakable": True,
-                "stakable_token_name": "AGIX"
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
             }
         }
 
@@ -394,7 +398,8 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": 40000,
                 "stakable_tokens": 10000,
                 "is_stakable": True,
-                "stakable_token_name": "AGIX"
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
             }
         }
 
@@ -437,7 +442,8 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": 0,
                 "stakable_tokens": 10000,
                 "is_stakable": True,
-                "stakable_token_name": "AGIX"
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
             }
         }
 
