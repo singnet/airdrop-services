@@ -6,7 +6,7 @@ class AirdropStakeClaim:
         self._claimable_tokens_to_wallet = claimable_tokens_to_wallet
         self._stakable_tokens = stakable_tokens
         self._is_stakable = is_stakable
-        self._stakable_token_name = stakable_token_name,
+        self._stakable_token_name = stakable_token_name
         self._airdrop_rewards = airdrop_rewards
 
     def to_dict(self):
