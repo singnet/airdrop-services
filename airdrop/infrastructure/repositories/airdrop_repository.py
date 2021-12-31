@@ -205,8 +205,6 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-        raise Exception('Airdrop not found')
-
         if airdrop is None:
             raise Exception('Invalid Airdrop')
 
