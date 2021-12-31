@@ -196,7 +196,7 @@ class AirdropRepository(BaseRepository):
         try:
             airdrop = (
                 self.session.query(Airdrop)
-                .filter(AirdropWindow.airdrop_id == airdrop_id)
+                .filter(Airdrop.id == airdrop_id)
                 .first()
             )
 
@@ -204,6 +204,8 @@ class AirdropRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+
+        raise Exception('Airdrop not found')
 
         if airdrop is None:
             raise Exception('Invalid Airdrop')
