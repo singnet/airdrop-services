@@ -31,9 +31,9 @@ class AirdropClaims(TestCase):
         user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         stakable_token_name = 'AGIX'
 
-        occam_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
-        occam_token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
-        occam_user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
+        occam_contract_address = '0x6e94577b949a56279637ff74dfcff2c28408f049'
+        occam_token_address = '0x5e93577b949a56279637ff74dfcff2c28408f049'
+        occam_user_address = '0xEA6741dDe714fd979de3EdF0F56AA9716B898ec8'
         occam_stakable_token_name = 'AGIX'
 
         airdrop_repository = AirdropRepository()
