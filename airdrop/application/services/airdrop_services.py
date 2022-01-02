@@ -158,7 +158,9 @@ class AirdropServices:
         else:
             tranfer_to_wallet = airdrop_rewards
 
-        return is_stake_window_is_open, stakable_amount, tranfer_to_wallet
+        is_stakable = True if stakable_amount > 0 else False
+
+        return is_stakable, stakable_amount, tranfer_to_wallet
 
     def get_stake_details_of_address(self, contract_address, user_wallet):
         try:
