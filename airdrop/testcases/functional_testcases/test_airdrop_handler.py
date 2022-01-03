@@ -29,13 +29,21 @@ class TestAirdropHandler(unittest.TestCase):
         user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         stakable_token_name = 'AGIX'
 
+        occam_contract_address = '0x6e94577b949a56279637ff74dfcff2c28408f049'
+        occam_token_address = '0x5e93577b949a56279637ff74dfcff2c28408f049'
+        occam_user_address = '0xEA6741dDe714fd979de3EdF0F56AA9716B898ec8'
+        occam_stakable_token_name = 'AGIX'
+
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
             token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
         airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
-        airdrop_repository.register_airdrop_window_timeline(
-            airdrop_window_id="1", title="Airdrop window 1", description="Long description", date=now)
+
+        nunet_occam_airdrop = airdrop_repository.register_airdrop(
+            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, occam_stakable_token_name)
+        airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
+                                                   registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
     @patch("common.utils.Utils.report_slack")
     def test_get_airdrop_schedules(self, mock_report_slack):
@@ -101,12 +109,15 @@ class TestAirdropHandler(unittest.TestCase):
     def test_airdrop_window_claim(self, mock_is_claimed_airdrop_window, mock_get_airdrop_window_claimable_info, mock_get_signature_for_airdrop_window_id, mock_check_rewards_awarded, mock_recover_address, mock_report_slack):
         address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
 
         mock_recover_address.return_value = address
         mock_is_claimed_airdrop_window.return_value = {}
         mock_check_rewards_awarded.return_value = True, 1000
         mock_get_signature_for_airdrop_window_id.return_value = airdrop_claim_signature
-        mock_get_airdrop_window_claimable_info.return_value = 100, address
+        mock_get_airdrop_window_claimable_info.return_value = 100, address, contract_address, token_address, staking_contract_address
 
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
@@ -117,7 +128,10 @@ class TestAirdropHandler(unittest.TestCase):
                 "address": address,
                 "airdrop_id": airdrop_id,
                 "airdrop_window_id": airdrop_window_id,
-                "signature": "9e05e94577b949a56279637ff74dfcff2c28408f049"
+                "signature": "9e05e94577b949a56279637ff74dfcff2c28408f049",
+                "token_address": token_address,
+                "contract_address": contract_address,
+                "staking_contract_address": staking_contract_address
             })
         }
         result = airdrop_window_claims(event, None)

@@ -3,7 +3,6 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 from airdrop.application.services.airdrop_services import AirdropServices
 from http import HTTPStatus
-from airdrop.config import MAX_STAKE_LIMIT
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.models import AirdropWindow, Airdrop
@@ -32,10 +31,20 @@ class AirdropClaims(TestCase):
         user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         stakable_token_name = 'AGIX'
 
+        occam_contract_address = '0x6e94577b949a56279637ff74dfcff2c28408f049'
+        occam_token_address = '0x5e93577b949a56279637ff74dfcff2c28408f049'
+        occam_user_address = '0xEA6741dDe714fd979de3EdF0F56AA9716B898ec8'
+        occam_stakable_token_name = 'AGIX'
+
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
             token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
         airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
+                                                   registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
+
+        nunet_occam_airdrop = airdrop_repository.register_airdrop(
+            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, occam_stakable_token_name)
+        airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
     @patch('common.utils.recover_address')
@@ -47,11 +56,14 @@ class AirdropClaims(TestCase):
 
         address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
 
         mock_is_claimed_airdrop_window.return_value = {}
         mock_check_rewards_awarded.return_value = True, 1000
         mock_get_signature_for_airdrop_window_id.return_value = airdrop_claim_signature
-        mock_get_airdrop_window_claimable_info.return_value = 100, address
+        mock_get_airdrop_window_claimable_info.return_value = 100, address, contract_address, token_address, staking_contract_address
 
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
@@ -70,8 +82,10 @@ class AirdropClaims(TestCase):
             "airdrop_window_id": "1"
         }
 
-        expected_response = {'airdrop_id': '1', 'airdrop_window_id': '1', 'user_address': '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8',
-                             'signature': '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F', 'claimable_amount': 100, 'token_address': '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'}
+        expected_response = {'airdrop_id': '1', 'airdrop_window_id': '1',
+                             'user_address': '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8',
+                             'signature': '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F', 'claimable_amount': 100,
+                             'contract_address': '0x5e94577b949a56279637ff74dfcff2c28408f049', 'staking_contract_address': '0x5e94577b949a56279637ff74dfcff2c28408f049', 'token_address': '0x5e94577b949a56279637ff74dfcff2c28408f049'}
 
         status_code, result = AirdropServices().airdrop_window_claims(payload)
         self.assertEqual(expected_response, result)
@@ -184,15 +198,28 @@ class AirdropClaims(TestCase):
         self.assertEqual(response, "Unsupported event")
 
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
-    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_info')
-    def test_get_airdrop_window_stake_details_only_claimable_details(self, mock_get_stake_info, mock_get_airdrop_window_claimable_info):
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_by_sending_full_rewards_to_wallet_if_stake_window_is_not_open(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
 
-        address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
-        mock_get_airdrop_window_claimable_info.return_value = 20000, address
-        mock_get_stake_info.return_value = True, 20000
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = False
+        is_user_can_stake = True
+
+        max_stakable_amount = 10000
+        already_staked_amount = 0
+        airdrop_rewards = 20000
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
 
         event = {
-            "address": address,
+            "address": user_wallet_address,
             "airdrop_id": "1",
             "airdrop_window_id": "1"
         }
@@ -201,104 +228,276 @@ class AirdropClaims(TestCase):
             "stake_details": {
                 "airdrop_id": "1",
                 "airdrop_window_id": "1",
-                "address": address,
-                "claimable_tokens_to_wallet": 0,
-                "stakable_tokens": 20000,
-                "is_stakable": True,
-                "stakable_token_name": "AGIX"
-            }
-        }
-
-        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
-        self.assertEqual(response, expected_result)
-        self.assertEqual(status_code, HTTPStatus.OK.value)
-
-    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
-    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_info')
-    def test_get_airdrop_window_stake_details_can_claim_and_stake_equal_tokens(self, mock_get_stake_info, mock_get_airdrop_window_claimable_info):
-
-        address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
-        mock_get_airdrop_window_claimable_info.return_value = 40000, address
-        mock_get_stake_info.return_value = True, 20000
-
-        event = {
-            "address": address,
-            "airdrop_id": "1",
-            "airdrop_window_id": "1"
-        }
-
-        expected_result = {
-            "stake_details": {
-                "airdrop_id": "1",
-                "airdrop_window_id": "1",
-                "address": address,
-                "claimable_tokens_to_wallet": 20000,
-                "stakable_tokens": 20000,
-                "is_stakable": True,
-                "stakable_token_name": "AGIX"
-            }
-        }
-
-        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
-        self.assertEqual(response, expected_result)
-        self.assertEqual(status_code, HTTPStatus.OK.value)
-
-    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
-    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_info')
-    def test_get_airdrop_window_stake_details_can_stake_maximum_amount(self, mock_get_stake_info, mock_get_airdrop_window_claimable_info):
-
-        rewards = 40000
-        address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
-        mock_get_airdrop_window_claimable_info.return_value = rewards, address
-        mock_get_stake_info.return_value = True, 100000
-
-        event = {
-            "address": address,
-            "airdrop_id": "1",
-            "airdrop_window_id": "1"
-        }
-
-        claimable_tokens = rewards - MAX_STAKE_LIMIT
-
-        expected_result = {
-            "stake_details": {
-                "airdrop_id": "1",
-                "airdrop_window_id": "1",
-                "address": address,
-                "claimable_tokens_to_wallet": claimable_tokens,
-                "stakable_tokens": MAX_STAKE_LIMIT,
-                "is_stakable": True,
-                "stakable_token_name": "AGIX"
-            }
-        }
-
-        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
-        self.assertEqual(response, expected_result)
-        self.assertEqual(status_code, HTTPStatus.OK.value)
-
-    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
-    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_info')
-    def test_get_airdrop_window_stake_details_cannot_stake(self, mock_get_stake_info, mock_get_airdrop_window_claimable_info):
-
-        address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
-        mock_get_airdrop_window_claimable_info.return_value = 1000, address
-        mock_get_stake_info.return_value = False, 0
-
-        event = {
-            "address": address,
-            "airdrop_id": "1",
-            "airdrop_window_id": "1"
-        }
-
-        expected_result = {
-            "stake_details": {
-                "airdrop_id": "1",
-                "airdrop_window_id": "1",
-                "address": address,
-                "claimable_tokens_to_wallet": 1000,
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": airdrop_rewards,
                 "stakable_tokens": 0,
                 "is_stakable": False,
-                "stakable_token_name": "AGIX"
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
+            }
+        }
+
+        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
+        self.assertEqual(response, expected_result)
+        self.assertEqual(status_code, HTTPStatus.OK.value)
+
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_by_sending_full_rewards_to_wallet_as_user_exceeded_the_stake_limit(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
+
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = True
+        is_user_can_stake = True
+
+        max_stakable_amount = 10000
+        already_staked_amount = max_stakable_amount
+        airdrop_rewards = 20000
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
+
+        event = {
+            "address": user_wallet_address,
+            "airdrop_id": "1",
+            "airdrop_window_id": "1"
+        }
+
+        expected_result = {
+            "stake_details": {
+                "airdrop_id": "1",
+                "airdrop_window_id": "1",
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": airdrop_rewards,
+                "stakable_tokens": 0,
+                "is_stakable": False,
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
+            }
+        }
+
+        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
+        self.assertEqual(response, expected_result)
+        self.assertEqual(status_code, HTTPStatus.OK.value)
+
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_by_partially_stake_and_claim(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
+
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = True
+        is_user_can_stake = True
+
+        max_stakable_amount = 10000
+        already_staked_amount = 5000
+        airdrop_rewards = 10000
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
+
+        event = {
+            "address": user_wallet_address,
+            "airdrop_id": "1",
+            "airdrop_window_id": "1"
+        }
+
+        expected_result = {
+            "stake_details": {
+                "airdrop_id": "1",
+                "airdrop_window_id": "1",
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": 5000,
+                "stakable_tokens": 5000,
+                "is_stakable": True,
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
+            }
+        }
+
+        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
+        self.assertEqual(response, expected_result)
+        self.assertEqual(status_code, HTTPStatus.OK.value)
+
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_by_full_rewards_staked(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
+
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = True
+        is_user_can_stake = True
+
+        max_stakable_amount = 10000
+        already_staked_amount = 0
+        airdrop_rewards = 10000
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
+
+        event = {
+            "address": user_wallet_address,
+            "airdrop_id": "1",
+            "airdrop_window_id": "1"
+        }
+
+        expected_result = {
+            "stake_details": {
+                "airdrop_id": "1",
+                "airdrop_window_id": "1",
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": 0,
+                "stakable_tokens": airdrop_rewards,
+                "is_stakable": True,
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
+            }
+        }
+
+        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
+        self.assertEqual(response, expected_result)
+        self.assertEqual(status_code, HTTPStatus.OK.value)
+
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_if_airdrop_rewards_greater_than_max_stake_amount(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
+
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = True
+        is_user_can_stake = True
+
+        max_stakable_amount = 10000
+        already_staked_amount = 0
+        airdrop_rewards = 50000
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
+
+        event = {
+            "address": user_wallet_address,
+            "airdrop_id": "1",
+            "airdrop_window_id": "1"
+        }
+
+        expected_result = {
+            "stake_details": {
+                "airdrop_id": "1",
+                "airdrop_window_id": "1",
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": 40000,
+                "stakable_tokens": 10000,
+                "is_stakable": True,
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
+            }
+        }
+
+        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
+        self.assertEqual(response, expected_result)
+        self.assertEqual(status_code, HTTPStatus.OK.value)
+
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_user_can_stake_who_has_not_staked(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
+
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = True
+        is_already_staked_user = False
+
+        max_stakable_amount = 10000
+        already_staked_amount = 0
+        airdrop_rewards = 10000
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_details_of_address.return_value = is_already_staked_user, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
+
+        event = {
+            "address": user_wallet_address,
+            "airdrop_id": "1",
+            "airdrop_window_id": "1"
+        }
+
+        expected_result = {
+            "stake_details": {
+                "airdrop_id": "1",
+                "airdrop_window_id": "1",
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": 0,
+                "stakable_tokens": 10000,
+                "is_stakable": True,
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
+            }
+        }
+
+        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
+        self.assertEqual(response, expected_result)
+        self.assertEqual(status_code, HTTPStatus.OK.value)
+
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_if_user_staked_max_amount_then_is_stakable_should_false(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
+
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = True
+        is_already_staked_user = True
+
+        max_stakable_amount = 10000
+        already_staked_amount = 10000
+        airdrop_rewards = 1000
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_details_of_address.return_value = is_already_staked_user, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
+
+        event = {
+            "address": user_wallet_address,
+            "airdrop_id": "1",
+            "airdrop_window_id": "1"
+        }
+
+        expected_result = {
+            "stake_details": {
+                "airdrop_id": "1",
+                "airdrop_window_id": "1",
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": airdrop_rewards,
+                "stakable_tokens": 0,
+                "is_stakable": False,
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": airdrop_rewards
             }
         }
 
