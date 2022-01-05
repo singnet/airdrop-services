@@ -105,7 +105,7 @@ functions:
   process_eligibility:
     timeout: 300
     warmup: false
-    handler: airdrop/application/job/eligibility.process_eligibility
+    handler: airdrop/job/eligibility.process_eligibility
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonCode_Layer}
       - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib_Layer}
@@ -485,7 +485,7 @@ functions:
                   "application/json": "ErrorMessage"
   airdrop_event_listener:
     warmup: true
-    handler: airdrop/application/handlers/airdrop_handlers.airdrop_event_listener
+    handler: airdrop/application/handlers/airdrop_handlers.airdrop_event_consumer
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:

@@ -1,9 +1,12 @@
+import ast
+from datetime import datetime
+
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
 from common.utils import generate_claim_signature, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, MAX_STAKE_LIMIT
+from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION
 from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.domain.models.airdrop_claim import AirdropClaim
@@ -48,20 +51,28 @@ class AirdropServices:
             print(f"Exception on get_txn_receipt {e}")
             raise e
 
-    def airdrop_listen_to_events(self, event):
+    def airdrop_event_consumer(self, event):
+        response = {}
+        status = HTTPStatus.BAD_REQUEST
+
         event_data = event['data']
         event_name = event_data['event']
 
         if event_name == AirdropEvents.AIRDROP_CLAIM.value:
-            return self.update_airdrop_window_claim_status(event_data)
+            self.update_airdrop_window_claim_status(event_data)
+            status = HTTPStatus.OK
+        else:
+            response = "Unsupported event"
+
+        return status, response
 
     def update_airdrop_window_claim_status(self, event):
         try:
-            event_payload = event['json_str']
+            event_payload = ast.literal_eval(event["json_str"])
             user_address = event_payload['claimer']
-            amount = int(event_payload['amount'])
-            airdrop_id = str(event_payload['airDropId'])
-            airdrop_window_id = str(event_payload['airDropWindowId'])
+            amount = event_payload['amount']
+            airdrop_id = event_payload['airDropId']
+            airdrop_window_id = event_payload['airDropWindowId']
             txn_hash = event['transactionHash']
             txn_status = AirdropClaimStatus.SUCCESS.value
             AirdropRepository().create_or_update_txn(
@@ -86,27 +97,20 @@ class AirdropServices:
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_id"]
 
-            address = get_checksum_address(user_address)
+            user_wallet_address = get_checksum_address(user_address)
 
-            rewards, user_address = AirdropRepository().get_airdrop_window_claimable_info(
-                airdrop_id, airdrop_window_id, address)
+            airdrop_rewards, user_address, contract_address, token_address, staking_contract_address = AirdropRepository().get_airdrop_window_claimable_info(
+                airdrop_id, airdrop_window_id, user_wallet_address)
 
             staking_contract_address, stakable_token_name = AirdropRepository(
             ).get_staking_contract_address(airdrop_id)
 
-            is_stakable, stakable_amount = self.get_stake_info(
-                staking_contract_address, address)
-            claimable_tokens_to_wallet = rewards
+            is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_info(
+                staking_contract_address, user_wallet_address, int(airdrop_rewards))
             stakable_tokens = stakable_amount
 
-            if(is_stakable):
-                if(stakable_tokens > MAX_STAKE_LIMIT):
-                    stakable_tokens = MAX_STAKE_LIMIT
-                claimable_tokens_to_wallet = abs(
-                    claimable_tokens_to_wallet - stakable_tokens)
-
             stake_details = AirdropFactory.convert_stake_claim_details_to_model(
-                airdrop_id, airdrop_window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, stakable_token_name)
+                airdrop_id, airdrop_window_id, user_wallet_address, tranfer_to_wallet, stakable_tokens, is_stakable, stakable_token_name, airdrop_rewards)
 
             response = {"stake_details": stake_details}
             status = HTTPStatus.OK
@@ -119,14 +123,79 @@ class AirdropServices:
 
         return status, response
 
-    def get_stake_info(self, staking_contract_address, address):
-        contract = get_contract_instance(
-            STAKING_CONTRACT_PATH, staking_contract_address, contract_name='STAKING')
+    def get_stake_info(self, contract_address, user_wallet_address, airdrop_rewards):
+        try:
 
-        is_stakable, amount, rewards_computation_index, bonus_amount = contract.functions.getStakeInfo(
-            address).call()
+            is_stake_window_is_open, max_stake_amount = self.get_stake_window_details(
+                contract_address)
 
-        return is_stakable, amount
+            is_user_can_stake, already_staked_amount = self.get_stake_details_of_address(
+                contract_address, user_wallet_address)
+
+            is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_and_claimable_amounts(
+                airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount)
+
+            return is_stakable, stakable_amount, tranfer_to_wallet
+        except BaseException as e:
+            raise e("Exception on get_stake_info {}".format(e))
+
+    def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount):
+
+        tranfer_to_wallet = 0
+        stakable_amount = 0
+
+        # User can stake if stake window is open and user can stake
+        if is_stake_window_is_open:
+            allowed_amount_for_stake = max_stake_amount - already_staked_amount
+            if(airdrop_rewards <= allowed_amount_for_stake):
+                # If airdrop rewards is less than allowed amount for stake then stake the full airdrop rewards
+                stakable_amount = airdrop_rewards
+            else:
+                stakable_amount = allowed_amount_for_stake
+
+            # Amount user can claim to wallet after staking
+            tranfer_to_wallet = airdrop_rewards - stakable_amount
+        else:
+            tranfer_to_wallet = airdrop_rewards
+
+        is_stakable = True if stakable_amount > 0 else False
+
+        return is_stakable, stakable_amount, tranfer_to_wallet
+
+    def get_stake_details_of_address(self, contract_address, user_wallet):
+        try:
+            contract = get_contract_instance(
+                STAKING_CONTRACT_PATH, contract_address, contract_name='STAKING')
+
+            stake_info = contract.functions.getStakeInfo(user_wallet).call()
+            is_user_can_stake = stake_info[0]
+            already_staked_amount = stake_info[1]
+
+            return is_user_can_stake, already_staked_amount
+        except BaseException as e:
+            raise e("Exception on get_stake_details_of_address {}".format(e))
+
+    def get_stake_window_details(self, staking_contract_address):
+        try:
+            contract = get_contract_instance(
+                STAKING_CONTRACT_PATH, staking_contract_address, contract_name='STAKING')
+
+            current_stakemap_index = contract.functions.currentStakeMapIndex().call()
+            stakemap = contract.functions.stakeMap(
+                current_stakemap_index).call()
+
+            stake_submission_start_period = int(stakemap[0])
+            stake_submission_end_period = int(stakemap[1])
+            max_stakable_amount = stakemap[3]
+            now = datetime.now()
+
+            # Check if stake window is open or not if stake start & end period is in between current time
+            is_stake_window_open = now <= datetime.fromtimestamp(
+                stake_submission_end_period) and now >= datetime.fromtimestamp(stake_submission_start_period)
+
+            return is_stake_window_open, max_stakable_amount
+        except BaseException as e:
+            raise e("Exception on get_stake_window_info {}".format(e))
 
     def airdrop_window_claim_history(self, inputs):
         status = HTTPStatus.BAD_REQUEST
@@ -208,14 +277,14 @@ class AirdropServices:
             airdrop_repo.is_claimed_airdrop_window(
                 user_address, airdrop_window_id)
 
-            claimable_amount, token_address = AirdropRepository().get_airdrop_window_claimable_info(
+            claimable_amount, user_wallet_address, contract_address, token_address, staking_contract_address = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_address)
 
             signature = self.get_signature_for_airdrop_window_id(
-                claimable_amount, airdrop_id, airdrop_window_id, user_address)
+                claimable_amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address)
 
             response = AirdropClaim(airdrop_id,
-                                    airdrop_window_id, user_address, signature, claimable_amount, token_address).to_dict()
+                                    airdrop_window_id, user_wallet_address, signature, claimable_amount, token_address, contract_address, staking_contract_address).to_dict()
 
             status = HTTPStatus.OK
         except ValidationError as e:
@@ -226,12 +295,8 @@ class AirdropServices:
 
         return status, response
 
-    def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_address):
+    def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address):
         try:
-
-            contract_address = AirdropRepository().get_contract_address(airdrop_id)
-
-            token_address = AirdropRepository().get_token_address(airdrop_id)
 
             boto_client = BotoUtils(
                 region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)
@@ -239,7 +304,7 @@ class AirdropServices:
                 secret_name=SIGNER_PRIVATE_KEY)
 
             return generate_claim_signature(
-                amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key)
+                amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address, private_key)
 
         except BaseException as e:
             raise e

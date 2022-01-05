@@ -27,8 +27,8 @@ def upgrade():
     sa.Column('address', sa.VARCHAR(length=50), nullable=False),
     sa.Column('balance', sa.BIGINT(), nullable=False),
     sa.Column('staked', sa.BIGINT(), nullable=False),
-    sa.Column('score', sa.DECIMAL(precision=10, scale=8), nullable=False),
-    sa.Column('normalized_score', sa.DECIMAL(precision=10, scale=8), nullable=False),
+    sa.Column('score', sa.DECIMAL(precision=18, scale=8), nullable=False),
+    sa.Column('normalized_score', sa.DECIMAL(precision=18, scale=8), nullable=False),
     sa.Column('rewards_awarded', sa.BIGINT(), nullable=False),
     sa.Column('snapshot_guid', sa.VARCHAR(length=50), nullable=False),
     sa.Column('comment', sa.VARCHAR(length=512), nullable=True),
@@ -43,8 +43,8 @@ def upgrade():
     op.add_column('user_balance_snapshot', sa.Column('snapshot_guid', sa.VARCHAR(length=50), nullable=False))
     op.add_column('user_balance_snapshot', sa.Column('staked', sa.BIGINT(), nullable=False))
     op.add_column('user_balance_snapshot', sa.Column('total', sa.BIGINT(), nullable=False))
-    op.add_column('user_rewards', sa.Column('normalized_score', sa.DECIMAL(precision=10, scale=8), nullable=False))
-    op.add_column('user_rewards', sa.Column('score', sa.DECIMAL(precision=10, scale=8), nullable=False))
+    op.add_column('user_rewards', sa.Column('normalized_score', sa.DECIMAL(precision=18, scale=8), nullable=False))
+    op.add_column('user_rewards', sa.Column('score', sa.DECIMAL(precision=18, scale=8), nullable=False))
     # ### end Alembic commands ###
 
 

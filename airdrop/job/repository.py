@@ -1,4 +1,7 @@
 import pymysql
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 class Repository:
     connection = None
@@ -46,7 +49,7 @@ class Repository:
                     self.connection.commit()
         except Exception as e:
             self.connection.rollback()
-            print("DB Error in %s, error: %s" % (str(query), repr(e)))
+            logger.error(f"DB Error in {str(query)}, error: {repr(e)}")
             raise e
         return result
 
@@ -54,14 +57,17 @@ class Repository:
         try:
             with self.connection.cursor() as cursor:
                 result = cursor.executemany(query, params)
-                self.connection.commit()
+                if self.auto_commit:
+                    self.connection.commit()
                 return result
         except Exception as err:
-            self.connection.rollback()
-            print("DB Error in %s, error: %s" % (str(query), repr(err)))
+            if self.auto_commit:
+                self.connection.rollback()
+            logger.error(f"DB Error in {str(query)}, error: {repr(err)}")
 
     def begin_transaction(self):
         self.connection.begin()
+        self.auto_commit = False
 
     def commit_transaction(self):
         self.connection.commit()

@@ -60,7 +60,6 @@ jobs:
           name: Run unit tests and integration test
           command: |
             PYTHONPATH=$PWD python -m coverage run -m pytest */testcases/unit_testcases/*.py */testcases/functional_testcases/*.py
-            python -m coverage report -m
             coverage xml -i
             sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner -Dsonar.host.url=https://sonarqube.singularitynet.io -Dsonar.login=${SONAR_TOKEN} $SONAR_SCANNER_OPTS_CUSTOM
       - save_cache:

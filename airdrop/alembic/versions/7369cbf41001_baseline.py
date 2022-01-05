@@ -130,7 +130,7 @@ def upgrade():
     sa.Column('airdrop_window_id', sa.BIGINT(), nullable=False),
     sa.Column('address', sa.VARCHAR(length=50), nullable=False),
     sa.Column('condition', sa.TEXT(), nullable=True),
-    sa.Column('rewards_awarded', sa.INTEGER(), nullable=False),
+    sa.Column('rewards_awarded', sa.BIGINT(), nullable=False),
     sa.ForeignKeyConstraint(['airdrop_id'], ['airdrop.row_id'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['airdrop_window_id'], ['airdrop_window.row_id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('row_id'),
