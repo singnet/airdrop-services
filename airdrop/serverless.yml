@@ -28,17 +28,12 @@ custom:
     automatic: true
     includeLayers: true
     number: 5
-  splitStacks:
-    perFunction: false
-    perType: true
-    perGroupFunction: false
 
 plugins:
   - serverless-offline
   - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
-  - serverless-plugin-split-stacks
   - serverless-latest-layer-version
   - serverless-aws-documentation
 
