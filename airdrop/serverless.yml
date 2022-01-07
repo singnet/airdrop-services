@@ -1,4 +1,4 @@
-service: airdropservices
+service: airdrop-services
 frameworkVersion: "2"
 
 provider:
