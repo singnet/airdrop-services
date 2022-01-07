@@ -114,7 +114,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - schedule:
-          rate: rate(24 hours)
+          rate: cron(0 11 * * ? *)
           name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-eligibility-processor
           enabled: true
 
