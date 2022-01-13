@@ -5,6 +5,8 @@ from common.utils import generate_lambda_response, request
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.application.services.user_registration_services import UserRegistrationServices
 from airdrop.application.services.user_notification_service import UserNotificationService
+import sys
+sys.path.append('/opt')
 
 
 logger = get_logger(__name__)

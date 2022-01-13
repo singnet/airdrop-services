@@ -18,20 +18,13 @@ provider:
   tracing: true
 
 custom:
-  pythonRequirements:
-    fileName: airdrop/requirements.txt
-    dockerizePip: true
-    useDownloadCache: true
-    useStaticCache: true
-    cacheLocation: "/var/cache/serverless"
   prune:
     automatic: true
     includeLayers: true
-    number: 5
+    number: 3
 
 plugins:
   - serverless-offline
-  - serverless-python-requirements
   - serverless-plugin-tracing
   - serverless-prune-plugin
   - serverless-latest-layer-version
@@ -121,6 +114,9 @@ functions:
   get_airdrop_schedules:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.get_airdrop_schedules
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -166,6 +162,9 @@ functions:
   user_registration:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.user_registration
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -211,6 +210,9 @@ functions:
   user_eligibility:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.user_eligibility
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -256,6 +258,9 @@ functions:
   airdrop_window_claims:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claims
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE_WITH_SM}
     vpc:
       securityGroupIds:
@@ -301,6 +306,9 @@ functions:
   airdrop_window_claim_status:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim_status
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -346,6 +354,9 @@ functions:
   airdrop_history:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim_history
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -391,6 +402,9 @@ functions:
   airdrop_user_notifications:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.user_notifications
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -436,6 +450,9 @@ functions:
   airdrop_window_stake_details:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_stake_details
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -481,6 +498,9 @@ functions:
   airdrop_event_listener:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_event_consumer
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
@@ -492,6 +512,9 @@ functions:
   airdrop_txn_watcher:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_txn_watcher
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
