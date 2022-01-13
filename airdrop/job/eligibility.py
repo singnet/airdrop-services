@@ -90,6 +90,3 @@ def process_eligibility(event, context):
         200,
         "Success"
     )
-
-
-process_eligibility(None, None)
