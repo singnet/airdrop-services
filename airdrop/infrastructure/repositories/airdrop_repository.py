@@ -140,18 +140,38 @@ class AirdropRepository(BaseRepository):
         airdrop = Airdrop(
             token_address=token_address, org_name=org_name, token_name=token_name, contract_address=contract_address, portal_link=portal_link, documentation_link=documentation_link, description=description, github_link_for_contract=github_link_for_contract, token_type=token_type, stakable_token_name=stakable_token_name)
         self.add(airdrop)
-        return self.session.query(Airdrop).filter_by(token_address=token_address).first()
+        return self.session.query(Airdrop).filter_by(contract_address=contract_address).first()
+
 
     def register_airdrop_window(self, airdrop_id, airdrop_window_name, description, registration_required, registration_start_period, registration_end_period, snapshot_required, claim_start_period, claim_end_period, total_airdrop_tokens):
         airdrop_window = AirdropWindow(airdrop_id=airdrop_id, airdrop_window_name=airdrop_window_name, description=description, registration_required=registration_required, registration_start_period=registration_start_period,
                                        registration_end_period=registration_end_period, snapshot_required=snapshot_required, claim_start_period=claim_start_period, claim_end_period=claim_end_period, total_airdrop_tokens=total_airdrop_tokens)
-        return self.add(airdrop_window)
+        self.add(airdrop_window)
+        return self.session.query(AirdropWindow).filter_by(airdrop_id=airdrop_id,
+                                                           airdrop_window_name=airdrop_window_name).first()
 
     def register_airdrop_window_timeline(self, airdrop_window_id, title, description, date):
         airdrop_window_timeline = AirdropWindowTimelines(
             airdrop_window_id=airdrop_window_id, title=title, description=description, date=date)
         return self.add(airdrop_window_timeline)
 
+    def register_user_rewards(self,airdrop_id, airdrop_window_id, rewards,address,score,normalized_score):
+        user_reward = UserReward(
+            airdrop_id=airdrop_id,airdrop_window_id=airdrop_window_id, address=address,rewards_awarded=rewards,score=score,
+        normalized_score=normalized_score)
+        return self.add(user_reward)
+
+    def register_user_registration(self,airdrop_window_id,address):
+        user_registration = UserRegistration(airdrop_window_id=airdrop_window_id, address=address)
+        return self.add(user_registration)
+
+    def register_claim_history(self, airdrop_id, airdrop_window_id,address, claimable_amount,unclaimable_amount,
+                               transaction_status, transaction_hash):
+        user_reward = ClaimHistory(
+            airdrop_id=airdrop_id, airdrop_window_id=airdrop_window_id, address=address,
+            claimable_amount=claimable_amount,unclaimed_amount=unclaimable_amount,
+        transaction_status=transaction_status,transaction_hash=transaction_hash)
+        return self.add(user_reward)
     def get_contract_address(self, airdrop_id):
         try:
             airdrop = self.session.query(
@@ -192,20 +212,11 @@ class AirdropRepository(BaseRepository):
             raise Exception("Airdrop not found")
         return airdrop.staking_contract_address, airdrop.stakable_token_name
 
-    def get_airdrop_window_claimable_info(self, airdrop_id, airdrop_window_id, address):
+    def get_airdrop_window_claimable_info(self, airdrop_id, airdrop_window_id, user_wallet_address):
         try:
-            date_time = datetime.utcnow()
-            is_eligible_user = (
-                self.session.query(UserRegistration, AirdropWindow)
-                .join(
-                    AirdropWindow,
-                    AirdropWindow.id == UserRegistration.airdrop_window_id
-                )
-                .filter(UserRegistration.address == address)
-                .filter(AirdropWindow.airdrop_id == airdrop_id)
-                .filter(AirdropWindow.id == airdrop_window_id)
-                .filter(AirdropWindow.claim_start_period <= date_time)
-                .filter(AirdropWindow.claim_end_period >= date_time)
+            airdrop = (
+                self.session.query(Airdrop)
+                .filter(Airdrop.id == airdrop_id)
                 .first()
             )
 
@@ -214,21 +225,27 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-        if is_eligible_user is None:
-            raise Exception('Non eligible user')
+        if airdrop is None:
+            raise Exception('Invalid Airdrop')
 
-        balance_raw_data = self.fetch_total_rewards_amount(airdrop_id, address)
+        total_rewards = 0
+        contract_address = airdrop.contract_address
+        token_address = airdrop.token_address
+        staking_contract_address = airdrop.staking_contract_address
+
+        balance_raw_data = self.fetch_total_rewards_amount(
+            airdrop_id, user_wallet_address)
 
         if len(balance_raw_data) > 0:
             balance_data = balance_raw_data[0]
-            total_rewards = balance_data['total_rewards'] if balance_data['total_rewards'] is not None else 0
-            return str(total_rewards), address
-        else:
-            return 0, ''
+            total_rewards = str(
+                balance_data['total_rewards']) if balance_data['total_rewards'] is not None else 0
+
+        return total_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
 
     def fetch_total_rewards_amount(self, airdrop_id, address):
         try:
-            query = text("select sum(ur.rewards_awarded) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and ur.airdrop_window_id not in (select airdrop_window_id from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING')) and ur.airdrop_window_id > (select ifnull (max(airdrop_window_id), -1) from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING'));")
+            query = text("select sum(ur.rewards_awarded) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp  and exists ( select 1 from airdrop_window where current_timestamp <= claim_end_period  and airdrop_id = :airdrop_id and claim_start_period <= current_timestamp ) and ur.airdrop_window_id > ( select ifnull (max(airdrop_window_id), -1) from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING')) and ur.airdrop_window_id in ( SELECT airdrop_window_id FROM user_registrations  WHERE address = :address and airdrop_window_id in ( select row_id from airdrop_window where airdrop_id = :airdrop_id));")
             result = self.session.execute(
                 query, {'address': address, 'airdrop_id': airdrop_id})
             self.session.commit()
@@ -236,7 +253,18 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
         return result.fetchall()
-
+    def fetch_total_eligibility_amount(self, airdrop_id, address):
+        try:
+            query = text("select ifnull( sum(ur.rewards_awarded),0) AS 'total_eligibility_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and exists ( select 1 from airdrop_window where current_timestamp <= claim_end_period and airdrop_id = :airdrop_id and claim_start_period <= current_timestamp )  and ur.airdrop_window_id in ( SELECT airdrop_window_id FROM user_registrations WHERE address = :address and airdrop_window_id in ( select row_id from airdrop_window where airdrop_id = :airdrop_id));")
+            result = self.session.execute(
+                query, {'address': address, 'airdrop_id': airdrop_id})
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        value_retrieved = result.fetchall()[0]
+        total_eligible_rewards = value_retrieved['total_eligibility_rewards']
+        return total_eligible_rewards
     def get_airdrops_schedule(self, airdrop_id):
         try:
             airdrop_row_data = (

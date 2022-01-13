@@ -7,9 +7,9 @@ from airdrop.domain.models.airdrop_stake_claim import AirdropStakeClaim
 
 class AirdropFactory:
     @staticmethod
-    def convert_stake_claim_details_to_model(airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name):
+    def convert_stake_claim_details_to_model(airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name, airdrop_rewards):
         return AirdropStakeClaim(
-            airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name
+            airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name, airdrop_rewards
         ).to_dict()
 
     @staticmethod
