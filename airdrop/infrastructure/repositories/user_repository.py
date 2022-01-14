@@ -37,19 +37,12 @@ class UserRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-        balance_raw_data = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
-
-        if is_eligible is not None and is_eligible.rewards_awarded > 0:
+        total_rewards = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
+        eligible_for_window = False
+        #Simplified the logic, if rewards > 0 => the user is eligible
+        if total_rewards > 0:
             eligible_for_window = True
-        else:
-            eligible_for_window = False
-
-        if len(balance_raw_data) > 0:
-            balance_data = balance_raw_data[0]
-            total_rewards = balance_data['total_rewards'] if balance_data['total_rewards'] is not None else 0
-            return eligible_for_window, str(total_rewards)
-        else:
-            return eligible_for_window, 0
+        return eligible_for_window, 0
 
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (

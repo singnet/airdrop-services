@@ -232,29 +232,32 @@ class AirdropRepository(BaseRepository):
         contract_address = airdrop.contract_address
         token_address = airdrop.token_address
         staking_contract_address = airdrop.staking_contract_address
-
-        balance_raw_data = self.fetch_total_rewards_amount(
+        total_eligibility_amount = self.fetch_total_eligibility_amount(airdrop_id,user_wallet_address)
+        total_rewards = self.fetch_total_rewards_amount(
             airdrop_id, user_wallet_address)
 
-        if len(balance_raw_data) > 0:
-            balance_data = balance_raw_data[0]
-            total_rewards = str(
-                balance_data['total_rewards']) if balance_data['total_rewards'] is not None else 0
-
-        return total_rewards, user_wallet_address, contract_address, token_address, staking_contract_address
+        return total_rewards, user_wallet_address, contract_address, token_address, staking_contract_address, total_eligibility_amount
 
     def fetch_total_rewards_amount(self, airdrop_id, address):
         try:
-            query = text("select sum(ur.rewards_awarded) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp  and exists ( select 1 from airdrop_window where current_timestamp <= claim_end_period  and airdrop_id = :airdrop_id and claim_start_period <= current_timestamp ) and ur.airdrop_window_id > ( select ifnull (max(airdrop_window_id), -1) from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING')) and ur.airdrop_window_id in ( SELECT airdrop_window_id FROM user_registrations  WHERE address = :address and airdrop_window_id in ( select row_id from airdrop_window where airdrop_id = :airdrop_id));")
+            #return zero if there are no rewards, please note that MYSQL smartly sums up varchar columns and returns
+            #it as a bigint if you have a very big number stored as a varchar in the rewards table.
+            query = text("select ifnull( sum(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp  and exists ( select 1 from airdrop_window where current_timestamp <= claim_end_period  and airdrop_id = :airdrop_id and claim_start_period <= current_timestamp ) and ur.airdrop_window_id > ( select ifnull (max(airdrop_window_id), -1) from claim_history where address = :address and transaction_status in ('SUCCESS', 'PENDING')) and ur.airdrop_window_id in ( SELECT airdrop_window_id FROM user_registrations  WHERE address = :address and airdrop_window_id in ( select row_id from airdrop_window where airdrop_id = :airdrop_id));")
             result = self.session.execute(
                 query, {'address': address, 'airdrop_id': airdrop_id})
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-        return result.fetchall()
+        value_retrieved = result.fetchall()[0]
+        #determine the final result here, this was the service layer does not have to deal
+        # with extracting 'total_rewards' from the o/p sent
+        total_rewards = value_retrieved['total_rewards']
+        return int(total_rewards)
     def fetch_total_eligibility_amount(self, airdrop_id, address):
         try:
+            #return zero if there are no rewards, please note that MYSQL smartly sums up varchar columns and returns
+            #it as a bigint if you have a very big number stored as a varchar in the rewards table.
             query = text("select ifnull( sum(ur.rewards_awarded),0) AS 'total_eligibility_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and exists ( select 1 from airdrop_window where current_timestamp <= claim_end_period and airdrop_id = :airdrop_id and claim_start_period <= current_timestamp )  and ur.airdrop_window_id in ( SELECT airdrop_window_id FROM user_registrations WHERE address = :address and airdrop_window_id in ( select row_id from airdrop_window where airdrop_id = :airdrop_id));")
             result = self.session.execute(
                 query, {'address': address, 'airdrop_id': airdrop_id})
@@ -264,7 +267,7 @@ class AirdropRepository(BaseRepository):
             raise e
         value_retrieved = result.fetchall()[0]
         total_eligible_rewards = value_retrieved['total_eligibility_rewards']
-        return total_eligible_rewards
+        return int(total_eligible_rewards)
     def get_airdrops_schedule(self, airdrop_id):
         try:
             airdrop_row_data = (
