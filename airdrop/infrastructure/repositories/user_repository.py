@@ -42,7 +42,7 @@ class UserRepository(BaseRepository):
         #Simplified the logic, if rewards > 0 => the user is eligible
         if total_rewards > 0:
             eligible_for_window = True
-        return eligible_for_window, 0
+        return eligible_for_window, total_rewards
 
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (
