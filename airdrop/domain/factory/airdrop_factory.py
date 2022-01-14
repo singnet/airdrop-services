@@ -7,9 +7,12 @@ from airdrop.domain.models.airdrop_stake_claim import AirdropStakeClaim
 
 class AirdropFactory:
     @staticmethod
-    def convert_stake_claim_details_to_model(airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name, airdrop_rewards):
+    #total eligibility amount is a new parameter that will be passed , please note that this is backward compatible
+    #we will need this amount for claim and also claim and stake&claim , can also be used additionally to perform validations on the UI
+    def convert_stake_claim_details_to_model(airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens,
+                                             is_stakable, token_name, airdrop_rewards,total_eligibile_amount):
         return AirdropStakeClaim(
-            airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name, airdrop_rewards
+            airdrop_id, window_id, address, claimable_tokens_to_wallet, stakable_tokens, is_stakable, token_name, airdrop_rewards,total_eligibile_amount
         ).to_dict()
 
     @staticmethod
