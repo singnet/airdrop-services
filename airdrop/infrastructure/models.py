@@ -1,5 +1,6 @@
 from sqlalchemy import (
     BIGINT,
+    BigInteger,
     VARCHAR,
     Column,
     DECIMAL,
@@ -170,7 +171,7 @@ class UserRewardAudit(Base, AuditClass):
     staked = Column("staked", BIGINT, nullable=False)    
     score = Column("score", DECIMAL(18,8), nullable=False)
     normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)
-    rewards_awarded = Column("rewards_awarded", BIGINT, nullable=False)
+    rewards_awarded = Column("rewards_awarded", VARCHAR(50), nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
     comment = Column("comment", VARCHAR(512))
 
