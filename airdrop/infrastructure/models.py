@@ -150,7 +150,7 @@ class UserReward(Base, AuditClass):
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     condition = Column("condition", TEXT, nullable=True)
-    rewards_awarded = Column("rewards_awarded", BIGINT, nullable=False)
+    rewards_awarded = Column("rewards_awarded", VARCHAR(50), nullable=False)
     score = Column("score", DECIMAL(18,8), nullable=False)
     normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)    
     UniqueConstraint(airdrop_window_id, address)
