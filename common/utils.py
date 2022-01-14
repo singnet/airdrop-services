@@ -109,7 +109,7 @@ def get_transaction_receipt_from_blockchain(transaction_hash):
         NETWORK['http_provider']))
     return web3_object.eth.getTransactionReceipt(transaction_hash)
 
-
+#TODO this will need to be deleted , after the nunet OCCAM claims windows expire
 def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key):
     try:
         user_address = Web3.toChecksumAddress(user_address)
@@ -138,6 +138,35 @@ def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address
     except BaseException as e:
         raise e(f"Error while generating claim signature. Error: {e}")
 
+def generate_claim_signature_with_total_eligibile_amount(totalEligibleAmount,airdropAmount, airdrop_id,
+                                                         airdrop_window_id, user_address,
+                                                         contract_address, token_address, private_key):
+    try:
+        user_address = Web3.toChecksumAddress(user_address)
+        token_address = Web3.toChecksumAddress(token_address)
+        contract_address = Web3.toChecksumAddress(contract_address)
+
+        print("Generate secured claim signature user_address: ", user_address)
+        print("Generate secured claim signature token_address: ", token_address)
+        print("Generate secured claim signature contract_address: ", contract_address)
+
+        message = web3.Web3.soliditySha3(
+            ["string","uint256","uint256", "address", "uint256",
+                "uint256", "address", "address"],
+            ["__airdropclaim",int(totalEligibleAmount) ,int(airdropAmount), user_address, int(airdrop_id),
+             int(airdrop_window_id), contract_address, token_address],
+        )
+
+        message_hash = encode_defunct(message)
+
+        web3_object = Web3(web3.providers.HTTPProvider(
+            NETWORK['http_provider']))
+        signed_message = web3_object.eth.account.sign_message(
+            message_hash, private_key=private_key)
+
+        return signed_message.signature.hex()
+    except BaseException as e:
+        raise e(f"Error while generating claim signature. Error: {e}")
 
 def load_contract(path):
     with open(path) as f:
