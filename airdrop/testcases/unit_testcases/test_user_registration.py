@@ -63,7 +63,7 @@ class UserRegistration(TestCase):
     @patch('common.utils.recover_address')
     @patch('airdrop.infrastructure.repositories.user_repository.UserRepository.check_rewards_awarded')
     def test_user_registration(self, mock_check_rewards_awarded, mock_recover_address):
-        address = '0x176133a958449C28930970989dB5fFFbEdd9F448'
+        address = '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc'
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
         inputs = {
