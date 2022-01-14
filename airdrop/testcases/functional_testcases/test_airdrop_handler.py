@@ -77,18 +77,29 @@ class TestAirdropHandler(unittest.TestCase):
                 "airdrop_window_id": airdrop_window_id
             })
         }
+
+        reward = 1
+        AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, reward,
+                                                 address, 1, 1)
         result = user_eligibility(event, None)
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
-        self.assertIn(user_eligibility_object['is_eligible'], [True, False])
-        self.assertIn(
-            user_eligibility_object['is_already_registered'], [True, False])
+        self.assertEqual(user_eligibility_object['is_eligible'], True)
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'],0)
+        self.assertEqual(
+            user_eligibility_object['is_already_registered'], False)
         self.assertIn(
             user_eligibility_object['is_airdrop_window_claimed'], [True, False])
         self.assertEqual(user_eligibility_object['user_address'], address)
         self.assertEqual(user_eligibility_object['airdrop_id'], airdrop_id)
         self.assertEqual(
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
+        #now register the user and see the amount to tbe claimed
+        AirdropRepository().register_user_registration( airdrop_window_id, address)
+        result = user_eligibility(event, None)
+        result = json.loads(result['body'])
+        user_eligibility_object = result['data']
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], reward)
 
     @patch("common.utils.Utils.report_slack")
     @patch('common.utils.recover_address')
