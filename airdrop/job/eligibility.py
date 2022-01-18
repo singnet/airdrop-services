@@ -47,18 +47,33 @@ class EligibilityProcessor:
             self.__rows_to_insert.append(tuple(values))
 
     def __populate_snapshot(self):
-        query = "select aa.wallet_address, aa.balance, ab.staked from " +\
-                "(select wallet_address, sum(amount) as balance from agix_balances " +\
-                "where balance_type <> 'STAKED' group by wallet_address) as aa, " +\
-                "(select wallet_address, amount as staked from agix_balances where balance_type = 'STAKED') as ab " +\
-                "where aa.wallet_address = ab.wallet_address"
-        snapshot = self._balances_db.execute(query)
-        logger.info(f"Snapshot size is {len(snapshot)} holders")
+        snapshot_rows = {}
+        query = "select wallet_address, sum(amount) as balance from agix_balances " +\
+                "where balance_type <> 'STAKED' group by wallet_address having sum(amount) > 0"
+        user_balance = self._balances_db.execute(query)
+        logger.info(f"Users with balance size is {len(user_balance)} holders")
+        for row in user_balance:
+            row["staked"] = 0
+            row["total"] = row["balance"]
+            snapshot_rows[row["wallet_address"]] = row
 
-        for row in snapshot:
+        logger.info(f"Users with non zero balance size is {len(snapshot_rows)} holders")
+        query = "select wallet_address, amount as staked from agix_balances where balance_type = 'STAKED' "
+        user_stake = self._balances_db.execute(query)
+        logger.info(f"Users with stake size is {len(user_stake)} holders")
+        for row in user_stake:
+            if row["wallet_address"] in snapshot_rows:
+                seen_row = snapshot_rows[row["wallet_address"]]
+                seen_row["staked"] = row["staked"]
+                seen_row["total"] = Decimal(seen_row["balance"]) + Decimal(seen_row["staked"])
+            else:
+                row["balance"] = 0
+                row["total"] = row["staked"]
+                snapshot_rows[row["wallet_address"]] = row
+
+        for address in snapshot_rows:
             for window in self._active_airdrop_window_map:
-                total = Decimal(row["balance"]) + Decimal(row["staked"])
-                self.__batch_insert([window, row["wallet_address"], row["balance"], row["staked"], total, self._snapshot_guid])
+                self.__batch_insert([window, address, snapshot_rows[address]["balance"], snapshot_rows[address]["staked"], snapshot_rows[address]["total"], self._snapshot_guid])
         self.__batch_insert([], True)
 
     def process_eligibility(self):
