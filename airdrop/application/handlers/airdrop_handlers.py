@@ -73,7 +73,17 @@ def airdrop_window_claims(event, context):
         response,
         cors_enabled=True,
     )
-
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def airdrop_window_secured_claims(event, context):
+    logger.info(f"Got Airdrops Window Secured Claims Events {event}")
+    status, response = AirdropServices(
+    ).airdrop_window_secured_claims(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_window_claim_status(event, context):

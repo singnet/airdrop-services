@@ -15,7 +15,8 @@ from airdrop.testcases.test_variables import AIRDROP
 
 
 class UserRegistration(TestCase):
-
+    airdrop_id = None
+    airdrop_window_id = None
     def setUp(self):
 
         org_name = 'SINGNET'
@@ -48,9 +49,12 @@ class UserRegistration(TestCase):
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
             token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
-        airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
+        airdrop_window= airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
-
+        global airdrop_id
+        airdrop_id = airdrop.id
+        global airdrop_window_id
+        airdrop_window_id = airdrop_window.id
         nunet_occam_airdrop = airdrop_repository.register_airdrop(
             occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, occam_stakable_token_name)
         airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
@@ -63,8 +67,8 @@ class UserRegistration(TestCase):
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
         inputs = {
-            "airdrop_window_id": "1",
-            "airdrop_id": "1",
+            "airdrop_window_id": str(airdrop_window_id),
+            "airdrop_id": str(airdrop_id),
             "address": address,
             "signature": "958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F",
         }
@@ -78,8 +82,8 @@ class UserRegistration(TestCase):
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
         inputs = {
-            "airdrop_window_id": "1",
-            "airdrop_id": "1",
+            "airdrop_window_id": str(airdrop_id),
+            "airdrop_id": str(airdrop_window_id),
             "address": address,
             "signature": "958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F",
         }
@@ -88,8 +92,8 @@ class UserRegistration(TestCase):
 
     def test_airdrop_window_user_eligibility(self):
         inputs = {
-            "airdrop_window_id": "1",
-            "airdrop_id": "1",
+            "airdrop_window_id": str(airdrop_window_id),
+            "airdrop_id": str(airdrop_id),
             "address": "0x176133a958449C28930970989dB5fFFbEdd9F448",
             "signature": "958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F",
         }
@@ -107,15 +111,16 @@ class UserRegistration(TestCase):
         self.assertNotEqual(status, HTTPStatus.OK)
 
     def test_user_notification_subscription(self):
+
         payload = {
-            "email": "email@provider.com",
+            "email": str(airdrop_id)+"email@provider.com",
         }
         status, response = UserNotificationService().subscribe_to_notifications(payload)
         self.assertEqual(response, HTTPStatus.OK.phrase)
 
     def test_user_notification_subscription_with_existing_email(self):
         payload = {
-            "email": "email@provider.com",
+            "email": str(airdrop_id)+"email@provider.com",
         }
         status, response = UserNotificationService().subscribe_to_notifications(payload)
         self.assertNotEqual(response, HTTPStatus.OK.phrase)
