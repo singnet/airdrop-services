@@ -305,6 +305,54 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+  airdrop_window_secured_claims:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_secured_claims
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+    role: ${file(./config.${self:provider.stage}.json):ROLE_WITH_SM}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          path: /airdrop/secured-claim
+          method: post
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+          documentation:
+            summary: "Airdrop window secured claims"
+            description: "Airdrop window secured claims"
+            tags:
+              - "airdrop"
+            requestHeaders:
+              - name: "Content-Type"
+                description: "application/json"
+            requestModels:
+              "application/json": "AirdropWindowClaim"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "For Airdrop Window Claim get signed signature from the back end service"
+                  "application/json": "AirdropWindowClaim"
+                responseModels:
+                  "application/json": "AirdropWindowClaim"
+              - statusCode: "400"
+                responseModels:
+                  "application/json": "ErrorMessage"
   airdrop_window_claim_status:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim_status

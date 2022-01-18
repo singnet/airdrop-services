@@ -5,7 +5,7 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
-from common.utils import generate_claim_signature, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
+from common.utils import generate_claim_signature,generate_claim_signature_with_total_eligibile_amount, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION
 from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
@@ -95,11 +95,11 @@ class AirdropServices:
 
             user_address = inputs["address"]
             airdrop_id = inputs["airdrop_id"]
-            airdrop_window_id = inputs["airdrop_id"]
+            airdrop_window_id = inputs["airdrop_window_id"]
 
             user_wallet_address = get_checksum_address(user_address)
 
-            airdrop_rewards, user_address, contract_address, token_address, staking_contract_address = AirdropRepository().get_airdrop_window_claimable_info(
+            airdrop_rewards, user_address, contract_address, token_address, staking_contract_address,total_eligibility_amount = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_wallet_address)
 
             staking_contract_address, stakable_token_name = AirdropRepository(
@@ -110,7 +110,7 @@ class AirdropServices:
             stakable_tokens = stakable_amount
 
             stake_details = AirdropFactory.convert_stake_claim_details_to_model(
-                airdrop_id, airdrop_window_id, user_wallet_address, tranfer_to_wallet, stakable_tokens, is_stakable, stakable_token_name, airdrop_rewards)
+                airdrop_id, airdrop_window_id, user_wallet_address, tranfer_to_wallet, stakable_tokens, is_stakable, stakable_token_name, airdrop_rewards,total_eligibility_amount)
 
             response = {"stake_details": stake_details}
             status = HTTPStatus.OK
@@ -257,6 +257,45 @@ class AirdropServices:
 
         return status, response
 
+    def airdrop_window_secured_claims(self, inputs):
+        status = HTTPStatus.BAD_REQUEST
+        try:
+
+            schema = {
+                "type": "object",
+                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"}, "airdrop_window_id": {"type": "string"}},
+                "required": ["address", "airdrop_id", "airdrop_window_id"],
+            }
+
+            validate(instance=inputs, schema=schema)
+
+            user_address = inputs["address"]
+            airdrop_id = inputs["airdrop_id"]
+            airdrop_window_id = inputs["airdrop_window_id"]
+
+            airdrop_repo = AirdropRepository()
+            airdrop_repo.is_claimed_airdrop_window(
+                user_address, airdrop_window_id)
+
+            claimable_amount, user_wallet_address, contract_address, token_address, staking_contract_address, total_eligibility_amount = AirdropRepository().get_airdrop_window_claimable_info(
+                airdrop_id, airdrop_window_id, user_address)
+
+            signature = self.get_signature_for_airdrop_window_id_with_totaleligibilty_amount(
+                claimable_amount, total_eligibility_amount,airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address)
+
+            response = AirdropClaim(airdrop_id,
+                                    airdrop_window_id, user_wallet_address, signature, claimable_amount, token_address, contract_address, staking_contract_address,total_eligibility_amount).to_dict()
+
+            status = HTTPStatus.OK
+        except ValidationError as e:
+            response = e.message
+        except BaseException as e:
+            print(f"Exception on Airdrop Window Claim {e}")
+            response = str(e)
+
+        return status, response
+    #this method is used only for Nunet OCCAM contract, once the claim window closes for Nunet OCCAM , we will
+    #delete this method airdrop_window_claims
     def airdrop_window_claims(self, inputs):
         status = HTTPStatus.BAD_REQUEST
         try:
@@ -277,14 +316,14 @@ class AirdropServices:
             airdrop_repo.is_claimed_airdrop_window(
                 user_address, airdrop_window_id)
 
-            claimable_amount, user_wallet_address, contract_address, token_address, staking_contract_address = AirdropRepository().get_airdrop_window_claimable_info(
+            claimable_amount, user_wallet_address, contract_address, token_address, staking_contract_address,total_eligibility_amount = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_address)
 
             signature = self.get_signature_for_airdrop_window_id(
                 claimable_amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address)
 
             response = AirdropClaim(airdrop_id,
-                                    airdrop_window_id, user_wallet_address, signature, claimable_amount, token_address, contract_address, staking_contract_address).to_dict()
+                                    airdrop_window_id, user_wallet_address, signature, claimable_amount, token_address, contract_address, staking_contract_address,total_eligibility_amount).to_dict()
 
             status = HTTPStatus.OK
         except ValidationError as e:
@@ -294,7 +333,6 @@ class AirdropServices:
             response = str(e)
 
         return status, response
-
     def get_signature_for_airdrop_window_id(self, amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address):
         try:
 
@@ -308,7 +346,20 @@ class AirdropServices:
 
         except BaseException as e:
             raise e
+    def get_signature_for_airdrop_window_id_with_totaleligibilty_amount(self, amount, total_eligible_amount,airdrop_id,
+                                                                        airdrop_window_id, user_wallet_address,
+                                                                        contract_address, token_address):
+        try:
+            boto_client = BotoUtils(
+                region_name=SIGNER_PRIVATE_KEY_STORAGE_REGION)
+            private_key = boto_client.get_parameter_value_from_secrets_manager(
+                secret_name=SIGNER_PRIVATE_KEY)
 
+            return generate_claim_signature_with_total_eligibile_amount(
+                total_eligible_amount,amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address, private_key)
+
+        except BaseException as e:
+            raise e
     def get_airdrops_schedule(self, airdrop_id):
         status = HTTPStatus.BAD_REQUEST
 
