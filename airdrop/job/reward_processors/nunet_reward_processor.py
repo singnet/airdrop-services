@@ -54,6 +54,10 @@ class NunetRewardProcessor:
         result = self._airdrop_db.execute("select count(distinct snapshot_guid) as distinct_snapshots from user_balance_snapshot where airdrop_window_id = %s", [self._window_id])
         return result[0]["distinct_snapshots"]
     
+    def __reset_user_rewards(self):
+        result = self._airdrop_db.execute("update user_rewards set rewards_awarded = 0, score = 0, normalized_score = 0, row_updated = current_timestamp where airdrop_window_id = %s", [self._window_id])
+        return result
+
     def __get_reward_values(self, user):
         return [self._airdrop_id, self._window_id, getattr(user, "_address"), getattr(user, "_reward"), getattr(user, "_score"), getattr(user, "_log10_score"), 
                 getattr(user, "_reward"), getattr(user, "_score"), getattr(user, "_log10_score")]
@@ -79,7 +83,7 @@ class NunetRewardProcessor:
 
     @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
     def process_rewards(self):
-        rewards_query = "select address, min(balance) as balance, min(staked) as staked, count(*) as occurrences " +\
+        rewards_query = "select address, min(total) as balance, min(staked) as staked, count(*) as occurrences " +\
                         "from user_balance_snapshot " +\
                         f"where airdrop_window_id = {self._window_id} and total >= {AGIX_THRESHOLD_IN_COGS} " +\
                         "group by address "
@@ -98,6 +102,8 @@ class NunetRewardProcessor:
         logger.info(f"Normalized Score {sum_of_log_values} for {len(self._users_to_reward)}")
         try:
             self._airdrop_db.begin_transaction()
+            self.__reset_user_rewards()
+
             for user in self._users_to_reward:
                 reward = Decimal(round(getattr(user, "_log10_score") / sum_of_log_values * TOKENS_ALLOCATED_PER_WINDOW, 6) * NUNET_DECIMALS)
                 user.set_reward(reward)
