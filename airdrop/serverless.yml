@@ -99,6 +99,7 @@ functions:
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonCode_Layer}
       - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib_Layer}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
     role: ${file(./config.${self:provider.stage}.json):ROLE}
     vpc:
       securityGroupIds:
