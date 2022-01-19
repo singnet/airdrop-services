@@ -101,7 +101,7 @@ class TestAirdropHandler(unittest.TestCase):
         result = user_eligibility(event, None)
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
-        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], str(reward))
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (reward))
 
 
     @patch("common.utils.Utils.report_slack")
@@ -141,7 +141,7 @@ class TestAirdropHandler(unittest.TestCase):
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], True)
-        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], str(large_reward))
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (large_reward))
         #self.assertEqual(user_eligibility_object['is_already_registered'], True)
         self.assertEqual(
             user_eligibility_object['is_airdrop_window_claimed'], False)
