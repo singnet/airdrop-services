@@ -5,13 +5,15 @@ from web3 import Web3
 from eth_account.messages import defunct_hash_message, encode_defunct
 from airdrop.config import NETWORK
 from unittest.mock import patch
+from common.boto_utils import BotoUtils
 from http import HTTPStatus
 from datetime import datetime, timedelta
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, user_registration, \
     airdrop_window_claims, airdrop_window_claim_status, user_notifications, airdrop_window_secured_claims
 from airdrop.infrastructure.models import UserRegistration,Airdrop,AirdropWindow,UserReward,ClaimHistory,UserNotifications
-
+from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
+    NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
 
 class TestAirdropHandler(unittest.TestCase):
     airdrop_id = None
@@ -77,7 +79,7 @@ class TestAirdropHandler(unittest.TestCase):
                 "airdrop_window_id": airdrop_window_id
             })
         }
-
+        #check for rewards with the smallest unit
         reward = 1
         AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, reward,
                                                  address, 1, 1)
@@ -85,7 +87,7 @@ class TestAirdropHandler(unittest.TestCase):
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], True)
-        self.assertEqual(user_eligibility_object['airdrop_window_rewards'],0)
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'],(0))
         self.assertEqual(
             user_eligibility_object['is_already_registered'], False)
         self.assertIn(
@@ -99,7 +101,79 @@ class TestAirdropHandler(unittest.TestCase):
         result = user_eligibility(event, None)
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
-        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], reward)
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (reward))
+
+
+    @patch("common.utils.Utils.report_slack")
+    def test_get_airdrop_window_eligibility_for_large_rewards(self, mock_report_slack):
+        address = '0x70a3396aba6DE1DBC845FfD5ECfD3c22A73c30F7'
+        large_reward = 10000000000000000000000
+        event = {
+            "body": json.dumps({
+                "address": address,
+                "airdrop_id": airdrop_id,
+                "airdrop_window_id": airdrop_window_id
+            })
+        }
+
+        AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, large_reward,
+                                                  address, 1, 1)
+        AirdropRepository().register_user_registration(airdrop_window_id, address)
+        result = user_eligibility(event, None)
+        result = json.loads(result['body'])
+        user_eligibility_object = result['data']
+        self.assertEqual(user_eligibility_object['is_eligible'], True)
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (large_reward))
+        #self.assertEqual(user_eligibility_object['is_already_registered'], True)
+        self.assertEqual(
+            user_eligibility_object['is_airdrop_window_claimed'], False)
+        #self.assertEqual(user_eligibility_object['user_address'], address)
+        self.assertEqual(user_eligibility_object['airdrop_id'], airdrop_id)
+        self.assertEqual(
+            user_eligibility_object['airdrop_window_id'], airdrop_window_id)
+        # now register the user and see the amount to tbe claimed
+
+
+
+
+        #AirdropRepository().register_user_registration(airdrop_window_id, address)
+        result = user_eligibility(event, None)
+        result = json.loads(result['body'])
+        user_eligibility_object = result['data']
+        self.assertEqual(user_eligibility_object['is_eligible'], True)
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (large_reward))
+        #self.assertEqual(user_eligibility_object['is_already_registered'], True)
+        self.assertEqual(
+            user_eligibility_object['is_airdrop_window_claimed'], False)
+        #self.assertEqual(user_eligibility_object['user_address'], address)
+        self.assertEqual(user_eligibility_object['airdrop_id'], airdrop_id)
+        self.assertEqual(
+            user_eligibility_object['airdrop_window_id'], airdrop_window_id)
+        # now register the user and see the amount to tbe claimed
+    @patch("common.utils.Utils.report_slack")
+    def test_get_airdrop_window_eligibility_with_no_rewards(self, mock_report_slack):
+        address = '0xFb4D686B3330893d6af6F996AB325f8ea26c949E'
+        large_reward = 10000000000000000000000
+        event = {
+            "body": json.dumps({
+                "address": address,
+                "airdrop_id": airdrop_id,
+                "airdrop_window_id": airdrop_window_id
+            })
+        }
+
+        result = user_eligibility(event, None)
+        result = json.loads(result['body'])
+        user_eligibility_object = result['data']
+        self.assertEqual(user_eligibility_object['is_eligible'], False)
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (0))
+        #self.assertEqual(user_eligibility_object['is_already_registered'], True)
+        self.assertEqual(
+            user_eligibility_object['is_airdrop_window_claimed'], False)
+        #self.assertEqual(user_eligibility_object['user_address'], address)
+        self.assertEqual(user_eligibility_object['airdrop_id'], airdrop_id)
+        self.assertEqual(
+            user_eligibility_object['airdrop_window_id'], airdrop_window_id)
 
     @patch("common.utils.Utils.report_slack")
     @patch('common.utils.recover_address')
@@ -140,7 +214,7 @@ class TestAirdropHandler(unittest.TestCase):
 
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
-       
+
         event = {
             "body": json.dumps({
                 "address": address,
@@ -157,6 +231,47 @@ class TestAirdropHandler(unittest.TestCase):
         claim_signature_object = result['data']
         self.assertEqual(result['status'], HTTPStatus.OK.value)
         self.assertEqual(claim_signature_object['user_address'], address)
+    @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
+    def test_airdrop_config_and_signature(self,  mock_get_parameter_value_from_secrets_manager):
+        private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
+        mock_get_parameter_value_from_secrets_manager.return_value = private_key
+        reward = 10000000000000000000000
+        user_address = "0xd1C9246f6A15A86bae293a3E72F28C57Da6e1dCD"
+
+        contract_address = '0x5E94577b949a56279637ff74DfcFf2C28408f049'
+        token_address = '0x5E94577b949a56279637ff74DfcFf2C28408f049'
+        AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, reward,
+                                                 user_address, 1, 1)
+        AirdropRepository().register_user_registration(airdrop_window_id, user_address)
+        message = web3.Web3.soliditySha3(
+            ["string","uint256", "uint256", "address", "uint256",
+             "uint256", "address", "address"],
+            ["__airdropclaim", int(reward),int(reward), user_address, int(airdrop_id),
+             int(airdrop_window_id), contract_address, token_address],
+        )
+
+        message_hash = encode_defunct(message)
+
+        web3_object = Web3(web3.providers.HTTPProvider(
+            NETWORK['http_provider']))
+        signed_message = web3_object.eth.account.sign_message(
+            message_hash, private_key=private_key)
+        self.assertIsNotNone(NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION)
+        self.assertIsNotNone(NUNET_SIGNER_PRIVATE_KEY)
+        expected_signature = signed_message.signature.hex()
+
+        event = {
+            "body": json.dumps({
+                "address": user_address,
+                "airdrop_id": str(airdrop_id),
+                "airdrop_window_id": str(airdrop_window_id),
+            })
+        }
+        result = airdrop_window_secured_claims(event, None)
+        result = json.loads(result['body'])
+        final_result = result['data']
+        self.assertEqual(expected_signature,final_result['signature'])
+
 
     @patch("common.utils.Utils.report_slack")
     def test_airdrop_window_claim_update_txn(self,  mock_report_slack):
