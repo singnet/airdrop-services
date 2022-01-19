@@ -87,7 +87,7 @@ class TestAirdropHandler(unittest.TestCase):
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], True)
-        self.assertEqual(user_eligibility_object['airdrop_window_rewards'],str(0))
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'],(0))
         self.assertEqual(
             user_eligibility_object['is_already_registered'], False)
         self.assertIn(
@@ -123,7 +123,7 @@ class TestAirdropHandler(unittest.TestCase):
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], True)
-        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], str(large_reward))
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (large_reward))
         #self.assertEqual(user_eligibility_object['is_already_registered'], True)
         self.assertEqual(
             user_eligibility_object['is_airdrop_window_claimed'], False)
@@ -166,7 +166,7 @@ class TestAirdropHandler(unittest.TestCase):
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], False)
-        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], str(0))
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (0))
         #self.assertEqual(user_eligibility_object['is_already_registered'], True)
         self.assertEqual(
             user_eligibility_object['is_airdrop_window_claimed'], False)
