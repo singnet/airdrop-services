@@ -81,7 +81,7 @@ class NunetRewardProcessor:
     def process_rewards(self):
         rewards_query = "select address, min(balance) as balance, min(staked) as staked, count(*) as occurrences " +\
                         "from user_balance_snapshot " +\
-                        f"where airdrop_window_id = 1 and total >= {AGIX_THRESHOLD_IN_COGS} " +\
+                        f"where airdrop_window_id = {self._window_id} and total >= {AGIX_THRESHOLD_IN_COGS} " +\
                         "group by address "
         
         sum_of_log_values = 0
