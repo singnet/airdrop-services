@@ -176,17 +176,29 @@ class TestAirdropHandler(unittest.TestCase):
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
 
     @patch("common.utils.Utils.report_slack")
-    @patch('common.utils.recover_address')
-    def test_get_airdrop_window_user_registration(self, mock_recover_address, mock_report_slack):
-        address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
-        mock_recover_address.return_value = address
+
+    def test_get_airdrop_window_user_registration(self, mock_report_slack):
+        user_address = '0x9B855eF8d137D2D5D2D93D3e2Ea81c0567332644'
+        message = web3.Web3.soliditySha3(
+            ["uint256","uint256", "address"],
+            [int(airdrop_id) ,int(airdrop_window_id), user_address],
+        )
+        test_private_key= '3bc4f87cd38fb51ad8f52028312fb3d816a35ec19366986b8ad648c231f9e72e'
+        message_hash = encode_defunct(message)
+
+        web3_object = Web3(web3.providers.HTTPProvider(
+            NETWORK['http_provider']))
+        signed_message = web3_object.eth.account.sign_message(
+            message_hash, private_key=test_private_key)
+
+        signature = signed_message.signature.hex()
 
         event = {
             "body": json.dumps({
-                "address": address,
+                "address": user_address,
                 "airdrop_id": airdrop_id,
                 "airdrop_window_id": airdrop_window_id,
-                "signature": "9e05e94577b949a56279637ff74dfcff2c28408f049"
+                "signature": signature
             })
         }
         result = user_registration(event, None)
