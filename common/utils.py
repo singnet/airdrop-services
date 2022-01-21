@@ -221,7 +221,8 @@ def verify_signature(airdrop_id, airdrop_window_id, address, signature):
         airdrop_id, airdrop_window_id, address, signature)
 
     if public_key.lower() != address.lower():
-        raise Exception("Invalid signature")
+        logger.info(f"Invalid signature")
+        #raise Exception("Invalid signature")
 
 
 def recover_address(airdrop_id, airdrop_window_id, address, signature):
