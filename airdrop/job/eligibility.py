@@ -20,6 +20,7 @@ class EligibilityProcessor:
         self._balances_db = Repository(BALANCE_DB_CONFIG)
         #self._airdrop_windows_open_for_snapshot = []
         self._active_airdrop_window_map = {}
+        self._reward_airdrop_window_map = {}
         self._snapshot_guid = str(uuid.uuid4())
         self.__insert_snapshot = "insert into user_balance_snapshot (airdrop_window_id, address, balance, staked, total, snapshot_guid, row_created, row_updated) "+\
                           "values(%s,%s,%s,%s,%s, %s, current_timestamp, current_timestamp)"
@@ -35,6 +36,17 @@ class EligibilityProcessor:
             details["airdrop_id"] = window["airdrop_id"]
             details["rewards_processor"] = window["rewards_processor"]
             self._active_airdrop_window_map[window["airdrop_window_id"]] = details
+        logger.info("Active windows " + str(self._active_airdrop_window_map))
+
+        reward_windows = self._airdrop_db.execute("select aw.airdrop_id, ad.rewards_processor, aw.row_id as airdrop_window_id from airdrop_window aw, airdrop ad  " + \
+                                                 "where aw.airdrop_id = ad.row_id and ad.rewards_processor is not null  " + \
+                                                 "and current_timestamp between aw.registration_end_period and aw.claim_start_period")
+        for window in reward_windows:
+            details = {}
+            details["airdrop_id"] = window["airdrop_id"]
+            details["rewards_processor"] = window["rewards_processor"]
+            self._reward_airdrop_window_map[window["airdrop_window_id"]] = details
+        logger.info("Reward windows " + str(self._reward_airdrop_window_map))
         
     def __batch_insert(self, values, force=False):
         start = time.process_time()
@@ -76,22 +88,32 @@ class EligibilityProcessor:
                 self.__batch_insert([window, address, snapshot_rows[address]["balance"], snapshot_rows[address]["staked"], snapshot_rows[address]["total"], self._snapshot_guid])
         self.__batch_insert([], True)
 
+    def __process_reward(self, processor_name, airdrop_id, window, identifier, only_registered):
+        logger.info(f"Processing rewards for window {window} using processor {processor_name} with snapshot {identifier}. For all {only_registered}")
+        processor_class = locate("airdrop.job.reward_processors."+processor_name)
+        processor = processor_class(self._airdrop_db, airdrop_id, window, identifier)
+        processor.process_rewards(only_registered)
+
     def process_eligibility(self):
         self.__populate_state()
+
+        if len(self._reward_airdrop_window_map) > 0:
+            logger.info("Processing final rewards")
+            for window in self._reward_airdrop_window_map:
+                processor_name = self._reward_airdrop_window_map[window]["rewards_processor"]
+                airdrop_id = self._reward_airdrop_window_map[window]["airdrop_id"]
+                self.__process_reward(processor_name, airdrop_id, window, "FINAL", True)
+
         if len(self._active_airdrop_window_map) == 0:
             logger.info(f"No airdrop windows to process for")
             return
         
         logger.info(f"Processing eligibility for windows {self._active_airdrop_window_map.keys()}. Snapshot Index is {self._snapshot_guid}")
         self.__populate_snapshot()
-        
         for window in self._active_airdrop_window_map:
             processor_name = self._active_airdrop_window_map[window]["rewards_processor"]
-            logger.info(f"Processing eligibility for window {window} using processor {processor_name} with snapshot {self._snapshot_guid}")
-            processor_class = locate("airdrop.job.reward_processors."+processor_name)
-            processor = processor_class(self._airdrop_db, self._active_airdrop_window_map[window]["airdrop_id"],window, self._snapshot_guid)
-            processor.process_rewards()
-
+            airdrop_id = self._active_airdrop_window_map[window]["airdrop_id"]
+            self.__process_reward(processor_name, airdrop_id, window, self._snapshot_guid, False)
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
 def process_eligibility(event, context):      

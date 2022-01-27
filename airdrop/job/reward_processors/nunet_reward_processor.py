@@ -5,6 +5,7 @@ from decimal import Decimal
 from common.exception_handler import exception_handler
 from airdrop.config import SLACK_HOOK
 from common.logger import get_logger
+from common.utils import Utils
 
 logger = get_logger(__name__)
 
@@ -28,7 +29,7 @@ class UserRewardObject:
         self._comment = comment
     
     def set_reward(self, reward):
-        self._reward = reward
+        self._reward = round(reward,0)
 
 
 class NunetRewardProcessor:
@@ -48,6 +49,7 @@ class NunetRewardProcessor:
         self.__reward_rows = []
         self.__reward_audit_rows = []
         self._distinct_snapshots = self.__get_distinct_snapshots()
+        self.__slack_messages = []
         return        
 
     def __get_distinct_snapshots(self):
@@ -81,12 +83,27 @@ class NunetRewardProcessor:
         if(len(values) > 0):
             rows.append(tuple(values))    
 
+    def __send_slack_message(self, message, send=False):
+        self.__slack_messages.append(message)
+        if send:
+            u = Utils()
+            for message in self.__slack_messages:
+                u.report_slack(type=0, slack_message=message, slack_config=SLACK_HOOK)
+
     @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
-    def process_rewards(self):
-        rewards_query = "select address, min(total) as balance, min(staked) as staked, count(*) as occurrences " +\
-                        "from user_balance_snapshot " +\
-                        f"where airdrop_window_id = {self._window_id} and total >= {AGIX_THRESHOLD_IN_COGS} " +\
-                        "group by address "
+    def process_rewards(self, only_registered):
+        if only_registered:
+            self.__send_slack_message(f"Computing final rewards for window {self._window_id}")
+            rewards_query = "select address, min(total) as balance, min(staked) as staked, count(*) as occurrences " +\
+                            "from user_balance_snapshot " +\
+                            f"where airdrop_window_id = {self._window_id} and total >= {AGIX_THRESHOLD_IN_COGS} " +\
+                            f"and address in (select address from user_registrations where airdrop_window_id = {self._window_id}) " +\
+                            "group by address "
+        else:            
+            rewards_query = "select address, min(total) as balance, min(staked) as staked, count(*) as occurrences " +\
+                            "from user_balance_snapshot " +\
+                            f"where airdrop_window_id = {self._window_id} and total >= {AGIX_THRESHOLD_IN_COGS} " +\
+                            "group by address "
         
         sum_of_log_values = 0
         user_balances = self._airdrop_db.execute(rewards_query)
@@ -99,7 +116,9 @@ class NunetRewardProcessor:
                 self._users_to_reward.append(u)
                 sum_of_log_values += getattr(u,"_log10_score")
         
-        logger.info(f"Normalized Score {sum_of_log_values} for {len(self._users_to_reward)}")
+        score_message = f"For window {self._window_id}, Normalized Score is {sum_of_log_values} for {len(self._users_to_reward)}. Skipped users {len(self._users_to_reward) - len(self._users_to_reward)}"
+        logger.info(score_message)
+        self.__send_slack_message(score_message)
         try:
             self._airdrop_db.begin_transaction()
             self.__reset_user_rewards()
@@ -116,6 +135,7 @@ class NunetRewardProcessor:
             self.__batch_insert([], False, True)
             self.__batch_insert([], True, True)
             self._airdrop_db.commit_transaction()
+            self.__send_slack_message(f"Successfully completed updating rewards for window {self._window_id}", only_registered)
         except Exception as e:
             logger.error(e)
             self._airdrop_db.rollback_transaction()
