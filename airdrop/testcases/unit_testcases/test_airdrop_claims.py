@@ -219,12 +219,13 @@ class AirdropClaims(TestCase):
 
         is_stake_window_open = False
         is_user_can_stake = True
-
+        window_max_stake = 100000
+        window_stake_amount = 200
         max_stakable_amount = 10000
         already_staked_amount = 0
         airdrop_rewards = 20000
 
-        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake,window_stake_amount
         mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
         mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, \
                                                               contract_address, token_address, staking_contract_address,0
@@ -265,12 +266,13 @@ class AirdropClaims(TestCase):
 
         is_stake_window_open = True
         is_user_can_stake = True
-
+        window_max_stake = 100000
+        window_stake_amount = 200
         max_stakable_amount = 10000
         already_staked_amount = max_stakable_amount
         airdrop_rewards = 20000
 
-        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake,window_stake_amount
         mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
         mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address,0
 
@@ -310,12 +312,13 @@ class AirdropClaims(TestCase):
 
         is_stake_window_open = True
         is_user_can_stake = True
-
+        window_max_stake = 100000
+        window_stake_amount = 200
         max_stakable_amount = 10000
         already_staked_amount = 5000
         airdrop_rewards = 10000
 
-        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake,window_stake_amount
         mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
         mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address,0
 
@@ -355,14 +358,17 @@ class AirdropClaims(TestCase):
 
         is_stake_window_open = True
         is_user_can_stake = True
-
+        window_max_stake = 100000
+        window_stake_amount = 200
         max_stakable_amount = 10000
         already_staked_amount = 0
         airdrop_rewards = 10000
 
-        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake,\
+                                                     window_stake_amount
         mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
-        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address,airdrop_rewards
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address,\
+                                                              contract_address, token_address, staking_contract_address,airdrop_rewards
 
         event = {
             "address": user_wallet_address,
@@ -400,12 +406,13 @@ class AirdropClaims(TestCase):
 
         is_stake_window_open = True
         is_user_can_stake = True
-
+        window_max_stake = 100000
+        window_stake_amount = 200
         max_stakable_amount = 10000
         already_staked_amount = 0
         airdrop_rewards = 50000
 
-        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake,window_stake_amount
         mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
         mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, token_address, staking_contract_address,airdrop_rewards
 
@@ -445,12 +452,13 @@ class AirdropClaims(TestCase):
 
         is_stake_window_open = True
         is_already_staked_user = False
-
+        window_max_stake = 100000
+        window_stake_amount = 200
         max_stakable_amount = 10000
         already_staked_amount = 0
         airdrop_rewards = 10000
 
-        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake,window_stake_amount
         mock_get_stake_details_of_address.return_value = is_already_staked_user, already_staked_amount
         mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address,\
                                                               token_address, staking_contract_address,0
@@ -491,12 +499,13 @@ class AirdropClaims(TestCase):
 
         is_stake_window_open = True
         is_already_staked_user = True
-
+        window_max_stake = 100000
+        window_stake_amount = 200
         max_stakable_amount = 10000
         already_staked_amount = 10000
         airdrop_rewards = 1000
 
-        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake,window_stake_amount
         mock_get_stake_details_of_address.return_value = is_already_staked_user, already_staked_amount
         mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, \
                                                               token_address, staking_contract_address,0
@@ -524,7 +533,56 @@ class AirdropClaims(TestCase):
         status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
         self.assertEqual(response, expected_result)
         self.assertEqual(status_code, HTTPStatus.OK.value)
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_on_window_limit(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
 
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = True
+        is_user_can_stake = True
+        window_max_stake = 10
+        window_stake_amount = 9
+        # => only 1 can be staked by any user
+        max_stakable_amount = 5
+        already_staked_amount = 1
+        airdrop_rewards = 4
+        # => ideally user can stake 4 if others had not staked,
+        # but since the window has been filled by other users, this user can stake NOW only 1
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake, \
+                                                     window_stake_amount
+        mock_get_stake_details_of_address.return_value = is_user_can_stake, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, \
+                                                              contract_address, token_address, staking_contract_address,airdrop_rewards
+
+        event = {
+            "address": user_wallet_address,
+            "airdrop_id": str(airdrop_id),
+            "airdrop_window_id": str(airdrop_window_id)
+        }
+
+        expected_result = {
+            "stake_details": {
+                "airdrop_id": str(airdrop_id),
+                "airdrop_window_id": str(airdrop_window_id),
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": str(airdrop_rewards - min((window_max_stake - window_stake_amount),(max_stakable_amount-already_staked_amount))),
+                "stakable_tokens": str(window_max_stake - window_stake_amount),
+                "is_stakable": True,
+                "stakable_token_name": "AGIX",
+                "airdrop_rewards": str(airdrop_rewards),
+                "total_eligible_amount":str(airdrop_rewards)
+            }
+        }
+
+        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
+        self.assertEqual(response, expected_result)
+        self.assertEqual(status_code, HTTPStatus.OK.value)
     def test_airdrop_txn_watcher(self):
 
         response = AirdropServices().airdrop_txn_watcher()
