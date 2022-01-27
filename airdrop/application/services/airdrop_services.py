@@ -5,13 +5,14 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
+from common.logger import get_logger
 from common.utils import generate_claim_signature,generate_claim_signature_with_total_eligibile_amount, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
     NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
 from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.domain.models.airdrop_claim import AirdropClaim
-
+logger = get_logger(__name__)
 
 class AirdropServices:
 
@@ -127,27 +128,39 @@ class AirdropServices:
     def get_stake_info(self, contract_address, user_wallet_address, airdrop_rewards):
         try:
 
-            is_stake_window_is_open, max_stake_amount = self.get_stake_window_details(
+            is_stake_window_is_open, max_stake_amount,max_window_stake_amount,total_window_amount_staked\
+                = self.get_stake_window_details(
                 contract_address)
 
             is_user_can_stake, already_staked_amount = self.get_stake_details_of_address(
                 contract_address, user_wallet_address)
 
             is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_and_claimable_amounts(
-                airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount)
+                airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount,
+                max_window_stake_amount,total_window_amount_staked)
+
 
             return is_stakable, stakable_amount, tranfer_to_wallet
         except BaseException as e:
+            logger.error(e)
             raise e("Exception on get_stake_info {}".format(e))
 
-    def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount):
+    def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount,
+                                        already_staked_amount,max_window_stake_amount,total_window_amount_staked):
 
         tranfer_to_wallet = 0
         stakable_amount = 0
 
         # User can stake if stake window is open and user can stake
         if is_stake_window_is_open:
-            allowed_amount_for_stake = max_stake_amount - already_staked_amount
+            # get the limit per user
+            user_stake_limit = max_stake_amount - already_staked_amount
+            # get the limit per window for staking
+            window_stake_limit = max_window_stake_amount- total_window_amount_staked
+
+            # take the minimum of the two on the max amount that a user can stake !
+            allowed_amount_for_stake = min(user_stake_limit,window_stake_limit)
+
             if(airdrop_rewards <= allowed_amount_for_stake):
                 # If airdrop rewards is less than allowed amount for stake then stake the full airdrop rewards
                 stakable_amount = airdrop_rewards
@@ -187,15 +200,22 @@ class AirdropServices:
 
             stake_submission_start_period = int(stakemap[0])
             stake_submission_end_period = int(stakemap[1])
+            # get the maximum amount of stake that is allowed for a given user
             max_stakable_amount = stakemap[3]
+            # get the maximum amount of stake that is allowed in a given window across all users
+            max_window_amount = stakemap[5]
             now = datetime.now()
+
+            # get the amount staked so far in this window across all users
+            total_window_amount_staked = contract.functions.windowTotalStake().call()
 
             # Check if stake window is open or not if stake start & end period is in between current time
             is_stake_window_open = now <= datetime.fromtimestamp(
                 stake_submission_end_period) and now >= datetime.fromtimestamp(stake_submission_start_period)
 
-            return is_stake_window_open, max_stakable_amount
+            return is_stake_window_open, max_stakable_amount,max_window_amount,total_window_amount_staked
         except BaseException as e:
+            logger.error(e)
             raise e("Exception on get_stake_window_info {}".format(e))
 
     def airdrop_window_claim_history(self, inputs):
