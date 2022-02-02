@@ -471,7 +471,179 @@ class TestAirdropHandler(unittest.TestCase):
         result = json.loads(result['body'])
         final_result = result['data']
         self.assertEqual(expected_response,final_result )
+    def test_total_rewards_with_claims_on_different_windows(self):
+        #delete it all !!!!
+        AirdropRepository().session.query(ClaimHistory).delete()
+        AirdropRepository().session.query(UserRegistration).delete()
+        AirdropRepository().session.query(UserReward).delete()
+        AirdropRepository().session.query(AirdropWindow).delete()
+        AirdropRepository().session.query(Airdrop).delete()
+        airdrop_repository = AirdropRepository()
+        airdrop1 = airdrop_repository.register_airdrop(
+            "0x5e94577b949a56279637ff74dfcff2c28408f049", "TEST_ORG", "TEST_TOKEN_NAME", "token_type",
+            "0x2fc8ae60108765056ff63a07843a5b7ec9ff89ef", "portal_link",
+            "documentation_link",
+            "description", "github_link", "stakable_token_name")
+        airdrop2 = airdrop_repository.register_airdrop(
+            "0x5e94577b949a56279637ff74dfcff2c28408f049", "TEST_ORG", "TEST_TOKEN_NAME", "token_type",
+            "0x2fc8ae60108765056ff63a07843a5b7ec9ff88ef", "portal_link",
+            "documentation_link",
+            "description", "github_link", "stakable_token_name")
+        registration_start_date = datetime.utcnow() - timedelta(days=2)
+        registration_end_date = datetime.utcnow() + timedelta(days=30)
+        claim_start_date = datetime.utcnow() - timedelta(days=5)
+        claim_end_date = datetime.utcnow() + timedelta(days=30)
 
+        airdrop1_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop1.id,
+                                                                     airdrop_window_name='A1:Airdrop Window 1',
+                                                                     description='Long description',
+                                                                     registration_required=True,
+                                                                     registration_start_period=registration_start_date,
+                                                                     registration_end_period=registration_end_date,
+                                                                     snapshot_required=True,
+                                                                     claim_start_period=claim_start_date,
+                                                                     claim_end_period=claim_end_date,
+                                                                     total_airdrop_tokens=1000000)
+        airdrop1_window2 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop1.id,
+                                                                     airdrop_window_name='A1:Airdrop Window 2',
+                                                                     description='Long description',
+                                                                     registration_required=True,
+                                                                     registration_start_period=registration_start_date,
+                                                                     registration_end_period=registration_end_date,
+                                                                     snapshot_required=True,
+                                                                     claim_start_period=datetime.utcnow() - timedelta(days=2),
+                                                                     claim_end_period=claim_end_date,
+                                                                     total_airdrop_tokens=1000000)
+
+        airdrop1_window3 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop1.id,
+                                                                     airdrop_window_name='A1:Airdrop Window 3',
+                                                                     description='Long description',
+                                                                     registration_required=True,
+                                                                     registration_start_period=registration_start_date,
+                                                                     registration_end_period=registration_end_date,
+                                                                     snapshot_required=True,
+                                                                     claim_start_period=datetime.utcnow() + timedelta(
+                                                                         days=20),
+                                                                     claim_end_period=datetime.utcnow() + timedelta(
+                                                                         days=25),
+                                                                     total_airdrop_tokens=1000000)
+        airdrop2_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop2.id,
+                                                                      airdrop_window_name='A2:Airdrop Window 1',
+                                                                      description='Long description',
+                                                                      registration_required=True,
+                                                                      registration_start_period=registration_start_date,
+                                                                      registration_end_period=registration_end_date,
+                                                                      snapshot_required=True,
+                                                                      claim_start_period=claim_start_date,
+                                                                      claim_end_period=claim_end_date,
+                                                                      total_airdrop_tokens=1000000)
+        airdrop2_window2 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop2.id,
+                                                                      airdrop_window_name='A2:Airdrop Window 2',
+                                                                      description='Long description',
+                                                                      registration_required=True,
+                                                                      registration_start_period=registration_start_date,
+                                                                      registration_end_period=registration_end_date,
+                                                                      snapshot_required=True,
+                                                                      claim_start_period=datetime.utcnow() - timedelta(days=2),
+                                                                      claim_end_period=claim_end_date,
+                                                                      total_airdrop_tokens=1000000)
+
+        airdrop2_window3 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop2.id,
+                                                                      airdrop_window_name='A2:Airdrop Window 3',
+                                                                      description='Long description',
+                                                                      registration_required=True,
+                                                                      registration_start_period=registration_start_date,
+                                                                      registration_end_period=registration_end_date,
+                                                                      snapshot_required=True,
+                                                                      claim_start_period=datetime.utcnow() + timedelta(
+                                                                          days=20),
+                                                                      claim_end_period=datetime.utcnow() + timedelta(
+                                                                          days=25),
+                                                                      total_airdrop_tokens=1000000)
+
+
+        #now user has rewards for all three windows for Airdrop 1
+        airdrop_repository.register_user_rewards(airdrop1.id,airdrop1_window1.id,100,
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+        airdrop_repository.register_user_rewards(airdrop1.id, airdrop1_window2.id, 100,
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+        airdrop_repository.register_user_rewards(airdrop1.id, airdrop1_window3.id, 100,
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+        #now user has rewards for all three windows for Airdrop 2
+        airdrop_repository.register_user_rewards(airdrop2.id,airdrop2_window1.id,1000,
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+        airdrop_repository.register_user_rewards(airdrop2.id, airdrop2_window2.id, 1000,
+                                             '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+        airdrop_repository.register_user_rewards(airdrop2.id, airdrop2_window3.id, 1000,
+                                             '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+
+        #User has not registered for any window of Airdrop 1
+        result = airdrop_repository.fetch_total_eligibility_amount(airdrop1.id,
+                                                                   '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        self.assertEqual(result,0)
+
+        #User has not registered for any window of Airdrop 2
+        result = airdrop_repository.fetch_total_eligibility_amount(airdrop2.id,
+                                                                   '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        self.assertEqual(result,0)
+
+        # User has registered for the first window of Airdrop 1
+        airdrop_repository.register_user_registration(airdrop1_window1.id,'0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        result = airdrop_repository.fetch_total_eligibility_amount(airdrop1.id,
+                                                                   '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        self.assertEqual(result, 100)
+
+        # User has registered for the first window of Airdrop 2
+        airdrop_repository.register_user_registration(airdrop2_window1.id,'0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        result = airdrop_repository.fetch_total_eligibility_amount(airdrop2.id,
+                                                                   '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        #we have added 1000, for Airdrop 2
+        self.assertEqual(result, 1000)
+
+        # User has registrations for the third window of Airdrop 1,but claim is not yet open for this window
+        # hence this window should never be considered , total eligbile amount is applicable only for past claim
+        # or acitve claim windows
+        airdrop_repository.register_user_registration(airdrop1_window3.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        result = airdrop_repository.fetch_total_eligibility_amount(airdrop1.id,
+                                                                   '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        self.assertEqual(result, 100)
+
+
+        # User has registrations for the 2nd window of Airdrop 1 which is active
+        airdrop_repository.register_user_registration(airdrop1_window2.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        result = airdrop_repository.fetch_total_eligibility_amount(airdrop1.id,
+                                                                   '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        self.assertEqual(result, 200)
+
+
+
+        # User has registrations for the 2nd window Airdrop 2 which is active
+        airdrop_repository.register_user_registration(airdrop2_window2.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        result = airdrop_repository.fetch_total_eligibility_amount(airdrop2.id,
+                                                                   '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        self.assertEqual(result, 2000)
+
+        #assuming no claim has happend til now , total_rewards user can claim = 200
+        rewards_for_claim = airdrop_repository.fetch_total_rewards_amount(airdrop1.id,
+                                                                          '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+
+        self.assertEqual(200, rewards_for_claim)
+
+
+        #make an entry in the claim table for Airdrop 2 window 2 => all amount till this point has been claimed for Airdrop 2
+        #hence rewards to be claimed is zero for current time  , however total eligibility was always 200
+        airdrop_repository.register_claim_history(airdrop2.id,airdrop2_window2.id,
+                                                  '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',2000,0,'PENDING',
+                                                  'transaction_hash')
+        rewards_for_claim = airdrop_repository.fetch_total_rewards_amount(airdrop2.id,
+                                                                          '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+
+        self.assertEqual(0, rewards_for_claim)
+        #no claims have happend on Airdrop 1 => the user should see a total rewards of 200
+        rewards_for_claim = airdrop_repository.fetch_total_rewards_amount(airdrop1.id,
+                                                                          '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+
+        self.assertEqual(200, rewards_for_claim)
     def test_fetch_total_eligibility_amount(self):
         #delete it all !!!!
         AirdropRepository().session.query(ClaimHistory).delete()
