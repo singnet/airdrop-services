@@ -168,7 +168,8 @@ class AirdropServices:
                 stakable_amount = allowed_amount_for_stake
 
             # Amount user can claim to wallet after staking
-            tranfer_to_wallet = airdrop_rewards - stakable_amount
+            if(stakable_amount > 0):
+               tranfer_to_wallet = airdrop_rewards - stakable_amount
         else:
             tranfer_to_wallet = airdrop_rewards
 
