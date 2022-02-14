@@ -148,7 +148,7 @@ class AirdropServices:
     def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount,
                                         already_staked_amount,max_window_stake_amount,total_window_amount_staked):
 
-        tranfer_to_wallet = 0
+        tranfer_to_wallet = airdrop_rewards
         stakable_amount = 0
 
         # User can stake if stake window is open and user can stake
@@ -170,8 +170,7 @@ class AirdropServices:
             # Amount user can claim to wallet after staking
             if(stakable_amount > 0):
                tranfer_to_wallet = airdrop_rewards - stakable_amount
-        else:
-            tranfer_to_wallet = airdrop_rewards
+
 
         is_stakable = True if stakable_amount > 0 else False
 
