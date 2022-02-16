@@ -6,9 +6,10 @@ from jsonschema import validate, ValidationError
 from http import HTTPStatus
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from common.utils import generate_claim_signature,generate_claim_signature_with_total_eligibile_amount, get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address
+from common.utils import generate_claim_signature, generate_claim_signature_with_total_eligibile_amount, \
+    get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address, Utils
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
-    NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
+    NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY, SLACK_HOOK
 from airdrop.constants import STAKING_CONTRACT_PATH, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.domain.models.airdrop_claim import AirdropClaim
@@ -135,21 +136,25 @@ class AirdropServices:
             is_user_can_stake, already_staked_amount = self.get_stake_details_of_address(
                 contract_address, user_wallet_address)
 
-            is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_and_claimable_amounts(
+            is_stakable, stake_amount, transfer_to_wallet = self.get_stake_and_claimable_amounts(
                 airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount,
                 max_window_stake_amount,total_window_amount_staked)
+            return is_stakable, stake_amount, transfer_to_wallet
 
-
-            return is_stakable, stakable_amount, tranfer_to_wallet
         except BaseException as e:
             logger.error(e)
-            raise e("Exception on get_stake_info {}".format(e))
+            Utils().report_slack(
+                type=0, slack_message=f"Issue with Stake window Opened exeption {e} user_address {user_wallet_address},"
+                                      f" stake_contract_address: {contract_address}", slack_config=SLACK_HOOK
+            )
+            return False, 0, airdrop_rewards
 
     def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount,
                                         already_staked_amount,max_window_stake_amount,total_window_amount_staked):
 
-        tranfer_to_wallet = airdrop_rewards
+        transfer_to_wallet = airdrop_rewards
         stakable_amount = 0
+
 
         # User can stake if stake window is open and user can stake
         if is_stake_window_is_open:
@@ -157,6 +162,12 @@ class AirdropServices:
             user_stake_limit = max_stake_amount - already_staked_amount
             # get the limit per window for staking
             window_stake_limit = max_window_stake_amount- total_window_amount_staked
+
+            if (user_stake_limit < 0 or window_stake_limit < 0 ):
+                # Ideally this should never happen, however if it does, Stake should be disabled
+                raise Exception(f"Issue with Stake window Opened, user_stake_limit{user_stake_limit},"
+                        f" window_stake_limit: {window_stake_limit}")
+
 
             # take the minimum of the two on the max amount that a user can stake !
             allowed_amount_for_stake = min(user_stake_limit,window_stake_limit)
@@ -169,12 +180,12 @@ class AirdropServices:
 
             # Amount user can claim to wallet after staking
             if(stakable_amount > 0):
-               tranfer_to_wallet = airdrop_rewards - stakable_amount
+               transfer_to_wallet = airdrop_rewards - stakable_amount
 
 
         is_stakable = True if stakable_amount > 0 else False
 
-        return is_stakable, stakable_amount, tranfer_to_wallet
+        return is_stakable, stakable_amount, transfer_to_wallet
 
     def get_stake_details_of_address(self, contract_address, user_wallet):
         try:
