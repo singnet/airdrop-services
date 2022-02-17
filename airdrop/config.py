@@ -25,12 +25,12 @@ BALANCE_DB_CONFIG = {
 
 NETWORK_ID = 3
 SLACK_HOOK = {
-    "hostname": "",
+    "hostname": "https://hooks.slack.com",
     "port": 443,
     "path": "",
     "method": "POST",
     "headers": {"Content-Type": "application/json"},
-    "channel_name": ""
+    "channel_name": "airdrop-ropsten-alerts"
 }
 
 SIGNER_PRIVATE_KEY = 'AIRDROP_SIGNER_PRIVATE_KEY'
