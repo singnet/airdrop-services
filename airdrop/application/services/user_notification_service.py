@@ -18,7 +18,8 @@ class UserNotificationService:
             validate(instance=inputs, schema=schema,
                      format_checker=FormatChecker())
             email = inputs["email"]
-            UserRepository().subscribe_to_notifications(email)
+            airdrop_id = inputs["airdrop_id"]
+            UserRepository().subscribe_to_notifications(email,airdrop_id)
             response = HTTPStatus.OK.phrase
             status = HTTPStatus.OK
         except ValidationError as e:
