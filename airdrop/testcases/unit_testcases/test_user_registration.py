@@ -114,6 +114,7 @@ class UserRegistration(TestCase):
 
         payload = {
             "email": str(airdrop_id)+"email@provider.com",
+            "airdrop_id": airdrop_id,
         }
         status, response = UserNotificationService().subscribe_to_notifications(payload)
         self.assertEqual(response, HTTPStatus.OK.phrase)
@@ -121,6 +122,7 @@ class UserRegistration(TestCase):
     def test_user_notification_subscription_with_existing_email(self):
         payload = {
             "email": str(airdrop_id)+"email@provider.com",
+            "airdrop_id": airdrop_id,
         }
         status, response = UserNotificationService().subscribe_to_notifications(payload)
         self.assertNotEqual(response, HTTPStatus.OK.phrase)
