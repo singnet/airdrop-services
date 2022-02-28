@@ -133,6 +133,7 @@ class UserRegistration(Base, AuditClass):
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     registered_at = Column("registered_at", TIMESTAMP(), nullable=True)
     reject_reason = Column("reject_reason", JSON, nullable=True)
+    receipt_generated = Column("receipt_generated", VARCHAR(250), nullable=True, index=True)
     UniqueConstraint(airdrop_window_id, address)
     airdrop_window = relationship(AirdropWindow, backref="users")
 

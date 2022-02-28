@@ -175,9 +175,11 @@ class TestAirdropHandler(unittest.TestCase):
         self.assertEqual(
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
 
-    @patch("common.utils.Utils.report_slack")
 
-    def test_get_airdrop_window_user_registration(self, mock_report_slack):
+    @patch("airdrop.application.services.user_registration_services.UserRegistrationServices.get_secret_key_for_receipt")
+    def test_get_airdrop_window_user_registration(self,mock_get_secret_key_for_receipt):
+        private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
+        mock_get_secret_key_for_receipt.return_value = private_key
         user_address = '0x9B855eF8d137D2D5D2D93D3e2Ea81c0567332644'
         message = web3.Web3.soliditySha3(
             ["uint256","uint256", "address"],
