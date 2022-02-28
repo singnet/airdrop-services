@@ -2,6 +2,7 @@ import datetime
 import json
 import sys
 import traceback
+from base64 import b64encode
 
 import requests
 import web3
@@ -236,3 +237,23 @@ def recover_address(airdrop_id, airdrop_window_id, address, signature):
     return web3_object.eth.account.recoverHash(
         hash_message, signature=signature
     )
+
+def get_registration_receipt(airdrop_id, airdrop_window_id, user_address,private_key):
+    try:
+        user_address = Web3.toChecksumAddress(user_address)
+
+        message = web3.Web3.soliditySha3(
+            ["string", "address", "uint256", "uint256"],
+            ["__receipt_ack_message", user_address, int(airdrop_id),int(airdrop_window_id)],
+        )
+
+        message_hash = encode_defunct(message)
+
+        web3_object = Web3(web3.providers.HTTPProvider(
+            NETWORK['http_provider']))
+        signed_message = web3_object.eth.account.sign_message(
+            message_hash, private_key=private_key)
+        return b64encode(signed_message.signature).decode()
+
+    except BaseException as e:
+        raise e

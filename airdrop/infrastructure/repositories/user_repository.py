@@ -91,7 +91,7 @@ class UserRepository(BaseRepository):
         else:
             return True
 
-    def register_user(self, airdrop_window_id, address):
+    def register_user(self, airdrop_window_id, address,receipt):
         user = UserRegistration(
-            address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow())
+            address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow(),receipt_generated=receipt)
         self.add(user)
