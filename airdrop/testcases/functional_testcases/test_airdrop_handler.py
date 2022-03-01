@@ -36,16 +36,16 @@ class TestAirdropHandler(unittest.TestCase):
         contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
-        stakable_token_name = 'AGIX'
+        token_name = 'AGIX'
 
         occam_contract_address = '0x6e94577b949a56279637ff74dfcff2c28408f049'
         occam_token_address = '0x5e93577b949a56279637ff74dfcff2c28408f049'
         occam_user_address = '0xEA6741dDe714fd979de3EdF0F56AA9716B898ec8'
-        occam_stakable_token_name = 'AGIX'
+        occam_token_name = 'AGIX'
 
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
-            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
+            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
         global airdrop_id
         airdrop_id = airdrop.id
         airdrop_windows = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
@@ -53,7 +53,7 @@ class TestAirdropHandler(unittest.TestCase):
         global airdrop_window_id
         airdrop_window_id = airdrop_windows.id
         nunet_occam_airdrop = airdrop_repository.register_airdrop(
-            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, occam_stakable_token_name)
+            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
         airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
@@ -326,7 +326,7 @@ class TestAirdropHandler(unittest.TestCase):
             token_address, "TEST_ORG", "TEST_TOKEN_NAME", "token_type",
             contract_address, "portal_link",
             "documentation_link",
-            "description", "github_link", "stakable_token_name")
+            "description", "github_link")
         registration_start_date = datetime.utcnow() - timedelta(days=2)
         registration_end_date = datetime.utcnow() + timedelta(days=30)
         claim_start_date = datetime.utcnow() - timedelta(days=5)
@@ -406,7 +406,7 @@ class TestAirdropHandler(unittest.TestCase):
             token_address, "TEST_ORG", "TEST_TOKEN_NAME", "token_type",
             contract_address, "portal_link",
             "documentation_link",
-            "description", "github_link", "stakable_token_name")
+            "description", "github_link")
         registration_start_date = datetime.utcnow() - timedelta(days=2)
         registration_end_date = datetime.utcnow() + timedelta(days=30)
         claim_start_date = datetime.utcnow() - timedelta(days=5)
@@ -485,12 +485,12 @@ class TestAirdropHandler(unittest.TestCase):
             "0x5e94577b949a56279637ff74dfcff2c28408f049", "TEST_ORG", "TEST_TOKEN_NAME", "token_type",
             "0x2fc8ae60108765056ff63a07843a5b7ec9ff89ef", "portal_link",
             "documentation_link",
-            "description", "github_link", "stakable_token_name")
+            "description", "github_link")
         airdrop2 = airdrop_repository.register_airdrop(
             "0x5e94577b949a56279637ff74dfcff2c28408f049", "TEST_ORG", "TEST_TOKEN_NAME", "token_type",
             "0x2fc8ae60108765056ff63a07843a5b7ec9ff88ef", "portal_link",
             "documentation_link",
-            "description", "github_link", "stakable_token_name")
+            "description", "github_link")
         registration_start_date = datetime.utcnow() - timedelta(days=2)
         registration_end_date = datetime.utcnow() + timedelta(days=30)
         claim_start_date = datetime.utcnow() - timedelta(days=5)
@@ -658,7 +658,7 @@ class TestAirdropHandler(unittest.TestCase):
             "0x5e94577b949a56279637ff74dfcff2c28408f049", "TEST_ORG", "TEST_TOKEN_NAME", "token_type",
             "0x2fc8ae60108765056ff63a07843a5b7ec9ff89ef", "portal_link",
             "documentation_link",
-            "description", "github_link", "stakable_token_name")
+            "description", "github_link")
         registration_start_date = datetime.utcnow() - timedelta(days=2)
         registration_end_date = datetime.utcnow() + timedelta(days=30)
         claim_start_date = datetime.utcnow() - timedelta(days=5)

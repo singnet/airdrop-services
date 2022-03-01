@@ -105,7 +105,7 @@ class AirdropServices:
             airdrop_rewards, user_address, contract_address, token_address, staking_contract_address,total_eligibility_amount = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_wallet_address)
 
-            staking_contract_address, stakable_token_name = AirdropRepository(
+            staking_contract_address, token_name = AirdropRepository(
             ).get_staking_contract_address(airdrop_id)
 
             is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_info(
@@ -113,7 +113,7 @@ class AirdropServices:
             stakable_tokens = stakable_amount
 
             stake_details = AirdropFactory.convert_stake_claim_details_to_model(
-                airdrop_id, airdrop_window_id, user_wallet_address, tranfer_to_wallet, stakable_tokens, is_stakable, stakable_token_name, airdrop_rewards,total_eligibility_amount)
+                airdrop_id, airdrop_window_id, user_wallet_address, tranfer_to_wallet, stakable_tokens, is_stakable, token_name, airdrop_rewards,total_eligibility_amount)
 
             response = {"stake_details": stake_details}
             status = HTTPStatus.OK
