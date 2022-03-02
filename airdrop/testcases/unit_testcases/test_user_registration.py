@@ -40,21 +40,21 @@ class UserRegistration(TestCase):
         contract_address = acct.address
         token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         user_address = '0xCc3cD60FF9936B7C9272a649b24f290ADa562469'
-        stakable_token_name = 'AGIX'
+        token_name = 'AGIX'
 
         now = datetime.utcnow()
         one_month_later = now + timedelta(days=30)
         registration_start_window = now - timedelta(days=2)
-        stakable_token_name = 'AGIX'
+        token_name = 'AGIX'
 
         occam_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f048'
         occam_token_address = '0x5e94577b949a56279637ff74dfcff2c28408f048'
         occam_user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
-        occam_stakable_token_name = 'AGIX'
+        occam_token_name = 'AGIX'
 
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
-            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
+            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
         airdrop_window= airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
         global airdrop_id
@@ -62,7 +62,7 @@ class UserRegistration(TestCase):
         global airdrop_window_id
         airdrop_window_id = airdrop_window.id
         nunet_occam_airdrop = airdrop_repository.register_airdrop(
-            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, occam_stakable_token_name)
+            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
         airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
@@ -82,7 +82,7 @@ class UserRegistration(TestCase):
         claim_start_date = datetime.utcnow() - timedelta(days=2)
         claim_end_date = datetime.utcnow() + timedelta(days=30)
         airdrop_ = AirdropRepository().register_airdrop(
-            token_address, "org", "tkanme", "NA", contract_address, "", "", "", "", "")
+            token_address, "org", "tkanme", "NA", contract_address, "", "", "", "")
         airdrop_window_= AirdropRepository().register_airdrop_window(airdrop_id=airdrop_.id, airdrop_window_name=str(datetime.utcnow()), description='reg Long description', registration_required=True,
                                                                registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
