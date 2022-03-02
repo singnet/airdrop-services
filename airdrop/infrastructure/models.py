@@ -133,6 +133,7 @@ class UserRegistration(Base, AuditClass):
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     registered_at = Column("registered_at", TIMESTAMP(), nullable=True)
     reject_reason = Column("reject_reason", JSON, nullable=True)
+    receipt_generated = Column("receipt_generated", VARCHAR(250), nullable=True, index=True)
     UniqueConstraint(airdrop_window_id, address)
     airdrop_window = relationship(AirdropWindow, backref="users")
 
@@ -153,7 +154,7 @@ class UserReward(Base, AuditClass):
     condition = Column("condition", TEXT, nullable=True)
     rewards_awarded = Column("rewards_awarded", VARCHAR(50), nullable=False)
     score = Column("score", DECIMAL(18,8), nullable=False)
-    normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)    
+    normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)
     UniqueConstraint(airdrop_window_id, address)
 
 class UserRewardAudit(Base, AuditClass):
@@ -168,7 +169,7 @@ class UserRewardAudit(Base, AuditClass):
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     balance = Column("balance", BIGINT, nullable=False)
-    staked = Column("staked", BIGINT, nullable=False)    
+    staked = Column("staked", BIGINT, nullable=False)
     score = Column("score", DECIMAL(18,8), nullable=False)
     normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)
     rewards_awarded = Column("rewards_awarded", VARCHAR(50), nullable=False)
@@ -178,7 +179,10 @@ class UserRewardAudit(Base, AuditClass):
 class UserNotifications(Base, AuditClass):
     __tablename__ = "user_notifications"
     email = Column("email", VARCHAR(255), nullable=False)
-    UniqueConstraint(email)
+    #ideally this should have been referenced as a foreign key from airdrop table , however
+    # we do not want to be overly strict here and also keep this change backward compatible , hence making this nullable
+    airdrop_id = Column("airdrop_id", BIGINT, nullable=True)
+    UniqueConstraint(email,airdrop_id)
 
 
 class ClaimHistory(Base, AuditClass):

@@ -8,14 +8,14 @@ from sqlalchemy.exc import SQLAlchemyError
 
 class UserRepository(BaseRepository):
 
-    def subscribe_to_notifications(self, email):
+    def subscribe_to_notifications(self, email,airdrop_id   ):
         try:
 
             is_existing_email = self.session.query(UserNotifications.id).filter(
-                UserNotifications.email == email).first()
+                UserNotifications.email == email).filter(UserNotifications.airdrop_id == airdrop_id).first()
 
             if is_existing_email is None:
-                user_notifications = UserNotifications(email=email)
+                user_notifications = UserNotifications(email=email,airdrop_id=airdrop_id)
                 self.add(user_notifications)
             else:
                 raise Exception('Email already subscribed to notifications')
@@ -91,7 +91,7 @@ class UserRepository(BaseRepository):
         else:
             return True
 
-    def register_user(self, airdrop_window_id, address):
+    def register_user(self, airdrop_window_id, address,receipt):
         user = UserRegistration(
-            address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow())
+            address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow(),receipt_generated=receipt)
         self.add(user)

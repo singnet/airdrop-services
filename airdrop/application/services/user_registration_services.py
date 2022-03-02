@@ -1,11 +1,19 @@
-from http import HTTPStatus
+
+from eth_account.messages import encode_defunct
 from jsonschema import validate, ValidationError
 from datetime import datetime
+
+import web3
+from web3 import Web3
+from eth_account.messages import defunct_hash_message, encode_defunct
+from airdrop.config import NETWORK,AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION, AIRDROP_RECEIPT_SECRET_KEY
+from http import HTTPStatus
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_repository import UserRepository
 from airdrop.domain.models.airdrop_window_eligibility import AirdropWindowEligibility
-from common.utils import verify_signature
+from common.boto_utils import BotoUtils
+from common.utils import verify_signature, get_registration_receipt
 
 
 class UserRegistrationServices:
@@ -108,13 +116,18 @@ class UserRegistrationServices:
                 airdrop_window_id, address)
 
             if is_registered_user is False:
-                UserRepository().register_user(airdrop_window_id, address)
+                # Get the unique receipt to be issued , users can use this receipt as evidence that
+                # registration was done
+                secret_key = self.get_secret_key_for_receipt()
+                receipt = get_registration_receipt(airdrop_id,airdrop_window_id,address,secret_key)
+                UserRepository().register_user(airdrop_window_id, address,receipt)
+                response = receipt
             else:
                 raise Exception(
                     "Address is already registered for this airdrop window"
                 )
 
-            response = HTTPStatus.OK.value
+
             status = HTTPStatus.OK
         except ValidationError as e:
             response = e.message
@@ -122,6 +135,19 @@ class UserRegistrationServices:
             response = str(e)
 
         return status, response
+
+    def get_secret_key_for_receipt(self):
+        try:
+            boto_client = BotoUtils(
+                region_name=AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION)
+            private_key = boto_client.get_parameter_value_from_secrets_manager(
+                secret_name=AIRDROP_RECEIPT_SECRET_KEY)
+
+            return private_key
+
+        except BaseException as e:
+            raise e
+
 
     def get_user_airdrop_window(self, airdrop_id, airdrop_window_id):
         now = datetime.utcnow()
