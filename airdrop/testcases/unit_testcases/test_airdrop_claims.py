@@ -31,16 +31,16 @@ class AirdropClaims(TestCase):
         contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         user_address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
-        stakable_token_name = 'AGIX'
+        token_name = 'AGIX'
 
         occam_contract_address = '0x6e94577b949a56279637ff74dfcff2c28408f049'
         occam_token_address = '0x5e93577b949a56279637ff74dfcff2c28408f049'
         occam_user_address = '0xEA6741dDe714fd979de3EdF0F56AA9716B898ec8'
-        occam_stakable_token_name = 'AGIX'
+        occam_token_name = 'AGIX'
 
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
-            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, stakable_token_name)
+            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
         airdrop_windows =  airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
         global airdrop_id
@@ -48,7 +48,7 @@ class AirdropClaims(TestCase):
         global airdrop_window_id
         airdrop_window_id = airdrop_windows.id
         nunet_occam_airdrop = airdrop_repository.register_airdrop(
-            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link, occam_stakable_token_name)
+            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
         airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
@@ -244,7 +244,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": str(airdrop_rewards),
                 "stakable_tokens": str(0),
                 "is_stakable": False,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount": str(0)
             }
@@ -290,7 +290,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": str(airdrop_rewards),
                 "stakable_tokens": str(0),
                 "is_stakable": False,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount": str(0)
             }
@@ -336,7 +336,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": str(5000),
                 "stakable_tokens": str(5000),
                 "is_stakable": True,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount": str(0)
             }
@@ -384,7 +384,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": "0",
                 "stakable_tokens": str(airdrop_rewards),
                 "is_stakable": True,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount":str(airdrop_rewards)
             }
@@ -430,7 +430,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": str(40000),
                 "stakable_tokens": str(10000),
                 "is_stakable": True,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount": str(airdrop_rewards)
             }
@@ -477,7 +477,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": str(0),
                 "stakable_tokens": str(10000),
                 "is_stakable": True,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount": str(0)
             }
@@ -524,7 +524,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": str(airdrop_rewards),
                 "stakable_tokens": str(0),
                 "is_stakable": False,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount": str(0)
             }
@@ -574,7 +574,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": str(airdrop_rewards - min((window_max_stake - window_stake_amount),(max_stakable_amount-already_staked_amount))),
                 "stakable_tokens": str(window_max_stake - window_stake_amount),
                 "is_stakable": True,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount":str(airdrop_rewards)
             }
@@ -628,7 +628,7 @@ class AirdropClaims(TestCase):
                 "claimable_tokens_to_wallet": str(airdrop_rewards),
                 "stakable_tokens": str(0),
                 "is_stakable": False,
-                "stakable_token_name": "AGIX",
+                "token_name": "AGIX",
                 "airdrop_rewards": str(airdrop_rewards),
                 "total_eligible_amount": str(airdrop_rewards)
             }

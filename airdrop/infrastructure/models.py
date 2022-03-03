@@ -45,8 +45,7 @@ class Airdrop(Base, AuditClass):
     contract_address = Column("contract_address", VARCHAR(50), nullable=False)
     staking_contract_address = Column(
         "staking_contract_address", VARCHAR(50), nullable=True)
-    stakable_token_name = Column(
-        "stakable_token_name", VARCHAR(50), nullable=True)
+
     portal_link = Column("portal_link", VARCHAR(256), nullable=True)
     documentation_link = Column(
         "documentation_link", VARCHAR(256), nullable=True)
