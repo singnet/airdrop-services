@@ -151,7 +151,7 @@ class UserReward(Base, AuditClass):
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     condition = Column("condition", TEXT, nullable=True)
-    rewards_awarded = Column("rewards_awarded", VARCHAR(50), nullable=False)
+    rewards_awarded = Column("rewards_awarded", DECIMAL(64,0), nullable=False)
     score = Column("score", DECIMAL(18,8), nullable=False)
     normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)
     UniqueConstraint(airdrop_window_id, address)
@@ -171,7 +171,7 @@ class UserRewardAudit(Base, AuditClass):
     staked = Column("staked", BIGINT, nullable=False)
     score = Column("score", DECIMAL(18,8), nullable=False)
     normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)
-    rewards_awarded = Column("rewards_awarded", VARCHAR(50), nullable=False)
+    rewards_awarded = Column("rewards_awarded", DECIMAL(64,0), nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
     comment = Column("comment", VARCHAR(512))
 
@@ -198,8 +198,8 @@ class ClaimHistory(Base, AuditClass):
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     blockchain_method = Column("blockchain_method", VARCHAR(50), nullable=True)
-    claimable_amount = Column("claimable_amount", INTEGER, nullable=False)
-    unclaimed_amount = Column("unclaimed_amount", INTEGER, nullable=False)
+    claimable_amount = Column("claimable_amount", DECIMAL(64,0), nullable=False)
+    unclaimed_amount = Column("unclaimed_amount", DECIMAL(64,0), nullable=False)
     transaction_status = Column(
         "transaction_status", VARCHAR(50), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(256), nullable=True)
