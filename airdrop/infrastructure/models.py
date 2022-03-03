@@ -116,9 +116,9 @@ class UserBalanceSnapshot(Base, AuditClass):
         nullable=False,
     )
     address = Column("address", VARCHAR(50), nullable=False)
-    balance = Column("balance", BIGINT, nullable=False)
-    staked = Column("staked", BIGINT, nullable=False)
-    total = Column("total", BIGINT, nullable=False)
+    balance = Column("balance", DECIMAL(64,0), nullable=False)
+    staked = Column("staked", DECIMAL(64,0), nullable=False)
+    total = Column("total", DECIMAL(64,0), nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
 
 
