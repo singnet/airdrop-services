@@ -10,7 +10,7 @@ from http import HTTPStatus
 from datetime import datetime, timedelta
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, user_registration, \
-    airdrop_window_claims, airdrop_window_claim_status, user_notifications, airdrop_window_secured_claims
+    airdrop_window_claims, airdrop_window_claim_status, user_notifications, airdrop_window_secured_claims,airdrop_window_claim_history
 from airdrop.infrastructure.models import UserRegistration,Airdrop,AirdropWindow,UserReward,ClaimHistory,UserNotifications
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
     NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
@@ -315,6 +315,27 @@ class TestAirdropHandler(unittest.TestCase):
         result = user_notifications(event, None)
         result = json.loads(result['body'])
         self.assertIsNotNone(result)
+
+    @patch("common.utils.Utils.report_slack")
+    def test_airdrop_window_claim_history(self,  mock_report_slack):
+        #Add a record in the claim history
+        address = '0x765C9E1BCa00002e294c9aa9dC3F96C2a022025C'
+        AirdropRepository().register_user_registration(airdrop_window_id,
+                                                   address)
+        AirdropRepository().register_claim_history(airdrop_id,airdrop_window_id,
+                                                  address,2000,0,'SUCCESS',
+                                                  'transaction_hash')
+        event = {
+            "body": json.dumps({
+                "address": address,
+                "airdrop_id": str(airdrop_id)
+
+            })
+        }
+        result = airdrop_window_claim_history(event, None)
+        result = json.loads(result['body'])
+        final_result = result['data']
+        self.assertIsNotNone(final_result)
 
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
     def test_nunet_occam_signature(self,  mock_get_parameter_value_from_secrets_manager):
