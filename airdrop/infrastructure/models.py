@@ -183,6 +183,20 @@ class UserNotifications(Base, AuditClass):
     airdrop_id = Column("airdrop_id", BIGINT, nullable=True)
     UniqueConstraint(email,airdrop_id)
 
+class UserPendingRewards(Base, AuditClass):
+    __tablename__ = "user_pending_rewards"
+    airdrop_id = Column(
+        BIGINT,
+        ForeignKey("airdrop.row_id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    airdrop_window_id = Column(
+        BIGINT,
+        ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    address = Column("address", VARCHAR(50), nullable=False, index=True)
+    pending_reward = Column("rewards_awarded", DECIMAL(64,0), nullable=False)
 
 class ClaimHistory(Base, AuditClass):
     __tablename__ = "claim_history"

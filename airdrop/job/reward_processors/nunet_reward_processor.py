@@ -84,11 +84,26 @@ class NunetRewardProcessor:
             rows.append(tuple(values))    
 
     def __send_slack_message(self, message, send=False):
-        self.__slack_messages.append(message)
-        if send:
-            u = Utils()
-            for message in self.__slack_messages:
-                u.report_slack(type=0, slack_message=message, slack_config=SLACK_HOOK)
+        try:
+            self.__slack_messages.append(message)
+            if send:
+                u = Utils()
+                for message in self.__slack_messages:
+                    u.report_slack(type=0, slack_message=message, slack_config=SLACK_HOOK)
+        except Exception as e:
+            logger.info(f"Unable to send slack message {self.__slack_messages}")
+
+    # Check if there are any pending rewards to be considered in this window
+    # and add the pending rewards as additional to the impacted users 
+    def __process_pending_rewards(self):
+        user_pending_rewards = {}
+        pending_rewards = self._airdrop_db.execute("select * from user_pending_rewards where airdrop_window_id = %s", [self._window_id])
+        logger.info(f"Processing pending_rewards for {len(pending_rewards)} holders")
+        additional_rewards = Decimal(0)
+        for row in pending_rewards:
+            additional_rewards += Decimal(row["pending_reward"])
+            user_pending_rewards[row["address"].lower()] = row["pending_reward"]
+        return additional_rewards, user_pending_rewards
 
     @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
     def process_rewards(self, only_registered):
@@ -120,11 +135,18 @@ class NunetRewardProcessor:
         logger.info(score_message)
         self.__send_slack_message(score_message)
         try:
+            total_pending_rewards, user_pending_rewards_map = self.__process_pending_rewards()
+            tokens_to_distribute = (TOKENS_ALLOCATED_PER_WINDOW * NUNET_DECIMALS) - total_pending_rewards
+            logger.info(f"For window {self._window_id} tokens to distribute are {tokens_to_distribute}")
             self._airdrop_db.begin_transaction()
             self.__reset_user_rewards()
 
             for user in self._users_to_reward:
-                reward = Decimal(round(getattr(user, "_log10_score") / sum_of_log_values * TOKENS_ALLOCATED_PER_WINDOW, 6) * NUNET_DECIMALS)
+                reward = Decimal(round(getattr(user, "_log10_score") / sum_of_log_values * tokens_to_distribute, 6))
+                user_address = getattr(user, "_address").lower()
+                if user_address in user_pending_rewards_map:
+                    logger.info(f"Adding additional {user_pending_rewards_map[user_address]} tokens to user {user_address} who had {reward}")
+                    reward += user_pending_rewards_map[user_address]
                 user.set_reward(reward)
                 #logger.info(f"Reward for {getattr(user,'_address')} is {reward} {getattr(user, '_score')} {getattr(user, '_log10_score')} ")
                 self.__batch_insert(self.__get_reward_values(user), False)
