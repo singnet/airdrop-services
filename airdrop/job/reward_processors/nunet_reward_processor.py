@@ -142,7 +142,7 @@ class NunetRewardProcessor:
             self.__reset_user_rewards()
 
             for user in self._users_to_reward:
-                reward = Decimal(round(getattr(user, "_log10_score") / sum_of_log_values * tokens_to_distribute, 6))
+                reward = Decimal(math.floor(getattr(user, "_log10_score") / sum_of_log_values * tokens_to_distribute))
                 user_address = getattr(user, "_address").lower()
                 if user_address in user_pending_rewards_map:
                     logger.info(f"Adding additional {user_pending_rewards_map[user_address]} tokens to user {user_address} who had {reward}")

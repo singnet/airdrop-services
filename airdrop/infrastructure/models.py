@@ -196,7 +196,7 @@ class UserPendingRewards(Base, AuditClass):
         nullable=False,
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
-    pending_reward = Column("rewards_awarded", DECIMAL(64,0), nullable=False)
+    pending_reward = Column("pending_reward", DECIMAL(64,0), nullable=False)
 
 class ClaimHistory(Base, AuditClass):
     __tablename__ = "claim_history"
