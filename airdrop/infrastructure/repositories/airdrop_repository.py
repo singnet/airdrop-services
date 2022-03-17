@@ -44,8 +44,10 @@ class AirdropRepository(BaseRepository):
             claim_raw_data = self.session.query(ClaimHistory).join(
                 UserRegistration,
                 ClaimHistory.airdrop_window_id == UserRegistration.airdrop_window_id
-            ).filter(
-                ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.address == address).filter(UserRegistration.address == address).all()
+            ).join(AirdropWindow,
+                   ClaimHistory.airdrop_window_id == AirdropWindow.id).filter(
+                ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.address == address).\
+                filter(UserRegistration.address == address).all()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
