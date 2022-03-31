@@ -120,7 +120,7 @@ class UserRegistrationServices:
                 # registration was done
                 secret_key = self.get_secret_key_for_receipt()
                 receipt = get_registration_receipt(airdrop_id,airdrop_window_id,address,secret_key)
-                UserRepository().register_user(airdrop_window_id, address,receipt)
+                UserRepository().register_user(airdrop_window_id, address,receipt,signature)
                 response = receipt
             else:
                 raise Exception(
