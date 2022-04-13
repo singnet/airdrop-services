@@ -200,7 +200,8 @@ class TestAirdropHandler(unittest.TestCase):
                 "address": user_address,
                 "airdrop_id": airdrop_id,
                 "airdrop_window_id": airdrop_window_id,
-                "signature": signature
+                "signature": signature,
+                "block_number": 1234
             })
         }
         result = user_registration(event, None)

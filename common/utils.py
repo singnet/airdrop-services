@@ -123,7 +123,7 @@ def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address
 
         message = web3.Web3.soliditySha3(
             ["string", "uint256", "address", "uint256",
-                "uint256", "address", "address"],
+             "uint256", "address", "address"],
             ["__airdropclaim", int(amount), user_address, int(airdrop_id),
              int(airdrop_window_id), contract_address, token_address],
         )
@@ -217,20 +217,22 @@ def get_contract_instance(base_path, contract_address, contract_name):
     return web3_object.eth.contract(abi=contract_abi, address=contract_address)
 
 
-def verify_signature(airdrop_id, airdrop_window_id, address, signature):
+def verify_signature(airdrop_id, airdrop_window_id, address, signature, block_number):
     public_key = recover_address(
-        airdrop_id, airdrop_window_id, address, signature)
+        airdrop_id, airdrop_window_id, address, signature, block_number)
 
     if public_key.lower() != address.lower():
-        logger.info(f"Invalid signature")
+        logger.info(f"INVALID SIGNATURE {signature}")
+        logger.info(f"For airdrop_id:{airdrop_id} , airdrop_window_id:{airdrop_window_id} , address:{address} , "
+                    f"block_number{block_number}")
         #raise Exception("Invalid signature")
 
 
-def recover_address(airdrop_id, airdrop_window_id, address, signature):
+def recover_address(airdrop_id, airdrop_window_id, address, signature, block_number):
     address = Web3.toChecksumAddress(address)
     message = web3.Web3.soliditySha3(
-        ["uint256", "uint256", "address"],
-        [int(airdrop_id), int(airdrop_window_id), address],
+        ["uint256", "uint256", "uint256", "address"],
+        [int(airdrop_id), int(airdrop_window_id), int(block_number), address],
     )
     hash_message = defunct_hash_message(message)
     web3_object = Web3(web3.providers.HTTPProvider(NETWORK['http_provider']))
@@ -238,13 +240,14 @@ def recover_address(airdrop_id, airdrop_window_id, address, signature):
         hash_message, signature=signature
     )
 
-def get_registration_receipt(airdrop_id, airdrop_window_id, user_address,private_key):
+
+def get_registration_receipt(airdrop_id, airdrop_window_id, user_address, private_key):
     try:
         user_address = Web3.toChecksumAddress(user_address)
 
         message = web3.Web3.soliditySha3(
             ["string", "address", "uint256", "uint256"],
-            ["__receipt_ack_message", user_address, int(airdrop_id),int(airdrop_window_id)],
+            ["__receipt_ack_message", user_address, int(airdrop_id), int(airdrop_window_id)],
         )
 
         message_hash = encode_defunct(message)

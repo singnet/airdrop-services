@@ -83,7 +83,7 @@ class UserRegistrationServices:
                     "address": {"type": "string"},
                     "signature": {"type": "string"},
                 },
-                "required": ["signature", "address", "airdrop_id", "airdrop_window_id"],
+                "required": ["signature", "address", "airdrop_id", "airdrop_window_id","block_number"],
             }
 
             validate(instance=inputs, schema=schema)
@@ -92,8 +92,9 @@ class UserRegistrationServices:
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"].lower()
             signature = inputs["signature"]
+            block_number = inputs["block_number"]
 
-            verify_signature(airdrop_id, airdrop_window_id, address, signature)
+            verify_signature(airdrop_id, airdrop_window_id, address, signature, block_number)
 
             airdrop_window = self.get_user_airdrop_window(
                 airdrop_id, airdrop_window_id
@@ -120,7 +121,7 @@ class UserRegistrationServices:
                 # registration was done
                 secret_key = self.get_secret_key_for_receipt()
                 receipt = get_registration_receipt(airdrop_id,airdrop_window_id,address,secret_key)
-                UserRepository().register_user(airdrop_window_id, address,receipt,signature)
+                UserRepository().register_user(airdrop_window_id, address, receipt, signature, block_number)
                 response = receipt
             else:
                 raise Exception(
