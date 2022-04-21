@@ -46,7 +46,7 @@ class UserRegistrationServices:
             is_eligible_user, rewards_awards = self.check_user_eligibility(
                 user_address=address, airdrop_id=airdrop_id, airdrop_window_id=airdrop_window_id)
 
-            is_already_registered = self.is_elgible_registered_user(
+            is_already_registered,registration_id = self.is_elgible_registered_user(
                 airdrop_window_id, address)
 
             is_airdrop_window_claimed = False
@@ -61,7 +61,8 @@ class UserRegistrationServices:
                 reject_reason = UserRepository().get_reject_reason(airdrop_window_id, address)
 
             response = AirdropWindowEligibility(airdrop_id, airdrop_window_id, address, is_eligible_user,
-                                                is_already_registered, is_airdrop_window_claimed, airdrop_claim_status, reject_reason, rewards_awards).to_dict()
+                                                is_already_registered, is_airdrop_window_claimed, airdrop_claim_status,
+                                                reject_reason, rewards_awards, registration_id).to_dict()
 
             status = HTTPStatus.OK
 
@@ -83,7 +84,7 @@ class UserRegistrationServices:
                     "address": {"type": "string"},
                     "signature": {"type": "string"},
                 },
-                "required": ["signature", "address", "airdrop_id", "airdrop_window_id"],
+                "required": ["signature", "address", "airdrop_id", "airdrop_window_id","block_number"],
             }
 
             validate(instance=inputs, schema=schema)
@@ -92,8 +93,9 @@ class UserRegistrationServices:
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"].lower()
             signature = inputs["signature"]
+            block_number = inputs["block_number"]
 
-            verify_signature(airdrop_id, airdrop_window_id, address, signature)
+            verify_signature(airdrop_id, airdrop_window_id, address, signature, block_number)
 
             airdrop_window = self.get_user_airdrop_window(
                 airdrop_id, airdrop_window_id
@@ -112,7 +114,7 @@ class UserRegistrationServices:
                     "Address is not eligible for this airdrop"
                 )
 
-            is_registered_user = self.is_elgible_registered_user(
+            is_registered_user, registration_id = self.is_elgible_registered_user(
                 airdrop_window_id, address)
 
             if is_registered_user is False:
@@ -120,7 +122,7 @@ class UserRegistrationServices:
                 # registration was done
                 secret_key = self.get_secret_key_for_receipt()
                 receipt = get_registration_receipt(airdrop_id,airdrop_window_id,address,secret_key)
-                UserRepository().register_user(airdrop_window_id, address,receipt)
+                UserRepository().register_user(airdrop_window_id, address, receipt, signature, block_number)
                 response = receipt
             else:
                 raise Exception(

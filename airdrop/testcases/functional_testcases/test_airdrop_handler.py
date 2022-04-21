@@ -200,12 +200,18 @@ class TestAirdropHandler(unittest.TestCase):
                 "address": user_address,
                 "airdrop_id": airdrop_id,
                 "airdrop_window_id": airdrop_window_id,
-                "signature": signature
+                "signature": signature,
+                "block_number": 1234
             })
         }
         result = user_registration(event, None)
         result = json.loads(result['body'])
         self.assertEqual(result['status'], HTTPStatus.OK.value)
+        self.assertNotEqual(result['data'], "")
+        result = user_eligibility(event, None)
+        result = json.loads(result['body'])
+        final_result = result['data']
+        self.assertNotEqual(final_result['registration_id'], "")
 
     @patch("common.utils.Utils.report_slack")
     @patch('common.utils.recover_address')

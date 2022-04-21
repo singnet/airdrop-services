@@ -91,6 +91,7 @@ class UserRegistration(TestCase):
             "airdrop_id": str(airdrop_.id),
             "address": address,
             "signature": "958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F",
+            "block_number": 1234
         }
         status, response = UserRegistrationServices().register(inputs)
         self.assertEqual(status, HTTPStatus.OK)

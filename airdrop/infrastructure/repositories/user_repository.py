@@ -79,7 +79,7 @@ class UserRepository(BaseRepository):
 
     def is_registered_user(self, airdrop_window_id, address):
         is_registered_user = (
-            self.session.query(UserRegistration.id)
+            self.session.query(UserRegistration)
             .filter(UserRegistration.airdrop_window_id == airdrop_window_id)
             .filter(UserRegistration.address == address)
             .filter(UserRegistration.registered_at != None)
@@ -87,11 +87,12 @@ class UserRepository(BaseRepository):
         )
 
         if is_registered_user is None:
-            return False
+            return False, ""
         else:
-            return True
+            return True, is_registered_user.receipt_generated
 
-    def register_user(self, airdrop_window_id, address,receipt):
+    def register_user(self, airdrop_window_id, address, receipt, signature, block_number):
         user = UserRegistration(
-            address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow(),receipt_generated=receipt)
+            address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow(),
+            receipt_generated=receipt, user_signature=signature, user_signature_block_number=block_number)
         self.add(user)
