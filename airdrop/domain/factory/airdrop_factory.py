@@ -60,5 +60,6 @@ class AirdropFactory:
             int(claim.claimable_amount),
             str(claim.claimed_on),
             claim.user_registrations,
-            claim.blockchain_method
+            claim.blockchain_method,
+            claim.user_registrations.airdrop_window.airdrop_window_order
         ).to_dict()

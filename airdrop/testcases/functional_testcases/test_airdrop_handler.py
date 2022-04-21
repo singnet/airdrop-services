@@ -336,6 +336,32 @@ class TestAirdropHandler(unittest.TestCase):
         result = json.loads(result['body'])
         final_result = result['data']
         self.assertIsNotNone(final_result)
+        registration_start_date = datetime.utcnow() - timedelta(days=2)
+        registration_end_date = datetime.utcnow() + timedelta(days=30)
+        claim_start_date = datetime.utcnow() - timedelta(days=5)
+        claim_end_date = datetime.utcnow() + timedelta(days=30)
+        #now create an other airdrop_window
+        airdrop_window1 = AirdropRepository().register_airdrop_window(airdrop_id=airdrop_id,
+                                                                    airdrop_window_name='CLAIM_ORG-Airdrop Window 1',
+                                                                    description='CLAIM Test Long description',
+                                                                    registration_required=True,
+                                                                    registration_start_period=registration_start_date,
+                                                                    registration_end_period=registration_end_date,
+                                                                    snapshot_required=True,
+                                                                    claim_start_period=claim_start_date,
+                                                                    claim_end_period=claim_end_date,
+                                                                    total_airdrop_tokens=1000000)
+
+        #now register for the second window
+        AirdropRepository().register_user_registration(airdrop_window1.id,
+                                                       address)
+        AirdropRepository().register_claim_history(airdrop_id,airdrop_window1.id,
+                                                   address,2000,0,'SUCCESS',
+                                                   'transaction_hash')
+        result = airdrop_window_claim_history(event, None)
+        result = json.loads(result['body'])
+        final_result = result['data']
+        self.assertIsNotNone(final_result)
 
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
     def test_nunet_occam_signature(self,  mock_get_parameter_value_from_secrets_manager):
