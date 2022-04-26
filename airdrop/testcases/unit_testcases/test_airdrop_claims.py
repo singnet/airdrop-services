@@ -178,6 +178,21 @@ class AirdropClaims(TestCase):
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertEqual(response, {})
+    
+    def test_airdrop_event_consumer_with_airdropAmount_in_payload(self):
+
+        payload = {
+            "transactionHash": "0x176133a958449C28930970989dB5fFFbEdd9F417",
+            "json_str": "{'authorizer': '0xD93209FDC420e8298bDFA3dBe340F366Faf1E7bc', 'claimer': '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8', 'airDropAmount': 100, 'airDropId': 1, 'airDropWindowId': 1}",
+            "event": "Claim"
+        }
+
+        event = {"data": payload}
+
+        status, response = AirdropServices().airdrop_event_consumer(event)
+
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(response, {})
 
     def test_airdrop_event_consumer_with_duplicate_data(self):
 
