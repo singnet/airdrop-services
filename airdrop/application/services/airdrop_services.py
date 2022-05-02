@@ -20,6 +20,7 @@ class AirdropServices:
     def airdrop_txn_watcher(self):
 
         pending_txns = AirdropRepository().get_pending_txns()
+        print(f"pending_txns {len(pending_txns)}")
 
         for txn in pending_txns:
             try:
