@@ -30,6 +30,8 @@ class AirdropRepository(BaseRepository):
             pending_txns = (
                 self.session.query(ClaimHistory)
                 .filter(ClaimHistory.transaction_status == AirdropClaimStatus.PENDING.value)
+                .order_by(ClaimHistory.id.asc())
+                .limit(5)
                 .all()
             )
             self.session.commit()
