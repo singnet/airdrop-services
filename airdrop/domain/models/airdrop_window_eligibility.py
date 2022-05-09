@@ -1,6 +1,6 @@
 class AirdropWindowEligibility:
     def __init__(self, airdrop_id, airdrop_window_id, address, is_eligible_user, is_already_registered, is_airdrop_window_claimed,
-                 airdrop_claim_status, reject_reason, rewards_awards, registration_id):
+                 airdrop_claim_status, reject_reason, rewards_awards, registration_id,is_claimable):
         self._is_eligible_user = is_eligible_user
         self._is_already_registered = is_already_registered
         self._is_airdrop_window_claimed = is_airdrop_window_claimed
@@ -11,6 +11,7 @@ class AirdropWindowEligibility:
         self._reject_reason = reject_reason
         self._rewards_awards = rewards_awards
         self._registration_id = registration_id
+        self._is_claimable = is_claimable
 
     def to_dict(self):
         return {
@@ -23,5 +24,6 @@ class AirdropWindowEligibility:
             "airdrop_window_id": self._airdrop_window_id,
             "reject_reason": self._reject_reason,
             "airdrop_window_rewards": self._rewards_awards,
-            "registration_id": self._registration_id
+            "registration_id": self._registration_id,
+            "is_claimable": self._is_claimable
         }
