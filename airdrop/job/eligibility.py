@@ -94,6 +94,9 @@ class EligibilityProcessor:
         processor = processor_class(self._airdrop_db, airdrop_id, window, identifier)
         processor.process_rewards(only_registered)
 
+    def process_specific_reward(self, event):
+        self.__process_reward(event['processor_name'], event['airdrop_id'], event['window_id'], "REGISTRATION", False)
+
     def process_eligibility(self):
         self.__populate_state()
 
@@ -120,7 +123,10 @@ def process_eligibility(event, context):
     logger.info(f"Processing eligibility")
 
     e = EligibilityProcessor()
-    e.process_eligibility()
+    if event is not None and 'window_id' in event:
+        e.process_specific_reward(event)
+    else: 
+        e.process_eligibility()
     
     logger.info(f"Completed Processing eligibility")
     return generate_lambda_response(
