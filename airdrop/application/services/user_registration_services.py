@@ -55,14 +55,20 @@ class UserRegistrationServices:
 
             if airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
                 is_airdrop_window_claimed = True
-
+            is_claimable = False
+            # if the user has not claimed yet and there are rewards pending to be claimed , then let the user claim
+            # rewards awarded will have some value ONLY when the claim window opens and the user has unclaimed rewards
+            # a claim in progress ~ PENDING will also be considered as claimed ( we don't want the user to end up losing
+            # gas in trying to claim again)
+            if is_airdrop_window_claimed is False and rewards_awards > 0:
+                is_claimable = True
             reject_reason = None
             if not is_eligible_user:
                 reject_reason = UserRepository().get_reject_reason(airdrop_window_id, address)
 
             response = AirdropWindowEligibility(airdrop_id, airdrop_window_id, address, is_eligible_user,
                                                 is_already_registered, is_airdrop_window_claimed, airdrop_claim_status,
-                                                reject_reason, rewards_awards, registration_id).to_dict()
+                                                reject_reason, rewards_awards, registration_id,is_claimable).to_dict()
 
             status = HTTPStatus.OK
 
