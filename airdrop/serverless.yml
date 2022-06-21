@@ -168,7 +168,7 @@ functions:
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
       - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
-    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    role: ${file(./config.${self:provider.stage}.json):ROLE_WITH_SM}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
