@@ -40,7 +40,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            for requirement_file in `ls */requirements.txt`;do sudo pip install -r $requirement_file --prefer-binary ;done
+            sudo pip install -r .circleci/requirements.txt --prefer-binary
             for package_file in `ls */package*.json | cut -d '/' -f1`;do sudo npm install $package_file/;done
       - run:
           name: Install required packages.
