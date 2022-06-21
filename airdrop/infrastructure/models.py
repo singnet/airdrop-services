@@ -68,17 +68,17 @@ class AirdropWindow(Base, AuditClass):
     description = Column("description", TEXT, nullable=True)
     registration_required = Column("registration_required", BIT, default=True)
     registration_start_period = Column(
-        "registration_start_period", TIMESTAMP(), nullable=False
+        "registration_start_period", TIMESTAMP(), nullable=True
     )
     registration_end_period = Column(
-        "registration_end_period", TIMESTAMP(), nullable=False
+        "registration_end_period", TIMESTAMP(), nullable=True
     )
     snapshot_required = Column("snapshot_required", BIT, default=True)
     first_snapshot_at = Column("first_snapshot_at", TIMESTAMP(), nullable=True)
     last_snapshot_at = Column("last_snapshot_at", TIMESTAMP(), nullable=True)
     claim_start_period = Column(
-        "claim_start_period", TIMESTAMP(), nullable=False)
-    claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=False)
+        "claim_start_period", TIMESTAMP(), nullable=True)
+    claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=True)
     total_airdrop_tokens = Column("total_airdrop_tokens", INTEGER, default=0)
     airdrop = relationship(Airdrop, backref="windows")
 
@@ -108,6 +108,7 @@ class AirdropWindowTimelines(Base, AuditClass):
     date = Column("date", TIMESTAMP(), nullable=False)
     airdrop_window = relationship(AirdropWindow, backref="timelines")
 
+
 class UserBalanceSnapshot(Base, AuditClass):
     __tablename__ = "user_balance_snapshot"
     airdrop_window_id = Column(
@@ -116,9 +117,9 @@ class UserBalanceSnapshot(Base, AuditClass):
         nullable=False,
     )
     address = Column("address", VARCHAR(50), nullable=False)
-    balance = Column("balance", DECIMAL(64,0), nullable=False)
-    staked = Column("staked", DECIMAL(64,0), nullable=False)
-    total = Column("total", DECIMAL(64,0), nullable=False)
+    balance = Column("balance", DECIMAL(64, 0), nullable=False)
+    staked = Column("staked", DECIMAL(64, 0), nullable=False)
+    total = Column("total", DECIMAL(64, 0), nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
 
 
@@ -134,6 +135,7 @@ class UserRegistration(Base, AuditClass):
     reject_reason = Column("reject_reason", JSON, nullable=True)
     receipt_generated = Column("receipt_generated", VARCHAR(250), nullable=True, index=True)
     user_signature = Column("user_signature", VARCHAR(250), nullable=True, index=True)
+    signed_data = Column("signed_data", JSON, nullable=True)
     user_signature_block_number = Column("user_signature_block_number", BIGINT, nullable=True, index=True)
 
     UniqueConstraint(airdrop_window_id, address)
@@ -154,10 +156,11 @@ class UserReward(Base, AuditClass):
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     condition = Column("condition", TEXT, nullable=True)
-    rewards_awarded = Column("rewards_awarded", DECIMAL(64,0), nullable=False)
-    score = Column("score", DECIMAL(18,8), nullable=False)
-    normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)
+    rewards_awarded = Column("rewards_awarded", DECIMAL(64, 0), nullable=False)
+    score = Column("score", DECIMAL(18, 8), nullable=False)
+    normalized_score = Column("normalized_score", DECIMAL(18, 8), nullable=False)
     UniqueConstraint(airdrop_window_id, address)
+
 
 class UserRewardAudit(Base, AuditClass):
     __tablename__ = "user_rewards_audit"
@@ -172,19 +175,21 @@ class UserRewardAudit(Base, AuditClass):
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     balance = Column("balance", BIGINT, nullable=False)
     staked = Column("staked", BIGINT, nullable=False)
-    score = Column("score", DECIMAL(18,8), nullable=False)
-    normalized_score = Column("normalized_score", DECIMAL(18,8), nullable=False)
-    rewards_awarded = Column("rewards_awarded", DECIMAL(64,0), nullable=False)
+    score = Column("score", DECIMAL(18, 8), nullable=False)
+    normalized_score = Column("normalized_score", DECIMAL(18, 8), nullable=False)
+    rewards_awarded = Column("rewards_awarded", DECIMAL(64, 0), nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
     comment = Column("comment", VARCHAR(512))
+
 
 class UserNotifications(Base, AuditClass):
     __tablename__ = "user_notifications"
     email = Column("email", VARCHAR(255), nullable=False)
-    #ideally this should have been referenced as a foreign key from airdrop table , however
+    # ideally this should have been referenced as a foreign key from airdrop table , however
     # we do not want to be overly strict here and also keep this change backward compatible , hence making this nullable
     airdrop_id = Column("airdrop_id", BIGINT, nullable=True)
-    UniqueConstraint(email,airdrop_id)
+    UniqueConstraint(email, airdrop_id)
+
 
 class UserPendingRewards(Base, AuditClass):
     __tablename__ = "user_pending_rewards"
@@ -199,7 +204,8 @@ class UserPendingRewards(Base, AuditClass):
         nullable=False,
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
-    pending_reward = Column("pending_reward", DECIMAL(64,0), nullable=False)
+    pending_reward = Column("pending_reward", DECIMAL(64, 0), nullable=False)
+
 
 class ClaimHistory(Base, AuditClass):
     __tablename__ = "claim_history"
@@ -215,11 +221,12 @@ class ClaimHistory(Base, AuditClass):
     )
     address = Column("address", VARCHAR(50), nullable=False, index=True)
     blockchain_method = Column("blockchain_method", VARCHAR(50), nullable=True)
-    claimable_amount = Column("claimable_amount", DECIMAL(64,0), nullable=False)
-    unclaimed_amount = Column("unclaimed_amount", DECIMAL(64,0), nullable=False)
+    claimable_amount = Column("claimable_amount", DECIMAL(64, 0), nullable=False)
+    unclaimed_amount = Column("unclaimed_amount", DECIMAL(64, 0), nullable=False)
     transaction_status = Column(
         "transaction_status", VARCHAR(50), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(256), nullable=True)
     claimed_on = Column("claimed_on", TIMESTAMP(), nullable=True)
     user_registrations = relationship(
-        UserRegistration, backref="claim_history", primaryjoin=airdrop_window_id == foreign(UserRegistration.airdrop_window_id), lazy="joined", uselist=False)
+        UserRegistration, backref="claim_history",
+        primaryjoin=airdrop_window_id == foreign(UserRegistration.airdrop_window_id), lazy="joined", uselist=False)
