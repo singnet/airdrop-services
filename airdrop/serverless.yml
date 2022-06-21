@@ -18,6 +18,12 @@ provider:
   tracing: true
 
 custom:
+  pythonRequirements:
+    fileName: airdrop/requirements.txt
+    dockerizePip: true
+    useDownloadCache: true
+    useStaticCache: true
+    cacheLocation: "/var/cache/serverless"
   prune:
     automatic: true
     includeLayers: true
@@ -29,6 +35,7 @@ plugins:
   - serverless-prune-plugin
   - serverless-latest-layer-version
   - serverless-aws-documentation
+  - serverless-python-requirements
 
 documentation:
   models:
