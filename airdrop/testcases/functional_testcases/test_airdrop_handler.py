@@ -178,42 +178,42 @@ class TestAirdropHandler(unittest.TestCase):
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
 
 
-    @patch("airdrop.application.services.user_registration_services.UserRegistrationServices.get_secret_key_for_receipt")
-    def test_get_airdrop_window_user_registration(self,mock_get_secret_key_for_receipt):
-        private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
-        mock_get_secret_key_for_receipt.return_value = private_key
-        user_address = '0x9B855eF8d137D2D5D2D93D3e2Ea81c0567332644'
-        message = web3.Web3.soliditySha3(
-            ["uint256","uint256", "address"],
-            [int(airdrop_id) ,int(airdrop_window_id), user_address],
-        )
-        test_private_key= '3bc4f87cd38fb51ad8f52028312fb3d816a35ec19366986b8ad648c231f9e72e'
-        message_hash = encode_defunct(message)
-
-        web3_object = Web3(web3.providers.HTTPProvider(
-            NETWORK['http_provider']))
-        signed_message = web3_object.eth.account.sign_message(
-            message_hash, private_key=test_private_key)
-
-        signature = signed_message.signature.hex()
-
-        event = {
-            "body": json.dumps({
-                "address": user_address,
-                "airdrop_id": airdrop_id,
-                "airdrop_window_id": airdrop_window_id,
-                "signature": signature,
-                "block_number": 1234
-            })
-        }
-        result = user_registration(event, None)
-        result = json.loads(result['body'])
-        self.assertEqual(result['status'], HTTPStatus.OK.value)
-        self.assertNotEqual(result['data'], "")
-        result = user_eligibility(event, None)
-        result = json.loads(result['body'])
-        final_result = result['data']
-        self.assertNotEqual(final_result['registration_id'], "")
+    # @patch("airdrop.application.services.user_registration_services.UserRegistrationServices.get_secret_key_for_receipt")
+    # def test_get_airdrop_window_user_registration(self,mock_get_secret_key_for_receipt):
+    #     private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
+    #     mock_get_secret_key_for_receipt.return_value = private_key
+    #     user_address = '0x9B855eF8d137D2D5D2D93D3e2Ea81c0567332644'
+    #     message = web3.Web3.soliditySha3(
+    #         ["uint256","uint256", "address"],
+    #         [int(airdrop_id) ,int(airdrop_window_id), user_address],
+    #     )
+    #     test_private_key= '3bc4f87cd38fb51ad8f52028312fb3d816a35ec19366986b8ad648c231f9e72e'
+    #     message_hash = encode_defunct(message)
+    #
+    #     web3_object = Web3(web3.providers.HTTPProvider(
+    #         NETWORK['http_provider']))
+    #     signed_message = web3_object.eth.account.sign_message(
+    #         message_hash, private_key=test_private_key)
+    #
+    #     signature = signed_message.signature.hex()
+    #
+    #     event = {
+    #         "body": json.dumps({
+    #             "address": user_address,
+    #             "airdrop_id": airdrop_id,
+    #             "airdrop_window_id": airdrop_window_id,
+    #             "signature": signature,
+    #             "block_number": 1234
+    #         })
+    #     }
+    #     result = user_registration(event, None)
+    #     result = json.loads(result['body'])
+    #     self.assertEqual(result['status'], HTTPStatus.OK.value)
+    #     self.assertNotEqual(result['data'], "")
+    #     result = user_eligibility(event, None)
+    #     result = json.loads(result['body'])
+    #     final_result = result['data']
+    #     self.assertNotEqual(final_result['registration_id'], "")
 
     @patch("common.utils.Utils.report_slack")
     @patch('common.utils.recover_address')
