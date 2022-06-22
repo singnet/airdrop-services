@@ -1,6 +1,6 @@
 from eth_account.messages import encode_defunct
 from jsonschema import validate, ValidationError
-from datetime import datetime
+from datetime import datetime as dt
 
 import web3
 from web3 import Web3
@@ -108,21 +108,24 @@ class UserRegistrationServices:
                 signature=signature, airdrop_id=airdrop_id, airdrop_window_id=airdrop_window_id,
                 block_number=block_number, address=address, cardano_address=cardano_address)
 
-            airdrop_window = self.get_user_airdrop_window(airdrop_id, airdrop_window_id)
-
+            airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
-                raise Exception("Airdrop window is not accepting registration at this moment")
+                raise Exception("Airdrop window id is invalid.")
 
-            is_eligible_user = self.check_user_eligibility(
-                airdrop_id, airdrop_window_id, address)
+            registration_required = airdrop_window.registration_required
+            if registration_required:
+                now = dt.utcnow()
+                registration_start_period = airdrop_window.registration_start_period
+                registration_end_period = airdrop_window.registration_end_period
+                if now < registration_start_period or now > registration_end_period:
+                    raise Exception("Airdrop window is not accepting registration at this moment.")
+
+            is_eligible_user = self.check_user_eligibility(airdrop_id, airdrop_window_id, address)
 
             if not is_eligible_user:
-                raise Exception(
-                    "Address is not eligible for this airdrop"
-                )
+                raise Exception("Address is not eligible for this airdrop")
 
-            is_registered_user, registration_id = self.is_elgible_registered_user(
-                airdrop_window_id, address)
+            is_registered_user, registration_id = self.is_elgible_registered_user(airdrop_window_id, address)
 
             if is_registered_user is False:
                 # Get the unique receipt to be issued , users can use this receipt as evidence that
@@ -158,7 +161,7 @@ class UserRegistrationServices:
             raise e
 
     def get_user_airdrop_window(self, airdrop_id, airdrop_window_id):
-        now = datetime.utcnow()
+        now = dt.utcnow()
         return AirdropWindowRepository().is_open_airdrop_window(
             airdrop_id, airdrop_window_id, now
         )
