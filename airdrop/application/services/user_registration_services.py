@@ -181,6 +181,8 @@ class UserRegistrationServices:
 
     def verify_signature(self, signature, airdrop_id, airdrop_window_id, block_number, address, cardano_address=None):
         address = Web3.toChecksumAddress(address)
+        if signature.startswith("0x"):
+            signature = signature[2:]
         message = {
             "Airdrop": {
                 "airdropId": airdrop_id,
