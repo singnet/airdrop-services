@@ -33,7 +33,6 @@ USER_REGISTRATION_SIGNATURE_FORMAT = {
             {"name": "airdropWindowId", "type": "uint256"},
             {"name": "blockNumber", "type": "uint256"},
             {"name": "walletAddress", "type": "address"},
-            {"name": "cardanoAddress", "type": "string"},
         ],
         "Mail": [
             {"name": "Airdrop", "type": "AirdropSignatureTypes"},

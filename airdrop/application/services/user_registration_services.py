@@ -191,10 +191,10 @@ class UserRegistrationServices:
                 "walletAddress": address,
             },
         }
-        if cardano_address:
-            message["Airdrop"]["cardanoAddress"] = "addr_test1qqera830frgpvw9f0jj2873lwe8nd8vcsf0q0ftuqqgd9g8ucaczw4" \
-                                                   "27uq8y7axn2v3w8dua87kjgdgurmgl38vd2hysk4dfj9"
         formatted_message = USER_REGISTRATION_SIGNATURE_FORMAT
+        if cardano_address:
+            formatted_message["types"]["AirdropSignatureTypes"].append({"name": "cardanoAddress", "type": "string"})
+            message["Airdrop"]["cardanoAddress"] = cardano_address
         formatted_message["message"] = message
         recovered_address = recover_typed_data(formatted_message, *signature_to_v_r_s(bytes.fromhex(signature)))
         if recovered_address.lower() != address.lower():
