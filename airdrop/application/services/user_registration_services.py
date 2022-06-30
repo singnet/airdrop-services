@@ -1,16 +1,15 @@
-from jsonschema import validate, ValidationError
 from datetime import datetime as dt
 from http import HTTPStatus
+
 from jsonschema import validate, ValidationError
 from py_eth_sig_utils.signing import recover_typed_data, signature_to_v_r_s
 from web3 import Web3
 
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION, AIRDROP_RECEIPT_SECRET_KEY
-from airdrop.constants import ELIGIBILITY_SCHEMA
 from airdrop.constants import AirdropClaimStatus, USER_REGISTRATION_SIGNATURE_FORMAT
-from airdrop.domain.models.airdrop_window_eligibility import AirdropWindowEligibility
-from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
+from airdrop.constants import ELIGIBILITY_SCHEMA
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
+from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_repository import UserRepository
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
@@ -20,8 +19,8 @@ logger = get_logger(__name__)
 
 
 class UserRegistrationServices:
-
-    def eligibility(self, inputs):
+    @staticmethod
+    def eligibility(inputs):
         status = HTTPStatus.BAD_REQUEST
         try:
             validate(instance=inputs, schema=ELIGIBILITY_SCHEMA)
@@ -62,7 +61,7 @@ class UserRegistrationServices:
                 registration_details = {
                     "registration_id": user_registration.registration_id,
                     "reject_reason": user_registration.reject_reason,
-                    "signed_data": user_registration.signed_data,
+                    "other_details": user_registration.signed_data.get("message", {}),
                     "registered_at": user_registration.registered_at
                 }
             else:
