@@ -13,7 +13,7 @@ from airdrop.infrastructure.repositories.airdrop_window_repository import Airdro
 from airdrop.infrastructure.repositories.user_repository import UserRepository
 from airdrop.infrastructure.repositories.user_reward_repository import UserRewardRepository
 from airdrop.testcases.functional_testcases.test_data import AirdropData, AirdropWindowData
-
+from airdrop.domain.models.loyality_airdrop import LoyalityAirdrop
 airdrop_repository = AirdropRepository()
 airdrop_window_repository = AirdropWindowRepository()
 user_repository = UserRepository()
@@ -92,7 +92,8 @@ class TestAirdropServices(TestCase):
                           "rmgl38vd2hysk4dfj9"
         test_private_key = bytes.fromhex("1c4162244e5ec8f53a51ab6bb0a29c50432d82afd0a168e6e5c5c55c43b0a9c9")
         block_number = 12432452
-        message = {
+        formatted_message = USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT
+        formatted_message["message"] = {
             "Airdrop": {
                 "airdropId": self.airdrop.id,
                 "airdropWindowId": self.airdrop_window.id,
@@ -101,8 +102,7 @@ class TestAirdropServices(TestCase):
                 "cardanoAddress": cardano_address
             }
         }
-        formatted_message = USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT
-        formatted_message["message"] = message
+        formatted_message["domain"]["name"] = LoyalityAirdrop(self.airdrop.id).domain_name
         signature = v_r_s_to_signature(*sign_typed_data(formatted_message, test_private_key)).hex()
         event = {
             "body": json.dumps({

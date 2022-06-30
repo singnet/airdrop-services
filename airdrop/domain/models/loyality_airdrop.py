@@ -7,11 +7,13 @@ class LoyalityAirdrop(BaseAirdrop):
         self.airdrop_id = airdrop_id
         self.airdrop_window_id = airdrop_window_id
         self.register_all_window_at_once = True
+        self.domain_name = "SingularityNet"
 
     def format_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
         cardano_address = signature_parameters["cardano_address"]
-        message = {
+        formatted_message = USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT
+        formatted_message["message"] = {
             "Airdrop": {
                 "airdropId": self.airdrop_id,
                 "airdropWindowId": self.airdrop_window_id,
@@ -20,8 +22,7 @@ class LoyalityAirdrop(BaseAirdrop):
                 "cardanoAddress": cardano_address
             },
         }
-        formatted_message = USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT
-        formatted_message["message"] = message
+        formatted_message["domain"]["name"] = self.domain_name
         return formatted_message
 
     @staticmethod

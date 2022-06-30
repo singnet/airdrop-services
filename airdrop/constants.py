@@ -55,7 +55,7 @@ USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT = {
     },
     "primaryType": "Mail",
     "domain": {
-        "name": "SingularityNet",
+        "name": "",
         "version": "1",
         "chainId": NETWORK_ID,
     },
