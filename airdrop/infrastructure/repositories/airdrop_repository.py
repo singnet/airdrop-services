@@ -292,3 +292,6 @@ class AirdropRepository(BaseRepository):
             return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(airdrop_row_data)
         else:
             raise Exception('Non eligible user')
+
+    def get_airdrop_details(self, airdrop_id):
+        return self.session.query(Airdrop).filter(Airdrop.id == airdrop_id).first()
