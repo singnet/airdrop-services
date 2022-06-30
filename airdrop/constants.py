@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+
 from airdrop.config import NETWORK_ID
 
 COMMON_CNTRCT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'resources'))
@@ -26,8 +27,16 @@ ELIGIBILITY_SCHEMA = {
     },
     "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
+USER_REGISTRATION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "address": {"type": "string"},
+        "signature": {"type": "string"},
+    },
+    "required": ["signature", "address", "airdrop_id", "airdrop_window_id", "block_number"],
+}
 
-USER_REGISTRATION_SIGNATURE_FORMAT = {
+USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT = {
     "types": {
         "EIP712Domain": [
             {"name": "name", "type": "string"},
@@ -55,9 +64,12 @@ USER_REGISTRATION_SIGNATURE_FORMAT = {
             "airdropId": 0,
             "airdropWindowId": 0,
             "blockNumber": 0,
-            "walletAddress": "",
-            "cardanoAddress": "",
+            "walletAddress": ""
         },
 
     },
 }
+USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT = USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
+USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT["types"]["AirdropSignatureTypes"] \
+    .append({"name": "cardanoAddress", "type": "string"})
+USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT["message"]["Airdrop"]["cardanoAddress"] = ""
