@@ -64,7 +64,7 @@ class UserRegistrationServices:
                     "registered_at": user_registration.registered_at
                 }
             else:
-                registration_id, reject_reason, registration_details = "", None, dict()
+                registration_details = {}
             response = {
                 "is_eligible": user_eligible_for_given_window,
                 "is_already_registered": user_registered,
@@ -73,9 +73,7 @@ class UserRegistrationServices:
                 "user_address": address,
                 "airdrop_id": airdrop_id,
                 "airdrop_window_id": airdrop_window_id,
-                "reject_reason": reject_reason,
                 "airdrop_window_rewards": rewards_awarded,
-                "registration_id": registration_id,
                 "is_claimable": is_claimable,
                 "registration_details": registration_details
             }
