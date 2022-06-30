@@ -55,7 +55,7 @@ USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT = {
     },
     "primaryType": "Mail",
     "domain": {
-        "name": "Nunet Airdrop",
+        "name": "SingularityNet",
         "version": "1",
         "chainId": NETWORK_ID,
     },
