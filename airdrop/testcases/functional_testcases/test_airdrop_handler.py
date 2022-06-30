@@ -839,7 +839,9 @@ class TestAirdropHandler(unittest.TestCase):
             "user_address": "0xcc3cd60ff9936b7c9272a649b24f290ada562469",
             "airdrop_id": str(airdrop.id),
             "airdrop_window_id": str(airdrop_window2.id),
+            "reject_reason": None,
             "airdrop_window_rewards": 110,
+            "registration_id": "",
             "is_claimable": True,
             "registration_details": {}
         }
@@ -864,7 +866,9 @@ class TestAirdropHandler(unittest.TestCase):
             "user_address": "0xcc3cd60ff9936b7c9272a649b24f290ada562469",
             "airdrop_id": str(airdrop.id),
             "airdrop_window_id": str(airdrop_window2.id),
+            "reject_reason": None,
             "airdrop_window_rewards": 0,
+            "registration_id": "",
             "is_claimable": False,
             "registration_details": {}}
         airdrop_repository.register_claim_history(airdrop.id, airdrop_window1.id,
