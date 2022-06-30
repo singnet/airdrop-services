@@ -2,10 +2,8 @@ import os
 from enum import Enum
 from airdrop.config import NETWORK_ID
 
-COMMON_CNTRCT_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'resources'))
-AIRDROP_ADDR_PATH = COMMON_CNTRCT_PATH + \
-                    '/singularitynet-airdrop-contracts/networks/SingularityAirdrop.json'
+COMMON_CNTRCT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'resources'))
+AIRDROP_ADDR_PATH = COMMON_CNTRCT_PATH + '/singularitynet-airdrop-contracts/networks/SingularityAirdrop.json'
 STAKING_CONTRACT_PATH = COMMON_CNTRCT_PATH + '/singularitynet-staking-contract'
 
 
@@ -20,6 +18,14 @@ class AirdropEvents(Enum):
     AIRDROP_CLAIM = 'Claim'
     AIRDROP_WINDOW_OPEN = 'AirdropWindowOpen'
 
+
+ELIGIBILITY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "address": {"type": "string"}
+    },
+    "required": ["address", "airdrop_id", "airdrop_window_id"],
+}
 
 USER_REGISTRATION_SIGNATURE_FORMAT = {
     "types": {
