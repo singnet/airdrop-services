@@ -55,16 +55,16 @@ class UserRegistrationServices:
             # rewards awarded will have some value ONLY when the claim window opens and the user has unclaimed rewards
             # a claim in progress ~ PENDING will also be considered as claimed ( we don't want the user to end up losing
             # gas in trying to claim again)
-
+            registration_id, reject_reason, registration_details = "", None, dict()
             if user_registered:
+                registration_id = user_registration.id
+                reject_reason = user_registration.reject_reason
                 registration_details = {
                     "registration_id": user_registration.id,
                     "reject_reason": user_registration.reject_reason,
-                    "other_details": user_registration.signed_data.get("message", {}),
-                    "registered_at": user_registration.registered_at
+                    "other_details": user_registration.signed_data.get("message", {}).get("Airdrop", {}),
+                    "registered_at": str(user_registration.registered_at),
                 }
-            else:
-                registration_details = {}
             response = {
                 "is_eligible": user_eligible_for_given_window,
                 "is_already_registered": user_registered,
@@ -73,7 +73,9 @@ class UserRegistrationServices:
                 "user_address": address,
                 "airdrop_id": airdrop_id,
                 "airdrop_window_id": airdrop_window_id,
+                "reject_reason": reject_reason,
                 "airdrop_window_rewards": rewards_awarded,
+                "registration_id": registration_id,
                 "is_claimable": is_claimable,
                 "registration_details": registration_details
             }
@@ -131,21 +133,25 @@ class UserRegistrationServices:
             if user_registered:
                 raise Exception("Address is already registered for this airdrop window")
 
+            response = []
             if airdrop_object.register_all_window_at_once:
                 airdrop_windows = AirdropWindowRepository().get_airdrop_windows(airdrop_id)
                 for airdrop_window in airdrop_windows:
                     receipt = self.generate_user_registration_receipt(airdrop_id, airdrop_window.id, address)
                     UserRepository().register_user(airdrop_window.id, address, receipt, signature, signed_data,
                                                    block_number)
+                    response.append({"airdrop_window_id": airdrop_window.id, "receipt": receipt})
             else:
                 receipt = self.generate_user_registration_receipt(airdrop_id, airdrop_window_id, address)
                 UserRepository().register_user(airdrop_window_id, address, receipt, signature, signed_data,
                                                block_number)
+                # Keeping it backward compatible
+                response = receipt
         except ValidationError as e:
             return HTTPStatus.BAD_REQUEST, repr(e)
         except BaseException as e:
             return HTTPStatus.BAD_REQUEST, repr(e)
-        return HTTPStatus.OK, receipt
+        return HTTPStatus.OK, response
 
     def generate_user_registration_receipt(self, airdrop_id, airdrop_window_id, address):
         # Get the unique receipt to be issued , users can use this receipt as evidence that

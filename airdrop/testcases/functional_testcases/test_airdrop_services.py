@@ -1,12 +1,12 @@
 import json
 from unittest import TestCase
 from unittest.mock import patch
-
+from datetime import datetime as dt, timedelta
 from py_eth_sig_utils.signing import v_r_s_to_signature, sign_typed_data
 from web3 import Web3
 
 from airdrop.application.handlers.airdrop_handlers import user_eligibility, user_registration
-from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
+from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT
 from airdrop.infrastructure.models import Airdrop, AirdropWindow, UserRegistration, UserReward
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
@@ -72,6 +72,20 @@ class TestAirdropServices(TestCase):
 
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
     def test_user_registration(self, mock_get_parameter_value_from_secrets_manager):
+        airdrop_repository.add(
+            AirdropWindow(
+                airdrop_id=self.airdrop.id,
+                airdrop_window_name="Next Window",
+                description=AirdropWindowData.description,
+                registration_required=False,
+                registration_start_period=AirdropWindowData.registration_start_date,
+                registration_end_period=AirdropWindowData.registration_end_date,
+                snapshot_required=True,
+                claim_start_period=dt.utcnow() + timedelta(days=10),
+                claim_end_period=dt.utcnow() + timedelta(days=20),
+                total_airdrop_tokens=1000000
+            )
+        )
         mock_get_parameter_value_from_secrets_manager.return_value = "1c4162244e5ec8f53a51ab6bb0a29c50432d82afd0a168e6e5c5c55c43b0a9c9"
         address = Web3.toChecksumAddress("0x4e1388Acfd6237aeED2b01Da0d4ccFe242e8F6cA")
         cardano_address = "addr_test1qqera830frgpvw9f0jj2873lwe8nd8vcsf0q0ftuqqgd9g8ucaczw427uq8y7axn2v3w8dua87kjgdgu" \
@@ -87,7 +101,7 @@ class TestAirdropServices(TestCase):
                 "cardanoAddress": cardano_address
             }
         }
-        formatted_message = USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
+        formatted_message = USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT
         formatted_message["message"] = message
         signature = v_r_s_to_signature(*sign_typed_data(formatted_message, test_private_key)).hex()
         event = {
@@ -105,6 +119,10 @@ class TestAirdropServices(TestCase):
         assert (response["statusCode"] == 200)
 
     def test_user_eligibility(self):
+        self.tearDown()
+        self.setUp()
+        signature_details = {"types": {}, "message": {"Airdrop": {"cardano_address": "addr_test", "block_no": 54321}}}
+        UserRepository().register_user(self.airdrop_window.id, self.address, "", "", signature_details, 12345)
         address = Web3.toChecksumAddress("0x4e1388Acfd6237aeED2b01Da0d4ccFe242e8F6cA")
         event = {
             "body": json.dumps({
@@ -114,6 +132,7 @@ class TestAirdropServices(TestCase):
             })
         }
         response = user_eligibility(event, context=None)
+        print(response)
         assert (response["statusCode"] == 200)
 
     def tearDown(self):
