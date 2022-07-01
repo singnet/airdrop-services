@@ -133,6 +133,3 @@ def process_eligibility(event, context):
         200,
         "Success"
     )
-
-if __name__ == '__main__':
-    process_eligibility(None, None)
