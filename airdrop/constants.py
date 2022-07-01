@@ -1,24 +1,13 @@
 import os
+from copy import deepcopy
 from enum import Enum
 
 from airdrop.config import NETWORK_ID
 
+PROCESSOR_PATH = "airdrop.processor"
 COMMON_CNTRCT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'resources'))
 AIRDROP_ADDR_PATH = COMMON_CNTRCT_PATH + '/singularitynet-airdrop-contracts/networks/SingularityAirdrop.json'
 STAKING_CONTRACT_PATH = COMMON_CNTRCT_PATH + '/singularitynet-staking-contract'
-
-
-class AirdropClaimStatus(Enum):
-    PENDING = 'PENDING'
-    SUCCESS = 'SUCCESS'
-    FAILED = 'FAILED'
-    NOT_STARTED = 'NOT_STARTED'
-
-
-class AirdropEvents(Enum):
-    AIRDROP_CLAIM = 'Claim'
-    AIRDROP_WINDOW_OPEN = 'AirdropWindowOpen'
-
 
 ELIGIBILITY_SCHEMA = {
     "type": "object",
@@ -69,7 +58,19 @@ USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT = {
 
     },
 }
-USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT = USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
-USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT["types"]["AirdropSignatureTypes"] \
+USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT = deepcopy(USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT)
+USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT["types"]["AirdropSignatureTypes"] \
     .append({"name": "cardanoAddress", "type": "string"})
-USER_REGISTRATION_SIGNATURE_LOYALITY_AIRDROP_FORMAT["message"]["Airdrop"]["cardanoAddress"] = ""
+USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT["message"]["Airdrop"]["cardanoAddress"] = ""
+
+
+class AirdropClaimStatus(Enum):
+    PENDING = 'PENDING'
+    SUCCESS = 'SUCCESS'
+    FAILED = 'FAILED'
+    NOT_STARTED = 'NOT_STARTED'
+
+
+class AirdropEvents(Enum):
+    AIRDROP_CLAIM = 'Claim'
+    AIRDROP_WINDOW_OPEN = 'AirdropWindowOpen'

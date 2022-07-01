@@ -53,7 +53,7 @@ class Airdrop(Base, AuditClass):
     github_link_for_contract = Column(
         "github_link_for_contract", VARCHAR(256), nullable=True
     )
-    rewards_processor = Column("rewards_processor", VARCHAR(256), default=False)
+    rewards_processor = Column("rewards_processor", VARCHAR(256), nullable=True)
     airdrop_rules = Column("airdrop_rules", JSON, nullable=True)
 
 
