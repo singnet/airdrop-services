@@ -18,7 +18,7 @@ class NuNetAirdropData:
     documentation_link = "http://testlink.test"
     description = "Test description."
     github_link = "https://github.com/test-repository"
-    rewards_processor = None
+    airdrop_processor = None
 
 
 class NuNetAirdropWindow1Data:

@@ -28,23 +28,23 @@ class EligibilityProcessor:
         return
 
     def __populate_state(self):
-        all_windows = self._airdrop_db.execute("select aw.airdrop_id, ad.rewards_processor, aw.row_id as airdrop_window_id from airdrop_window aw, airdrop ad " + \
-                                               "where aw.airdrop_id = ad.row_id and ad.rewards_processor is not null " + \
+        all_windows = self._airdrop_db.execute("select aw.airdrop_id, ad.airdrop_processor, aw.row_id as airdrop_window_id from airdrop_window aw, airdrop ad " + \
+                                               "where aw.airdrop_id = ad.row_id and ad.airdrop_processor is not null " + \
                                                "and current_timestamp between aw.first_snapshot_at and aw.last_snapshot_at ")
         for window in all_windows:
             details = {}
             details["airdrop_id"] = window["airdrop_id"]
-            details["rewards_processor"] = window["rewards_processor"]
+            details["airdrop_processor"] = window["airdrop_processor"]
             self._active_airdrop_window_map[window["airdrop_window_id"]] = details
         logger.info("Active windows " + str(self._active_airdrop_window_map))
 
-        reward_windows = self._airdrop_db.execute("select aw.airdrop_id, ad.rewards_processor, aw.row_id as airdrop_window_id from airdrop_window aw, airdrop ad  " + \
-                                                 "where aw.airdrop_id = ad.row_id and ad.rewards_processor is not null  " + \
+        reward_windows = self._airdrop_db.execute("select aw.airdrop_id, ad.airdrop_processor, aw.row_id as airdrop_window_id from airdrop_window aw, airdrop ad  " + \
+                                                 "where aw.airdrop_id = ad.row_id and ad.airdrop_processor is not null  " + \
                                                  "and current_timestamp between aw.registration_end_period and aw.claim_start_period")
         for window in reward_windows:
             details = {}
             details["airdrop_id"] = window["airdrop_id"]
-            details["rewards_processor"] = window["rewards_processor"]
+            details["airdrop_processor"] = window["airdrop_processor"]
             self._reward_airdrop_window_map[window["airdrop_window_id"]] = details
         logger.info("Reward windows " + str(self._reward_airdrop_window_map))
         
@@ -103,7 +103,7 @@ class EligibilityProcessor:
         if len(self._reward_airdrop_window_map) > 0:
             logger.info("Processing final rewards")
             for window in self._reward_airdrop_window_map:
-                processor_name = self._reward_airdrop_window_map[window]["rewards_processor"]
+                processor_name = self._reward_airdrop_window_map[window]["airdrop_processor"]
                 airdrop_id = self._reward_airdrop_window_map[window]["airdrop_id"]
                 self.__process_reward(processor_name, airdrop_id, window, "FINAL", True)
 
@@ -114,7 +114,7 @@ class EligibilityProcessor:
         logger.info(f"Processing eligibility for windows {self._active_airdrop_window_map.keys()}. Snapshot Index is {self._snapshot_guid}")
         self.__populate_snapshot()
         for window in self._active_airdrop_window_map:
-            processor_name = self._active_airdrop_window_map[window]["rewards_processor"]
+            processor_name = self._active_airdrop_window_map[window]["airdrop_processor"]
             airdrop_id = self._active_airdrop_window_map[window]["airdrop_id"]
             self.__process_reward(processor_name, airdrop_id, window, self._snapshot_guid, False)
 
@@ -133,3 +133,6 @@ def process_eligibility(event, context):
         200,
         "Success"
     )
+
+if __name__ == '__main__':
+    process_eligibility(None, None)

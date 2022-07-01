@@ -62,7 +62,7 @@ class UserRegistrationServices:
                 registration_details = {
                     "registration_id": user_registration.id,
                     "reject_reason": user_registration.reject_reason,
-                    "other_details": user_registration.signed_data.get("message", {}).get("Airdrop", {}),
+                    "other_details": user_registration.signature_details.get("message", {}).get("Airdrop", {}),
                     "registered_at": str(user_registration.registered_at),
                 }
             response = {
@@ -102,13 +102,13 @@ class UserRegistrationServices:
             if not airdrop:
                 raise Exception("Airdrop Id is not valid.")
 
-            if airdrop.rewards_processor:
-                airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop.rewards_processor}")
+            if airdrop.airdrop_processor:
+                airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop.airdrop_processor}")
             else:
                 airdrop_class = DefaultAirdrop
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            signature_verified, recovered_address, signed_data = self. \
+            signature_verified, recovered_address, signature_details = self. \
                 verify_signature(airdrop_object=airdrop_object, address=address, signature=signature,
                                  signature_parameters=inputs)
             if not signature_verified:
@@ -138,12 +138,12 @@ class UserRegistrationServices:
                 airdrop_windows = AirdropWindowRepository().get_airdrop_windows(airdrop_id)
                 for airdrop_window in airdrop_windows:
                     receipt = self.generate_user_registration_receipt(airdrop_id, airdrop_window.id, address)
-                    UserRepository().register_user(airdrop_window.id, address, receipt, signature, signed_data,
+                    UserRepository().register_user(airdrop_window.id, address, receipt, signature, signature_details,
                                                    block_number)
                     response.append({"airdrop_window_id": airdrop_window.id, "receipt": receipt})
             else:
                 receipt = self.generate_user_registration_receipt(airdrop_id, airdrop_window_id, address)
-                UserRepository().register_user(airdrop_window_id, address, receipt, signature, signed_data,
+                UserRepository().register_user(airdrop_window_id, address, receipt, signature, signature_details,
                                                block_number)
                 # Keeping it backward compatible
                 response = receipt

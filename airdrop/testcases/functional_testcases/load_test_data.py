@@ -24,7 +24,7 @@ def load_airdrop_data(airdrop_data):
             documentation_link=airdrop_data.documentation_link,
             description=airdrop_data.description,
             github_link_for_contract=airdrop_data.github_link,
-            rewards_processor=airdrop_data.rewards_processor
+            airdrop_processor=airdrop_data.airdrop_processor
         )
     )
     airdrop = airdrop_repository.session.query(Airdrop) \
@@ -75,7 +75,7 @@ def load_airdrop_user_registration(airdrop_window_id, airdrop_user):
             registered_at=dt.utcnow(),
             receipt_generated="",
             user_signature="",
-            signed_data={"message": {"Airdrop": {"address": "addr_test", "block_no": 54321}}},
+            signature_details={"message": {"Airdrop": {"address": "addr_test", "block_no": 54321}}},
             user_signature_block_number=airdrop_user.signature_details["block_no"]
         )
     )
