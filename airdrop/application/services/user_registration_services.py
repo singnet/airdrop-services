@@ -6,9 +6,9 @@ from jsonschema import validate, ValidationError
 from web3 import Web3
 
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION, AIRDROP_RECEIPT_SECRET_KEY
-from airdrop.constants import AirdropClaimStatus
+from airdrop.constants import PROCESSOR_PATH, AirdropClaimStatus
 from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA
-from airdrop.domain.models.default_airdrop import DefaultAirdrop
+from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_repository import UserRepository
@@ -103,7 +103,7 @@ class UserRegistrationServices:
                 raise Exception("Airdrop Id is not valid.")
 
             if airdrop.rewards_processor:
-                airdrop_class = locate(f"airdrop.domain.models.{airdrop.rewards_processor}")
+                airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop.rewards_processor}")
             else:
                 airdrop_class = DefaultAirdrop
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
@@ -173,7 +173,7 @@ class UserRegistrationServices:
     @staticmethod
     def is_registration_window_open(start_period, end_period):
         now = dt.utcnow()
-        if now < start_period or now > end_period:
+        if now > start_period or now < end_period:
             return True
         return False
 

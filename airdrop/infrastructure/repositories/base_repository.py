@@ -27,3 +27,11 @@ class BaseRepository:
         except Exception as e:
             self.session.rollback()
             raise e
+
+    def add_all_items(self, items):
+        try:
+            self.session.add_all(items)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
