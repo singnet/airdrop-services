@@ -53,7 +53,7 @@ class Airdrop(Base, AuditClass):
     github_link_for_contract = Column(
         "github_link_for_contract", VARCHAR(256), nullable=True
     )
-    rewards_processor = Column("rewards_processor", VARCHAR(256), nullable=True)
+    airdrop_processor = Column("airdrop_processor", VARCHAR(256), nullable=True)
     airdrop_rules = Column("airdrop_rules", JSON, nullable=True)
 
 
@@ -135,7 +135,7 @@ class UserRegistration(Base, AuditClass):
     reject_reason = Column("reject_reason", JSON, nullable=True)
     receipt_generated = Column("receipt_generated", VARCHAR(250), nullable=True, index=True)
     user_signature = Column("user_signature", VARCHAR(250), nullable=True, index=True)
-    signed_data = Column("signed_data", JSON, nullable=True)
+    signature_details = Column("signature_details", JSON, nullable=True)
     user_signature_block_number = Column("user_signature_block_number", BIGINT, nullable=True, index=True)
 
     UniqueConstraint(airdrop_window_id, address)

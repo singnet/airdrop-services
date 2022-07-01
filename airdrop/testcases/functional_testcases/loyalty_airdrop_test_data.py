@@ -18,7 +18,7 @@ class LoyaltyAirdropData:
     documentation_link = "http://testlink.test"
     description = "Test description."
     github_link = "https://github.com/test-repository"
-    rewards_processor = "loyalty_airdrop.LoyaltyAirdrop"
+    airdrop_processor = "loyalty_airdrop.LoyaltyAirdrop"
 
 
 class LoyaltyAirdropWindow1Data:
