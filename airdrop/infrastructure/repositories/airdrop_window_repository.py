@@ -40,3 +40,6 @@ class AirdropWindowRepository(BaseRepository):
             )
             .first()
         )
+
+    def get_airdrop_windows(self, airdrop_id):
+        return self.session.query(AirdropWindow).filter(AirdropWindow.airdrop_id == airdrop_id).all()

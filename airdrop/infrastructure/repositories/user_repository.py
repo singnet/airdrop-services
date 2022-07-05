@@ -8,14 +8,14 @@ from sqlalchemy.exc import SQLAlchemyError
 
 class UserRepository(BaseRepository):
 
-    def subscribe_to_notifications(self, email,airdrop_id   ):
+    def subscribe_to_notifications(self, email, airdrop_id):
         try:
 
             is_existing_email = self.session.query(UserNotifications.id).filter(
                 UserNotifications.email == email).filter(UserNotifications.airdrop_id == airdrop_id).first()
 
             if is_existing_email is None:
-                user_notifications = UserNotifications(email=email,airdrop_id=airdrop_id)
+                user_notifications = UserNotifications(email=email, airdrop_id=airdrop_id)
                 self.add(user_notifications)
             else:
                 raise Exception('Email already subscribed to notifications')
@@ -39,7 +39,7 @@ class UserRepository(BaseRepository):
 
         total_rewards = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
         eligible_for_window = False
-        #Simplified the logic, if rewards_awarded > 0 => the user is eligible
+        # Simplified the logic, if rewards_awarded > 0 => the user is eligible
         if is_eligible is not None and int(is_eligible.rewards_awarded) > 0:
             eligible_for_window = True
         else:
@@ -91,9 +91,30 @@ class UserRepository(BaseRepository):
         else:
             return True, is_registered_user.receipt_generated
 
-    def register_user(self, airdrop_window_id, address, receipt, signature, signed_data, block_number):
+    def register_user(self, airdrop_window_id, address, receipt, signature, signature_details, block_number):
         user = UserRegistration(
             address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow(),
-            receipt_generated=receipt, user_signature=signature, signed_data=signed_data,
+            receipt_generated=receipt, user_signature=signature, signature_details=signature_details,
             user_signature_block_number=block_number)
         self.add(user)
+
+    def is_user_eligible_for_given_window(self, address, airdrop_id, airdrop_window_id):
+        user_reward = self.session.query(UserReward) \
+            .filter(UserReward.address == address) \
+            .filter(UserReward.airdrop_id == airdrop_id) \
+            .filter(UserReward.airdrop_window_id == airdrop_window_id) \
+            .first()
+        if user_reward and int(user_reward.rewards_awarded) > 0:
+            return True
+        else:
+            return False
+
+    def get_user_registration_details(self, address, airdrop_window_id):
+        user_registration = self.session.query(UserRegistration) \
+            .filter(UserRegistration.airdrop_window_id == airdrop_window_id) \
+            .filter(UserRegistration.address == address) \
+            .filter(UserRegistration.registered_at != None) \
+            .first()
+        if user_registration:
+            return True, user_registration
+        return False, user_registration

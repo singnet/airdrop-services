@@ -1,25 +1,26 @@
-import unittest
 import json
-import web3
-from web3 import Web3
-from eth_account.messages import defunct_hash_message, encode_defunct
-
-from airdrop.application.services.user_registration_services import UserRegistrationServices
-from airdrop.config import NETWORK
-from unittest.mock import patch
-from common.boto_utils import BotoUtils
-from http import HTTPStatus
+import unittest
 from datetime import datetime, timedelta
+from http import HTTPStatus
+from unittest.mock import patch
+
+import web3
+from eth_account.messages import encode_defunct
+from web3 import Web3
+
+from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, \
+    airdrop_window_claims, airdrop_window_claim_status, user_notifications, airdrop_window_secured_claims, \
+    airdrop_window_claim_history
+from airdrop.config import NETWORK
+from airdrop.config import NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
+from airdrop.infrastructure.models import UserRegistration, Airdrop, AirdropWindow, UserReward, ClaimHistory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
-from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, user_registration, \
-    airdrop_window_claims, airdrop_window_claim_status, user_notifications, airdrop_window_secured_claims,airdrop_window_claim_history
-from airdrop.infrastructure.models import UserRegistration,Airdrop,AirdropWindow,UserReward,ClaimHistory,UserNotifications
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
-    NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
+
 
 class TestAirdropHandler(unittest.TestCase):
     airdrop_id = None
     airdrop_window_id = None
+
     def setUp(self):
         self.tearDown()
         org_name = 'SINGNET'
@@ -47,17 +48,32 @@ class TestAirdropHandler(unittest.TestCase):
 
         airdrop_repository = AirdropRepository()
         airdrop = airdrop_repository.register_airdrop(
-            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
+            token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link,
+            description, github_link)
         global airdrop_id
         airdrop_id = airdrop.id
-        airdrop_windows = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id, airdrop_window_name='Airdrop Window 1', description='Long description', registration_required=True,
-                                                   registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
+        airdrop_windows = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id,
+                                                                     airdrop_window_name='Airdrop Window 1',
+                                                                     description='Long description',
+                                                                     registration_required=True,
+                                                                     registration_start_period=registration_start_date,
+                                                                     registration_end_period=registration_end_date,
+                                                                     snapshot_required=True,
+                                                                     claim_start_period=claim_start_date,
+                                                                     claim_end_period=claim_end_date,
+                                                                     total_airdrop_tokens=1000000)
         global airdrop_window_id
         airdrop_window_id = airdrop_windows.id
         nunet_occam_airdrop = airdrop_repository.register_airdrop(
-            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link, description, github_link)
-        airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id, airdrop_window_name='Occam Window 1', description='Long description', registration_required=True,
-                                                   registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
+            occam_token_address, org_name, token_name, token_type, contract_address, portal_link, documentation_link,
+            description, github_link)
+        airdrop_repository.register_airdrop_window(airdrop_id=nunet_occam_airdrop.id,
+                                                   airdrop_window_name='Occam Window 1', description='Long description',
+                                                   registration_required=True,
+                                                   registration_start_period=registration_start_date,
+                                                   registration_end_period=registration_end_date,
+                                                   snapshot_required=True, claim_start_period=claim_start_date,
+                                                   claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
     @patch("common.utils.Utils.report_slack")
     def test_get_airdrop_schedules(self, mock_report_slack):
@@ -81,15 +97,15 @@ class TestAirdropHandler(unittest.TestCase):
                 "airdrop_window_id": airdrop_window_id
             })
         }
-        #check for rewards with the smallest unit
+        # check for rewards with the smallest unit
         reward = 1
         AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, reward,
-                                                 address, 1, 1)
+                                                  address, 1, 1)
         result = user_eligibility(event, None)
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], True)
-        self.assertEqual(user_eligibility_object['airdrop_window_rewards'],(0))
+        self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (0))
         self.assertEqual(
             user_eligibility_object['is_already_registered'], False)
         self.assertIn(
@@ -98,13 +114,12 @@ class TestAirdropHandler(unittest.TestCase):
         self.assertEqual(user_eligibility_object['airdrop_id'], airdrop_id)
         self.assertEqual(
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
-        #now register the user and see the amount to tbe claimed
-        AirdropRepository().register_user_registration( airdrop_window_id, address)
+        # now register the user and see the amount to tbe claimed
+        AirdropRepository().register_user_registration(airdrop_window_id, address)
         result = user_eligibility(event, None)
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (reward))
-
 
     @patch("common.utils.Utils.report_slack")
     def test_get_airdrop_window_eligibility_for_large_rewards(self, mock_report_slack):
@@ -126,32 +141,30 @@ class TestAirdropHandler(unittest.TestCase):
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], True)
         self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (large_reward))
-        #self.assertEqual(user_eligibility_object['is_already_registered'], True)
+        # self.assertEqual(user_eligibility_object['is_already_registered'], True)
         self.assertEqual(
             user_eligibility_object['is_airdrop_window_claimed'], False)
-        #self.assertEqual(user_eligibility_object['user_address'], address)
+        # self.assertEqual(user_eligibility_object['user_address'], address)
         self.assertEqual(user_eligibility_object['airdrop_id'], airdrop_id)
         self.assertEqual(
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
         # now register the user and see the amount to tbe claimed
 
-
-
-
-        #AirdropRepository().register_user_registration(airdrop_window_id, address)
+        # AirdropRepository().register_user_registration(airdrop_window_id, address)
         result = user_eligibility(event, None)
         result = json.loads(result['body'])
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], True)
         self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (large_reward))
-        #self.assertEqual(user_eligibility_object['is_already_registered'], True)
+        # self.assertEqual(user_eligibility_object['is_already_registered'], True)
         self.assertEqual(
             user_eligibility_object['is_airdrop_window_claimed'], False)
-        #self.assertEqual(user_eligibility_object['user_address'], address)
+        # self.assertEqual(user_eligibility_object['user_address'], address)
         self.assertEqual(user_eligibility_object['airdrop_id'], airdrop_id)
         self.assertEqual(
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
         # now register the user and see the amount to tbe claimed
+
     @patch("common.utils.Utils.report_slack")
     def test_get_airdrop_window_eligibility_with_no_rewards(self, mock_report_slack):
         address = '0xFb4D686B3330893d6af6F996AB325f8ea26c949E'
@@ -169,51 +182,13 @@ class TestAirdropHandler(unittest.TestCase):
         user_eligibility_object = result['data']
         self.assertEqual(user_eligibility_object['is_eligible'], False)
         self.assertEqual(user_eligibility_object['airdrop_window_rewards'], (0))
-        #self.assertEqual(user_eligibility_object['is_already_registered'], True)
+        # self.assertEqual(user_eligibility_object['is_already_registered'], True)
         self.assertEqual(
             user_eligibility_object['is_airdrop_window_claimed'], False)
-        #self.assertEqual(user_eligibility_object['user_address'], address)
+        # self.assertEqual(user_eligibility_object['user_address'], address)
         self.assertEqual(user_eligibility_object['airdrop_id'], airdrop_id)
         self.assertEqual(
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
-
-
-    # @patch("airdrop.application.services.user_registration_services.UserRegistrationServices.get_secret_key_for_receipt")
-    # def test_get_airdrop_window_user_registration(self,mock_get_secret_key_for_receipt):
-    #     private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
-    #     mock_get_secret_key_for_receipt.return_value = private_key
-    #     user_address = '0x9B855eF8d137D2D5D2D93D3e2Ea81c0567332644'
-    #     message = web3.Web3.soliditySha3(
-    #         ["uint256","uint256", "address"],
-    #         [int(airdrop_id) ,int(airdrop_window_id), user_address],
-    #     )
-    #     test_private_key= '3bc4f87cd38fb51ad8f52028312fb3d816a35ec19366986b8ad648c231f9e72e'
-    #     message_hash = encode_defunct(message)
-    #
-    #     web3_object = Web3(web3.providers.HTTPProvider(
-    #         NETWORK['http_provider']))
-    #     signed_message = web3_object.eth.account.sign_message(
-    #         message_hash, private_key=test_private_key)
-    #
-    #     signature = signed_message.signature.hex()
-    #
-    #     event = {
-    #         "body": json.dumps({
-    #             "address": user_address,
-    #             "airdrop_id": airdrop_id,
-    #             "airdrop_window_id": airdrop_window_id,
-    #             "signature": signature,
-    #             "block_number": 1234
-    #         })
-    #     }
-    #     result = user_registration(event, None)
-    #     result = json.loads(result['body'])
-    #     self.assertEqual(result['status'], HTTPStatus.OK.value)
-    #     self.assertNotEqual(result['data'], "")
-    #     result = user_eligibility(event, None)
-    #     result = json.loads(result['body'])
-    #     final_result = result['data']
-    #     self.assertNotEqual(final_result['registration_id'], "")
 
     @patch("common.utils.Utils.report_slack")
     @patch('common.utils.recover_address')
@@ -221,7 +196,9 @@ class TestAirdropHandler(unittest.TestCase):
     @patch('airdrop.application.services.airdrop_services.AirdropServices.get_signature_for_airdrop_window_id')
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.is_claimed_airdrop_window')
-    def test_airdrop_window_claim(self, mock_is_claimed_airdrop_window, mock_get_airdrop_window_claimable_info, mock_get_signature_for_airdrop_window_id, mock_check_rewards_awarded, mock_recover_address, mock_report_slack):
+    def test_airdrop_window_claim(self, mock_is_claimed_airdrop_window, mock_get_airdrop_window_claimable_info,
+                                  mock_get_signature_for_airdrop_window_id, mock_check_rewards_awarded,
+                                  mock_recover_address, mock_report_slack):
         address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
         contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
@@ -232,7 +209,7 @@ class TestAirdropHandler(unittest.TestCase):
         mock_is_claimed_airdrop_window.return_value = {}
         mock_check_rewards_awarded.return_value = True, 1000
         mock_get_signature_for_airdrop_window_id.return_value = airdrop_claim_signature
-        mock_get_airdrop_window_claimable_info.return_value = 100, address, contract_address, token_address, staking_contract_address,0
+        mock_get_airdrop_window_claimable_info.return_value = 100, address, contract_address, token_address, staking_contract_address, 0
 
         mock_recover_address.return_value = address
         mock_check_rewards_awarded.value = True, 1000
@@ -253,8 +230,9 @@ class TestAirdropHandler(unittest.TestCase):
         claim_signature_object = result['data']
         self.assertEqual(result['status'], HTTPStatus.OK.value)
         self.assertEqual(claim_signature_object['user_address'], address)
+
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
-    def test_airdrop_config_and_signature(self,  mock_get_parameter_value_from_secrets_manager):
+    def test_airdrop_config_and_signature(self, mock_get_parameter_value_from_secrets_manager):
         private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
         mock_get_parameter_value_from_secrets_manager.return_value = private_key
         reward = 10000000000000000000000
@@ -263,12 +241,12 @@ class TestAirdropHandler(unittest.TestCase):
         contract_address = '0x5E94577b949a56279637ff74DfcFf2C28408f049'
         token_address = '0x5E94577b949a56279637ff74DfcFf2C28408f049'
         AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, reward,
-                                                 user_address, 1, 1)
+                                                  user_address, 1, 1)
         AirdropRepository().register_user_registration(airdrop_window_id, user_address)
         message = web3.Web3.soliditySha3(
-            ["string","uint256", "uint256", "address", "uint256",
+            ["string", "uint256", "uint256", "address", "uint256",
              "uint256", "address", "address"],
-            ["__airdropclaim", int(reward),int(reward), user_address, int(airdrop_id),
+            ["__airdropclaim", int(reward), int(reward), user_address, int(airdrop_id),
              int(airdrop_window_id), contract_address, token_address],
         )
 
@@ -292,11 +270,10 @@ class TestAirdropHandler(unittest.TestCase):
         result = airdrop_window_secured_claims(event, None)
         result = json.loads(result['body'])
         final_result = result['data']
-        self.assertEqual(expected_signature,final_result['signature'])
-
+        self.assertEqual(expected_signature, final_result['signature'])
 
     @patch("common.utils.Utils.report_slack")
-    def test_airdrop_window_claim_update_txn(self,  mock_report_slack):
+    def test_airdrop_window_claim_update_txn(self, mock_report_slack):
         address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
         airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
 
@@ -314,7 +291,7 @@ class TestAirdropHandler(unittest.TestCase):
         self.assertIsNotNone(result)
 
     @patch("common.utils.Utils.report_slack")
-    def test_user_notifications(self,  mock_report_slack):
+    def test_user_notifications(self, mock_report_slack):
         event = {
             "body": json.dumps({
                 "email": "mail@provider.com"
@@ -325,14 +302,14 @@ class TestAirdropHandler(unittest.TestCase):
         self.assertIsNotNone(result)
 
     @patch("common.utils.Utils.report_slack")
-    def test_airdrop_window_claim_history(self,  mock_report_slack):
-        #Add a record in the claim history
+    def test_airdrop_window_claim_history(self, mock_report_slack):
+        # Add a record in the claim history
         address = '0x765C9E1BCa00002e294c9aa9dC3F96C2a022025C'
         AirdropRepository().register_user_registration(airdrop_window_id,
-                                                   address)
-        AirdropRepository().register_claim_history(airdrop_id,airdrop_window_id,
-                                                  address,2000,0,'SUCCESS',
-                                                  'transaction_hash')
+                                                       address)
+        AirdropRepository().register_claim_history(airdrop_id, airdrop_window_id,
+                                                   address, 2000, 0, 'SUCCESS',
+                                                   'transaction_hash')
         event = {
             "body": json.dumps({
                 "address": address,
@@ -348,23 +325,23 @@ class TestAirdropHandler(unittest.TestCase):
         registration_end_date = datetime.utcnow() + timedelta(days=30)
         claim_start_date = datetime.utcnow() - timedelta(days=5)
         claim_end_date = datetime.utcnow() + timedelta(days=30)
-        #now create an other airdrop_window
+        # now create an other airdrop_window
         airdrop_window1 = AirdropRepository().register_airdrop_window(airdrop_id=airdrop_id,
-                                                                    airdrop_window_name='CLAIM_ORG-Airdrop Window 1',
-                                                                    description='CLAIM Test Long description',
-                                                                    registration_required=True,
-                                                                    registration_start_period=registration_start_date,
-                                                                    registration_end_period=registration_end_date,
-                                                                    snapshot_required=True,
-                                                                    claim_start_period=claim_start_date,
-                                                                    claim_end_period=claim_end_date,
-                                                                    total_airdrop_tokens=1000000)
+                                                                      airdrop_window_name='CLAIM_ORG-Airdrop Window 1',
+                                                                      description='CLAIM Test Long description',
+                                                                      registration_required=True,
+                                                                      registration_start_period=registration_start_date,
+                                                                      registration_end_period=registration_end_date,
+                                                                      snapshot_required=True,
+                                                                      claim_start_period=claim_start_date,
+                                                                      claim_end_period=claim_end_date,
+                                                                      total_airdrop_tokens=1000000)
 
-        #now register for the second window
+        # now register for the second window
         AirdropRepository().register_user_registration(airdrop_window1.id,
                                                        address)
-        AirdropRepository().register_claim_history(airdrop_id,airdrop_window1.id,
-                                                   address,2000,0,'SUCCESS',
+        AirdropRepository().register_claim_history(airdrop_id, airdrop_window1.id,
+                                                   address, 2000, 0, 'SUCCESS',
                                                    'transaction_hash')
         result = airdrop_window_claim_history(event, None)
         result = json.loads(result['body'])
@@ -372,7 +349,7 @@ class TestAirdropHandler(unittest.TestCase):
         self.assertIsNotNone(final_result)
 
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
-    def test_nunet_occam_signature(self,  mock_get_parameter_value_from_secrets_manager):
+    def test_nunet_occam_signature(self, mock_get_parameter_value_from_secrets_manager):
         user_address = "0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10"
         token_address = "0x765C9E1BCa00002e294c9aa9dC3F96C2a022025C"
         contract_address = "0xFb4D686B3330893d6af6F996AB325f8ea26c949E"
@@ -388,15 +365,15 @@ class TestAirdropHandler(unittest.TestCase):
         claim_end_date = datetime.utcnow() + timedelta(days=30)
 
         airdrop_window = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id,
-                                                                     airdrop_window_name='TEST_ORG-Airdrop Window 1',
-                                                                     description='Long description',
-                                                                     registration_required=True,
-                                                                     registration_start_period=registration_start_date,
-                                                                     registration_end_period=registration_end_date,
-                                                                     snapshot_required=True,
-                                                                     claim_start_period=claim_start_date,
-                                                                     claim_end_period=claim_end_date,
-                                                                     total_airdrop_tokens=1000000)
+                                                                    airdrop_window_name='TEST_ORG-Airdrop Window 1',
+                                                                    description='Long description',
+                                                                    registration_required=True,
+                                                                    registration_start_period=registration_start_date,
+                                                                    registration_end_period=registration_end_date,
+                                                                    snapshot_required=True,
+                                                                    claim_start_period=claim_start_date,
+                                                                    claim_end_period=claim_end_date,
+                                                                    total_airdrop_tokens=1000000)
         private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
         mock_get_parameter_value_from_secrets_manager.return_value = private_key
         event = {
@@ -406,19 +383,19 @@ class TestAirdropHandler(unittest.TestCase):
                 "airdrop_window_id": str(airdrop_window.id),
             })
         }
-        #add rewards for this user in the active window, take a very large number so that we support
+        # add rewards for this user in the active window, take a very large number so that we support
         reward = 10000000000000000000000
         airdrop_repository.register_user_rewards(airdrop.id, airdrop_window.id, reward,
                                                  '0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10', 1, 1)
         # Register the user for the window
         airdrop_repository.register_user_registration(airdrop_window.id, '0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10')
 
-        #now generate the expected signature
+        # now generate the expected signature
         user_address = Web3.toChecksumAddress(user_address)
         token_address = Web3.toChecksumAddress(token_address)
         contract_address = Web3.toChecksumAddress(contract_address)
         big_reward = '1e+22'
-        print("int of big_reward",str(reward))
+        print("int of big_reward", str(reward))
         print("Generate claim signature user_address: ", user_address)
         print("Generate claim signature token_address: ", token_address)
         print("Generate claim signature contract_address: ", contract_address)
@@ -449,10 +426,10 @@ class TestAirdropHandler(unittest.TestCase):
         result = airdrop_window_claims(event, None)
         result = json.loads(result['body'])
         final_result = result['data']
-        self.assertEqual(expected_response,final_result )
+        self.assertEqual(expected_response, final_result)
 
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
-    def test_airdrop_signature(self,  mock_get_parameter_value_from_secrets_manager):
+    def test_airdrop_signature(self, mock_get_parameter_value_from_secrets_manager):
         user_address = "0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10"
         token_address = "0x765C9E1BCa00002e294c9aa9dC3F96C2a022025C"
         contract_address = "0xFb4D686B3330893d6af6F996AB325f8ea26c949E"
@@ -468,15 +445,15 @@ class TestAirdropHandler(unittest.TestCase):
         claim_end_date = datetime.utcnow() + timedelta(days=30)
 
         airdrop_window = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id,
-                                                                     airdrop_window_name='TEST_ORG-Airdrop Window 1',
-                                                                     description='Long description',
-                                                                     registration_required=True,
-                                                                     registration_start_period=registration_start_date,
-                                                                     registration_end_period=registration_end_date,
-                                                                     snapshot_required=True,
-                                                                     claim_start_period=claim_start_date,
-                                                                     claim_end_period=claim_end_date,
-                                                                     total_airdrop_tokens=1000000)
+                                                                    airdrop_window_name='TEST_ORG-Airdrop Window 1',
+                                                                    description='Long description',
+                                                                    registration_required=True,
+                                                                    registration_start_period=registration_start_date,
+                                                                    registration_end_period=registration_end_date,
+                                                                    snapshot_required=True,
+                                                                    claim_start_period=claim_start_date,
+                                                                    claim_end_period=claim_end_date,
+                                                                    total_airdrop_tokens=1000000)
         private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
         mock_get_parameter_value_from_secrets_manager.return_value = private_key
         event = {
@@ -486,13 +463,13 @@ class TestAirdropHandler(unittest.TestCase):
                 "airdrop_window_id": str(airdrop_window.id),
             })
         }
-        #add rewards for this user in the active window
+        # add rewards for this user in the active window
         airdrop_repository.register_user_rewards(airdrop.id, airdrop_window.id, 150,
                                                  '0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10', 1, 1)
         # Register the user for the window
         airdrop_repository.register_user_registration(airdrop_window.id, '0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10')
 
-        #now generate the expected signature
+        # now generate the expected signature
         user_address = Web3.toChecksumAddress(user_address)
         token_address = Web3.toChecksumAddress(token_address)
         contract_address = Web3.toChecksumAddress(contract_address)
@@ -502,9 +479,9 @@ class TestAirdropHandler(unittest.TestCase):
         print("Generate claim signature contract_address: ", contract_address)
 
         message = web3.Web3.soliditySha3(
-            ["string", "uint256","uint256", "address", "uint256",
+            ["string", "uint256", "uint256", "address", "uint256",
              "uint256", "address", "address"],
-            ["__airdropclaim", int(150),int(150), user_address, int(airdrop.id),
+            ["__airdropclaim", int(150), int(150), user_address, int(airdrop.id),
              int(airdrop_window.id), contract_address, token_address],
         )
 
@@ -527,9 +504,10 @@ class TestAirdropHandler(unittest.TestCase):
         result = airdrop_window_secured_claims(event, None)
         result = json.loads(result['body'])
         final_result = result['data']
-        self.assertEqual(expected_response,final_result )
+        self.assertEqual(expected_response, final_result)
+
     def test_total_rewards_with_claims_on_different_windows(self):
-        #delete it all !!!!
+        # delete it all !!!!
         AirdropRepository().session.query(ClaimHistory).delete()
         AirdropRepository().session.query(UserRegistration).delete()
         AirdropRepository().session.query(UserReward).delete()
@@ -552,38 +530,39 @@ class TestAirdropHandler(unittest.TestCase):
         claim_end_date = datetime.utcnow() + timedelta(days=30)
 
         airdrop1_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop1.id,
-                                                                     airdrop_window_name='A1:Airdrop Window 1',
-                                                                     description='Long description',
-                                                                     registration_required=True,
-                                                                     registration_start_period=registration_start_date,
-                                                                     registration_end_period=registration_end_date,
-                                                                     snapshot_required=True,
-                                                                     claim_start_period=claim_start_date,
-                                                                     claim_end_period=claim_end_date,
-                                                                     total_airdrop_tokens=1000000)
+                                                                      airdrop_window_name='A1:Airdrop Window 1',
+                                                                      description='Long description',
+                                                                      registration_required=True,
+                                                                      registration_start_period=registration_start_date,
+                                                                      registration_end_period=registration_end_date,
+                                                                      snapshot_required=True,
+                                                                      claim_start_period=claim_start_date,
+                                                                      claim_end_period=claim_end_date,
+                                                                      total_airdrop_tokens=1000000)
         airdrop1_window2 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop1.id,
-                                                                     airdrop_window_name='A1:Airdrop Window 2',
-                                                                     description='Long description',
-                                                                     registration_required=True,
-                                                                     registration_start_period=registration_start_date,
-                                                                     registration_end_period=registration_end_date,
-                                                                     snapshot_required=True,
-                                                                     claim_start_period=datetime.utcnow() - timedelta(days=2),
-                                                                     claim_end_period=claim_end_date,
-                                                                     total_airdrop_tokens=1000000)
+                                                                      airdrop_window_name='A1:Airdrop Window 2',
+                                                                      description='Long description',
+                                                                      registration_required=True,
+                                                                      registration_start_period=registration_start_date,
+                                                                      registration_end_period=registration_end_date,
+                                                                      snapshot_required=True,
+                                                                      claim_start_period=datetime.utcnow() - timedelta(
+                                                                          days=2),
+                                                                      claim_end_period=claim_end_date,
+                                                                      total_airdrop_tokens=1000000)
 
         airdrop1_window3 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop1.id,
-                                                                     airdrop_window_name='A1:Airdrop Window 3',
-                                                                     description='Long description',
-                                                                     registration_required=True,
-                                                                     registration_start_period=registration_start_date,
-                                                                     registration_end_period=registration_end_date,
-                                                                     snapshot_required=True,
-                                                                     claim_start_period=datetime.utcnow() + timedelta(
-                                                                         days=20),
-                                                                     claim_end_period=datetime.utcnow() + timedelta(
-                                                                         days=25),
-                                                                     total_airdrop_tokens=1000000)
+                                                                      airdrop_window_name='A1:Airdrop Window 3',
+                                                                      description='Long description',
+                                                                      registration_required=True,
+                                                                      registration_start_period=registration_start_date,
+                                                                      registration_end_period=registration_end_date,
+                                                                      snapshot_required=True,
+                                                                      claim_start_period=datetime.utcnow() + timedelta(
+                                                                          days=20),
+                                                                      claim_end_period=datetime.utcnow() + timedelta(
+                                                                          days=25),
+                                                                      total_airdrop_tokens=1000000)
         airdrop2_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop2.id,
                                                                       airdrop_window_name='A2:Airdrop Window 1',
                                                                       description='Long description',
@@ -601,7 +580,8 @@ class TestAirdropHandler(unittest.TestCase):
                                                                       registration_start_period=registration_start_date,
                                                                       registration_end_period=registration_end_date,
                                                                       snapshot_required=True,
-                                                                      claim_start_period=datetime.utcnow() - timedelta(days=2),
+                                                                      claim_start_period=datetime.utcnow() - timedelta(
+                                                                          days=2),
                                                                       claim_end_period=claim_end_date,
                                                                       total_airdrop_tokens=1000000)
 
@@ -618,43 +598,42 @@ class TestAirdropHandler(unittest.TestCase):
                                                                           days=25),
                                                                       total_airdrop_tokens=1000000)
 
-
-        #now user has rewards for all three windows for Airdrop 1
-        airdrop_repository.register_user_rewards(airdrop1.id,airdrop1_window1.id,100,
-                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+        # now user has rewards for all three windows for Airdrop 1
+        airdrop_repository.register_user_rewards(airdrop1.id, airdrop1_window1.id, 100,
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
         airdrop_repository.register_user_rewards(airdrop1.id, airdrop1_window2.id, 100,
-                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
         airdrop_repository.register_user_rewards(airdrop1.id, airdrop1_window3.id, 100,
-                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
-        #now user has rewards for all three windows for Airdrop 2
-        airdrop_repository.register_user_rewards(airdrop2.id,airdrop2_window1.id,1000,
-                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
+        # now user has rewards for all three windows for Airdrop 2
+        airdrop_repository.register_user_rewards(airdrop2.id, airdrop2_window1.id, 1000,
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
         airdrop_repository.register_user_rewards(airdrop2.id, airdrop2_window2.id, 1000,
-                                             '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
         airdrop_repository.register_user_rewards(airdrop2.id, airdrop2_window3.id, 1000,
-                                             '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
 
-        #User has not registered for any window of Airdrop 1
+        # User has not registered for any window of Airdrop 1
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop1.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
-        self.assertEqual(result,0)
+        self.assertEqual(result, 0)
 
-        #User has not registered for any window of Airdrop 2
+        # User has not registered for any window of Airdrop 2
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop2.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
-        self.assertEqual(result,0)
+        self.assertEqual(result, 0)
 
         # User has registered for the first window of Airdrop 1
-        airdrop_repository.register_user_registration(airdrop1_window1.id,'0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        airdrop_repository.register_user_registration(airdrop1_window1.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop1.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         self.assertEqual(result, 100)
 
         # User has registered for the first window of Airdrop 2
-        airdrop_repository.register_user_registration(airdrop2_window1.id,'0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        airdrop_repository.register_user_registration(airdrop2_window1.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop2.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
-        #we have added 1000, for Airdrop 2
+        # we have added 1000, for Airdrop 2
         self.assertEqual(result, 1000)
 
         # User has registrations for the third window of Airdrop 1,but claim is not yet open for this window
@@ -665,14 +644,11 @@ class TestAirdropHandler(unittest.TestCase):
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         self.assertEqual(result, 100)
 
-
         # User has registrations for the 2nd window of Airdrop 1 which is active
         airdrop_repository.register_user_registration(airdrop1_window2.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop1.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         self.assertEqual(result, 200)
-
-
 
         # User has registrations for the 2nd window Airdrop 2 which is active
         airdrop_repository.register_user_registration(airdrop2_window2.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
@@ -680,29 +656,29 @@ class TestAirdropHandler(unittest.TestCase):
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         self.assertEqual(result, 2000)
 
-        #assuming no claim has happend til now , total_rewards user can claim = 200
+        # assuming no claim has happend til now , total_rewards user can claim = 200
         rewards_for_claim = airdrop_repository.fetch_total_rewards_amount(airdrop1.id,
                                                                           '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
 
         self.assertEqual(200, rewards_for_claim)
 
-
-        #make an entry in the claim table for Airdrop 2 window 2 => all amount till this point has been claimed for Airdrop 2
-        #hence rewards to be claimed is zero for current time  , however total eligibility was always 200
-        airdrop_repository.register_claim_history(airdrop2.id,airdrop2_window2.id,
-                                                  '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',2000,0,'PENDING',
+        # make an entry in the claim table for Airdrop 2 window 2 => all amount till this point has been claimed for Airdrop 2
+        # hence rewards to be claimed is zero for current time  , however total eligibility was always 200
+        airdrop_repository.register_claim_history(airdrop2.id, airdrop2_window2.id,
+                                                  '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 2000, 0, 'PENDING',
                                                   'transaction_hash')
         rewards_for_claim = airdrop_repository.fetch_total_rewards_amount(airdrop2.id,
                                                                           '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
 
         self.assertEqual(0, rewards_for_claim)
-        #no claims have happend on Airdrop 1 => the user should see a total rewards of 200
+        # no claims have happend on Airdrop 1 => the user should see a total rewards of 200
         rewards_for_claim = airdrop_repository.fetch_total_rewards_amount(airdrop1.id,
                                                                           '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
 
         self.assertEqual(200, rewards_for_claim)
+
     def test_fetch_total_eligibility_amount(self):
-        #delete it all !!!!
+        # delete it all !!!!
         AirdropRepository().session.query(ClaimHistory).delete()
         AirdropRepository().session.query(UserRegistration).delete()
         AirdropRepository().session.query(UserReward).delete()
@@ -736,7 +712,8 @@ class TestAirdropHandler(unittest.TestCase):
                                                                      registration_start_period=registration_start_date,
                                                                      registration_end_period=registration_end_date,
                                                                      snapshot_required=True,
-                                                                     claim_start_period=datetime.utcnow() - timedelta(days=2),
+                                                                     claim_start_period=datetime.utcnow() - timedelta(
+                                                                         days=2),
                                                                      claim_end_period=claim_end_date,
                                                                      total_airdrop_tokens=1000000)
 
@@ -753,21 +730,21 @@ class TestAirdropHandler(unittest.TestCase):
                                                                          days=25),
                                                                      total_airdrop_tokens=1000000)
 
-        #now user has rewards for all three windows
-        airdrop_repository.register_user_rewards(airdrop.id,airdrop_window1.id,100,
-                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+        # now user has rewards for all three windows
+        airdrop_repository.register_user_rewards(airdrop.id, airdrop_window1.id, 100,
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
         airdrop_repository.register_user_rewards(airdrop.id, airdrop_window2.id, 100,
-                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
         airdrop_repository.register_user_rewards(airdrop.id, airdrop_window3.id, 100,
-                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
 
-        #User has not registered for any window
+        # User has not registered for any window
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
-        self.assertEqual(result,0)
+        self.assertEqual(result, 0)
 
         # User has registered for the first window
-        airdrop_repository.register_user_registration(airdrop_window1.id,'0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        airdrop_repository.register_user_registration(airdrop_window1.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
 
@@ -779,31 +756,29 @@ class TestAirdropHandler(unittest.TestCase):
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         self.assertEqual(result, 100)
 
-
         # User has registrations for the 2nd window which is active
         airdrop_repository.register_user_registration(airdrop_window2.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         self.assertEqual(result, 200)
 
-        #assuming no claim has happend til now , total_rewards user can claim = 200
+        # assuming no claim has happend til now , total_rewards user can claim = 200
         rewards_for_claim = airdrop_repository.fetch_total_rewards_amount(airdrop.id,
-                                                                   '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+                                                                          '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
 
         self.assertEqual(200, rewards_for_claim)
 
-
-        #make an entry in the claim table for window 2 => all amount till this point has been claimed
-        #hence rewards to be claimed is zero for current time  , however total eligibility was always 200
-        airdrop_repository.register_claim_history(airdrop.id,airdrop_window2.id,
-                                                  '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',200,0,'PENDING',
+        # make an entry in the claim table for window 2 => all amount till this point has been claimed
+        # hence rewards to be claimed is zero for current time  , however total eligibility was always 200
+        airdrop_repository.register_claim_history(airdrop.id, airdrop_window2.id,
+                                                  '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 200, 0, 'PENDING',
                                                   'transaction_hash')
         rewards_for_claim = airdrop_repository.fetch_total_rewards_amount(airdrop.id,
-                                                                              '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+                                                                          '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         self.assertEqual(0, rewards_for_claim)
 
     def test_user_eligibilty_flags(self):
-        #delete it all !!!!
+        # delete it all !!!!
         AirdropRepository().session.query(ClaimHistory).delete()
         AirdropRepository().session.query(UserRegistration).delete()
         AirdropRepository().session.query(UserReward).delete()
@@ -819,7 +794,7 @@ class TestAirdropHandler(unittest.TestCase):
         registration_end_date = datetime.utcnow() - timedelta(days=6)
         claim_start_date = datetime.utcnow() - timedelta(days=4)
         claim_end_date = datetime.utcnow() - timedelta(days=2)
-        #this is in the past
+        # this is in the past
         airdrop_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id,
                                                                      airdrop_window_name='Airdrop Window 1',
                                                                      description='Long description',
@@ -835,30 +810,41 @@ class TestAirdropHandler(unittest.TestCase):
                                                                      airdrop_window_name='Airdrop Window 2',
                                                                      description='Long description',
                                                                      registration_required=True,
-                                                                     registration_start_period=datetime.utcnow()- timedelta(days=1),
-                                                                     registration_end_period=datetime.utcnow() - timedelta(days=1.5) ,
+                                                                     registration_start_period=datetime.utcnow() - timedelta(
+                                                                         days=1),
+                                                                     registration_end_period=datetime.utcnow() - timedelta(
+                                                                         days=1.5),
                                                                      snapshot_required=True,
-                                                                     claim_start_period=datetime.utcnow() - timedelta(hours=1),
-                                                                     claim_end_period=datetime.utcnow() + timedelta(days=2),
+                                                                     claim_start_period=datetime.utcnow() - timedelta(
+                                                                         hours=1),
+                                                                     claim_end_period=datetime.utcnow() + timedelta(
+                                                                         days=2),
                                                                      total_airdrop_tokens=1000000)
 
-
-
-        #now user has rewards for all 2 windows
-        airdrop_repository.register_user_rewards(airdrop.id,airdrop_window1.id,110,
-                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',1,1)
-
+        # now user has rewards for all 2 windows
+        airdrop_repository.register_user_rewards(airdrop.id, airdrop_window1.id, 110,
+                                                 '0xCc3cD60FF9936B7C9272a649b24f290ADa562469', 1, 1)
 
         # User has registered for the first window but not claimed
-        airdrop_repository.register_user_registration(airdrop_window1.id,'0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
+        airdrop_repository.register_user_registration(airdrop_window1.id, '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
         result = airdrop_repository.fetch_total_eligibility_amount(airdrop.id,
                                                                    '0xCc3cD60FF9936B7C9272a649b24f290ADa562469')
 
-
         self.assertEqual(result, 110)
-        expected_response_claimable = {'is_eligible': False, 'is_already_registered': False,
-                             'is_airdrop_window_claimed': False, 'airdrop_window_claim_status': None, 'user_address': '0xcc3cd60ff9936b7c9272a649b24f290ada562469',
-                             'airdrop_id': str(airdrop.id), 'airdrop_window_id': str(airdrop_window2.id), 'reject_reason': None, 'airdrop_window_rewards': 110, 'registration_id': '', 'is_claimable': True}
+        expected_response_claimable = {
+            "is_eligible": False,
+            "is_already_registered": False,
+            "is_airdrop_window_claimed": False,
+            "airdrop_window_claim_status": None,
+            "user_address": "0xcc3cd60ff9936b7c9272a649b24f290ada562469",
+            "airdrop_id": str(airdrop.id),
+            "airdrop_window_id": str(airdrop_window2.id),
+            "reject_reason": None,
+            "airdrop_window_rewards": 110,
+            "registration_id": "",
+            "is_claimable": True,
+            "registration_details": {}
+        }
         event = {
             "body": json.dumps({
                 "airdrop_window_id": str(airdrop_window2.id),
@@ -870,50 +856,60 @@ class TestAirdropHandler(unittest.TestCase):
         result = user_eligibility(event, None)
         result = json.loads(result['body'])
         final_result = result['data']
-        self.assertEqual(final_result,expected_response_claimable)
+        self.assertDictEqual(final_result, expected_response_claimable)
 
-
-        expected_response_non_claimable = {'is_eligible': False, 'is_already_registered': False, 'is_airdrop_window_claimed': False, 'airdrop_window_claim_status': None, 'user_address': '0xcc3cd60ff9936b7c9272a649b24f290ada562469',
-                             'airdrop_id': str(airdrop.id), 'airdrop_window_id': str(airdrop_window2.id), 'reject_reason': None, 'airdrop_window_rewards': 0, 'registration_id': '', 'is_claimable': False}
-        airdrop_repository.register_claim_history(airdrop.id,airdrop_window1.id,
-                                                  '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',200,0,'FAILED',
-                                                  'transaction_hash')
+        expected_response_non_claimable = {
+            "is_eligible": False,
+            "is_already_registered": False,
+            "is_airdrop_window_claimed": False,
+            "airdrop_window_claim_status": None,
+            "user_address": "0xcc3cd60ff9936b7c9272a649b24f290ada562469",
+            "airdrop_id": str(airdrop.id),
+            "airdrop_window_id": str(airdrop_window2.id),
+            "reject_reason": None,
+            "airdrop_window_rewards": 0,
+            "registration_id": "",
+            "is_claimable": False,
+            "registration_details": {}}
+        airdrop_repository.register_claim_history(airdrop.id, airdrop_window1.id,
+                                                  "0xCc3cD60FF9936B7C9272a649b24f290ADa562469", 200, 0, "FAILED",
+                                                  "transaction_hash")
 
         result = user_eligibility(event, None)
-        result = json.loads(result['body'])
-        final_result = result['data']
-        self.assertEqual(final_result,expected_response_claimable)
+        result = json.loads(result["body"])
+        final_result = result["data"]
+        self.assertEqual(final_result, expected_response_claimable)
 
         # user has a pending claim
-        airdrop_repository.register_claim_history(airdrop.id,airdrop_window1.id,
-                                                  '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',200,0,'PENDING',
-                                                  'transaction_hash')
+        airdrop_repository.register_claim_history(airdrop.id, airdrop_window1.id,
+                                                  "0xCc3cD60FF9936B7C9272a649b24f290ADa562469", 200, 0, "PENDING",
+                                                  "transaction_hash")
 
         result = user_eligibility(event, None)
-        result = json.loads(result['body'])
-        final_result = result['data']
-        self.assertEqual(final_result,expected_response_non_claimable)
+        result = json.loads(result["body"])
+        final_result = result["data"]
+        self.assertDictEqual(final_result, expected_response_non_claimable)
 
         # delete all entries from claim
         AirdropRepository().session.query(ClaimHistory).delete()
 
         # user has a Successful claim
-        airdrop_repository.register_claim_history(airdrop.id,airdrop_window1.id,
-                                                  '0xCc3cD60FF9936B7C9272a649b24f290ADa562469',200,0,'SUCCESS',
-                                                  'transaction_hash')
+        airdrop_repository.register_claim_history(airdrop.id, airdrop_window1.id,
+                                                  "0xCc3cD60FF9936B7C9272a649b24f290ADa562469", 200, 0, "SUCCESS",
+                                                  "transaction_hash")
 
         result = user_eligibility(event, None)
-        result = json.loads(result['body'])
-        final_result = result['data']
-        self.assertEqual(final_result,expected_response_non_claimable)
+        result = json.loads(result["body"])
+        final_result = result["data"]
+        self.assertEqual(final_result, expected_response_non_claimable)
 
     def tearDown(self):
-        self.assertEqual(100, 100)
         AirdropRepository().session.query(ClaimHistory).delete()
         AirdropRepository().session.query(UserRegistration).delete()
         AirdropRepository().session.query(UserReward).delete()
         AirdropRepository().session.query(AirdropWindow).delete()
         AirdropRepository().session.query(Airdrop).delete()
+        AirdropRepository().session.commit()
 
 
 if __name__ == '__main__':
