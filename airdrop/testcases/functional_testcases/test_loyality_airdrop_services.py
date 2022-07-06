@@ -56,7 +56,7 @@ class TestLoyaltyAirdropServices(TestCase):
         response_body = json.loads(response["body"])
         assert (len(response_body["data"]) == 2)
 
-    def test_loyalty_airdrop_user_eligibility(self):
+    def test_loyalty_airdrop_user_eligibility_case1(self):
         clear_database()
         self.setUp()
         event = {
@@ -92,6 +92,25 @@ class TestLoyaltyAirdropServices(TestCase):
         assert (response["statusCode"] == 200)
         response_body = json.loads(response["body"])
         self.assertTrue(response_body["data"]["is_already_registered"])
+
+    def test_loyalty_airdrop_user_eligibility_case2(self):
+        # User eligible for Window 1 and Not for Window 2
+        # User comes directly to Window2, is_eligible flag needs to be true as he has unclaimed rewards from Window 1.
+        clear_database()
+        self.setUp()
+        load_user_reward_data(self.airdrop.id, self.loyalty_airdrop_window1.id, LoyaltyAirdropUser1)
+        event = {
+            "body": json.dumps({
+                "address": LoyaltyAirdropUser1.address,
+                "airdrop_id": self.airdrop.id,
+                "airdrop_window_id": self.loyalty_airdrop_window2.id
+            })
+        }
+        response = user_eligibility(event, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        self.assertTrue(response_body["data"]["is_eligible"])
+        self.assertFalse(response_body["data"]["is_claimable"])
 
     def tearDown(self):
         clear_database()
