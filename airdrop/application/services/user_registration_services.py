@@ -129,9 +129,13 @@ class UserRegistrationServices:
             if airdrop_window.registration_required and not is_registration_open:
                 raise Exception("Airdrop window is not accepting registration at this moment.")
 
-            user_eligibility = UserRepository().is_user_eligible_for_given_window(address, airdrop_id,
-                                                                                  airdrop_window_id)
-            if not user_eligibility:
+            user_eligible_for_given_window = UserRepository(). \
+                is_user_eligible_for_given_window(address, airdrop_id, airdrop_window_id)
+
+            unclaimed_reward = UserRepository().get_unclaimed_reward(airdrop_id, address)
+
+            is_user_eligible = airdrop_object.check_user_eligibility(user_eligible_for_given_window, unclaimed_reward)
+            if not is_user_eligible:
                 raise Exception("Address is not eligible for this airdrop.")
 
             user_registered, user_registration = UserRepository(). \
