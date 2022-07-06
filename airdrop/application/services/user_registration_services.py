@@ -29,13 +29,23 @@ class UserRegistrationServices:
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"].lower()
 
-            airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
+            airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
+            if airdrop is None:
+                raise Exception("Airdrop id is not valid.")
 
+            airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
-                raise Exception("Invalid Airdrop window id")
+                raise Exception("Airdrop window id is not valid.")
+
+            airdrop_class = UserRegistrationServices.load_airdrop_class(airdrop)
+            airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             user_eligible_for_given_window = UserRepository(). \
                 is_user_eligible_for_given_window(address, airdrop_id, airdrop_window_id)
+
+            unclaimed_reward = UserRepository().get_unclaimed_reward(airdrop_id, address)
+
+            is_user_eligible = airdrop_object.check_user_eligibility(user_eligible_for_given_window, unclaimed_reward)
 
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
@@ -66,7 +76,7 @@ class UserRegistrationServices:
                     "registered_at": str(user_registration.registered_at),
                 }
             response = {
-                "is_eligible": user_eligible_for_given_window,
+                "is_eligible": is_user_eligible,
                 "is_already_registered": user_registered,
                 "is_airdrop_window_claimed": is_airdrop_window_claimed,
                 "airdrop_window_claim_status": airdrop_claim_status,
@@ -100,12 +110,9 @@ class UserRegistrationServices:
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
-                raise Exception("Airdrop Id is not valid.")
+                raise Exception("Airdrop id is not valid.")
 
-            if airdrop.airdrop_processor:
-                airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop.airdrop_processor}")
-            else:
-                airdrop_class = DefaultAirdrop
+            airdrop_class = self.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             signature_verified, recovered_address, signature_details = self. \
@@ -122,9 +129,13 @@ class UserRegistrationServices:
             if airdrop_window.registration_required and not is_registration_open:
                 raise Exception("Airdrop window is not accepting registration at this moment.")
 
-            user_eligibility = UserRepository().is_user_eligible_for_given_window(address, airdrop_id,
-                                                                                  airdrop_window_id)
-            if not user_eligibility:
+            user_eligible_for_given_window = UserRepository(). \
+                is_user_eligible_for_given_window(address, airdrop_id, airdrop_window_id)
+
+            unclaimed_reward = UserRepository().get_unclaimed_reward(airdrop_id, address)
+
+            is_user_eligible = airdrop_object.check_user_eligibility(user_eligible_for_given_window, unclaimed_reward)
+            if not is_user_eligible:
                 raise Exception("Address is not eligible for this airdrop.")
 
             user_registered, user_registration = UserRepository(). \
@@ -184,3 +195,11 @@ class UserRegistrationServices:
         formatted_message = airdrop_object.format_signature_message(address, signature_parameters)
         signature_verified, recovered_address = airdrop_object.match_signature(address, formatted_message, signature)
         return signature_verified, recovered_address, formatted_message
+
+    @staticmethod
+    def load_airdrop_class(airdrop):
+        if airdrop.airdrop_processor:
+            airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop.airdrop_processor}")
+        else:
+            airdrop_class = DefaultAirdrop
+        return airdrop_class
