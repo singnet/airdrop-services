@@ -125,8 +125,9 @@ class UserRepository(BaseRepository):
             query = text("SELECT IFNULL( sum(ur.rewards_awarded),0) AS 'unclaimed_reward' FROM user_rewards ur, "
                          "airdrop_window aw WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address "
                          "AND aw.airdrop_id = :airdrop_id AND aw.claim_start_period <= current_timestamp "
-                         "AND aw.claim_end_period >= current_timestamp AND ur.airdrop_window_id > "
-                         "(SELECT ifnull (max(airdrop_window_id), -1) from claim_history ch "
+                         "AND EXISTS (SELECT 1 FROM airdrop_window WHERE current_timestamp <= claim_end_period "
+                         "AND airdrop_id = :airdrop_id AND claim_start_period <= current_timestamp) "
+                         "AND ur.airdrop_window_id > (SELECT ifnull (max(airdrop_window_id), -1) from claim_history ch "
                          "where ch.airdrop_id = :airdrop_id and ch.address = :address "
                          "and ch.transaction_status in ('SUCCESS', 'PENDING'))")
             result = self.session.execute(query, {'address': address, 'airdrop_id': airdrop_id})
