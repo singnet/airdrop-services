@@ -24,6 +24,10 @@ class DefaultAirdrop(BaseAirdrop):
         return formatted_message
 
     @staticmethod
+    def check_user_eligibility(user_eligible_for_given_window, unclaimed_reward):
+        return user_eligible_for_given_window
+
+    @staticmethod
     def trim_prefix_from_string_message(prefix, message):
         # move to utils
         if message.startswith(prefix):

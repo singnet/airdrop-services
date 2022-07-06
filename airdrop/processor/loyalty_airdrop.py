@@ -26,6 +26,14 @@ class LoyaltyAirdrop(BaseAirdrop):
         return formatted_message
 
     @staticmethod
+    def check_user_eligibility(user_eligible_for_given_window, unclaimed_reward):
+        if user_eligible_for_given_window:
+            return True
+        elif unclaimed_reward > 0:
+            return True
+        return False
+
+    @staticmethod
     def trim_prefix_from_string_message(prefix, message):
         # move to utils
         if message.startswith(prefix):

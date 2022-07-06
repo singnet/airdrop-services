@@ -3,6 +3,7 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -118,3 +119,20 @@ class UserRepository(BaseRepository):
         if user_registration:
             return True, user_registration
         return False, user_registration
+
+    def get_unclaimed_reward(self, airdrop_id, address):
+        try:
+            query = text("SELECT IFNULL( sum(ur.rewards_awarded),0) AS 'unclaimed_reward' FROM user_rewards ur, "
+                         "airdrop_window aw WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address "
+                         "AND aw.airdrop_id = :airdrop_id AND aw.claim_start_period <= current_timestamp "
+                         "AND aw.claim_end_period >= current_timestamp AND ur.airdrop_window_id > "
+                         "(SELECT ifnull (max(airdrop_window_id), -1) from claim_history ch "
+                         "where ch.airdrop_id = :airdrop_id and ch.address = :address "
+                         "and ch.transaction_status in ('SUCCESS', 'PENDING'))")
+            result = self.session.execute(query, {'address': address, 'airdrop_id': airdrop_id})
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        unclaimed_reward = int(result.fetchall()[0]["unclaimed_reward"])
+        return unclaimed_reward
