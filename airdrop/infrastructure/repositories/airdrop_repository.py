@@ -291,7 +291,15 @@ class AirdropRepository(BaseRepository):
             # return zero if there are no rewards, please note that MYSQL smartly sums up varchar columns and returns
             # it as a bigint if you have a very big number stored as a varchar in the rewards table.
             query = text(
-                "select ifnull( sum(ur.rewards_awarded),0) AS 'total_eligibility_rewards' FROM user_rewards ur, airdrop_window aw where ur.airdrop_window_id = aw.row_id and ur.address = :address and aw.airdrop_id = :airdrop_id and aw.claim_start_period <= current_timestamp and exists ( select 1 from airdrop_window where current_timestamp <= claim_end_period and airdrop_id = :airdrop_id and claim_start_period <= current_timestamp )  and ur.airdrop_window_id in ( SELECT airdrop_window_id FROM user_registrations WHERE address = :address and airdrop_window_id in ( select row_id from airdrop_window where airdrop_id = :airdrop_id));")
+                "SELECT IFNULL( sum(ur.rewards_awarded),0) AS 'total_eligibility_rewards' FROM user_rewards ur, "
+                "airdrop_window aw WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address "
+                "AND aw.airdrop_id = :airdrop_id AND aw.claim_start_period <= current_timestamp "
+                "AND exists (SELECT 1 FROM airdrop_window WHERE current_timestamp <= claim_end_period "
+                "AND airdrop_id = :airdrop_id AND claim_start_period <= current_timestamp )  "
+                "AND ur.airdrop_window_id IN ( SELECT airdrop_window_id FROM user_registrations "
+                "WHERE address = :address AND airdrop_window_id IN (SELECT row_id FROM airdrop_window "
+                "WHERE airdrop_id = :airdrop_id));"
+            )
             result = self.session.execute(
                 query, {'address': address, 'airdrop_id': airdrop_id})
             self.session.commit()
