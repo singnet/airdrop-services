@@ -2,6 +2,7 @@ from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT
 from airdrop.processor.base_airdrop import BaseAirdrop
 from airdrop.config import LoyaltyAirdropConfig
 
+
 class LoyaltyAirdrop(BaseAirdrop):
     def __init__(self, airdrop_id, airdrop_window_id=None):
         self.airdrop_id = airdrop_id
@@ -10,9 +11,8 @@ class LoyaltyAirdrop(BaseAirdrop):
         self.domain_name = "SingularityNet"
         self.chain_context = {
             "deposit_address": LoyaltyAirdropConfig.deposit_address,
-            "amount": LoyaltyAirdropConfig.pre_claim_transfer_amount["amount"],
-            "network": LoyaltyAirdropConfig.network,
-            "environment": LoyaltyAirdropConfig.environment
+            "amount": LoyaltyAirdropConfig.pre_claim_transfer_amount.value["amount"],
+            "chain": LoyaltyAirdropConfig.chain
         }
 
     def format_signature_message(self, address, signature_parameters):
