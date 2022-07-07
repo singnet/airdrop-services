@@ -55,4 +55,4 @@ class LoyaltyAirdropConfig(Enum):
     deposit_address = "addr"
     pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
     network = "-testnet-magic 1097911063"
-    environment = "Cardano"
+    chain = "Cardano"
