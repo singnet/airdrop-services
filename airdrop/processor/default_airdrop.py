@@ -8,6 +8,7 @@ class DefaultAirdrop(BaseAirdrop):
         self.airdrop_window_id = airdrop_window_id
         self.register_all_window_at_once = False
         self.domain_name = "Nunet Airdrop"
+        self.chain_context = {}
 
     def format_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]

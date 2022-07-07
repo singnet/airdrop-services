@@ -33,7 +33,8 @@ class UserRegistrationServices:
             if airdrop is None:
                 raise Exception("Airdrop id is not valid.")
 
-            airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
+            airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id,
+                                                                                airdrop_id=airdrop_id)
             if airdrop_window is None:
                 raise Exception("Airdrop window id is not valid.")
 
