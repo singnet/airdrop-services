@@ -1,3 +1,5 @@
+from enum import Enum
+
 NETWORK = {
     "name": "test",
     "http_provider": "https://ropsten.infura.io",
@@ -47,3 +49,10 @@ MAX_STAKE_LIMIT = 25000
 
 class AirdropStrategy:
     AGIX = "AGIX"
+
+
+class LoyaltyAirdropConfig(Enum):
+    deposit_address = "addr"
+    pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
+    network = "-testnet-magic 1097911063"
+    chain = "Cardano"

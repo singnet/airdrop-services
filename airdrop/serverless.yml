@@ -313,9 +313,10 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
-  airdrop_window_secured_claims:
+
+  airdrop_window_claim:
     warmup: true
-    handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_secured_claims
+    handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
       - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}

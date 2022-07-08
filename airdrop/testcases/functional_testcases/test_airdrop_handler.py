@@ -9,7 +9,7 @@ from eth_account.messages import encode_defunct
 from web3 import Web3
 
 from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, \
-    airdrop_window_claims, airdrop_window_claim_status, user_notifications, airdrop_window_secured_claims, \
+    airdrop_window_claims, airdrop_window_claim_status, user_notifications, airdrop_window_claim, \
     airdrop_window_claim_history
 from airdrop.config import NETWORK
 from airdrop.config import NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
@@ -267,7 +267,7 @@ class TestAirdropHandler(unittest.TestCase):
                 "airdrop_window_id": str(airdrop_window_id),
             })
         }
-        result = airdrop_window_secured_claims(event, None)
+        result = airdrop_window_claim(event, None)
         result = json.loads(result['body'])
         final_result = result['data']
         self.assertEqual(expected_signature, final_result['signature'])
@@ -493,15 +493,18 @@ class TestAirdropHandler(unittest.TestCase):
             message_hash, private_key=private_key)
 
         expected_signature = signed_message.signature.hex()
-        expected_response = {'airdrop_id': str(airdrop.id), 'airdrop_window_id': str(airdrop_window.id),
-                             'user_address': '0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10',
-                             'signature': expected_signature,
-                             'claimable_amount': '150',
-                             'contract_address': '0xFb4D686B3330893d6af6F996AB325f8ea26c949E',
-                             'staking_contract_address': None,
-                             'token_address': '0x765C9E1BCa00002e294c9aa9dC3F96C2a022025C',
-                             'total_eligibility_amount': '150'}
-        result = airdrop_window_secured_claims(event, None)
+        expected_response = {
+            "airdrop_id": str(airdrop.id), "airdrop_window_id": str(airdrop_window.id),
+            "user_address": "0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10",
+            "signature": expected_signature,
+            "claimable_amount": "150",
+            "contract_address": "0xFb4D686B3330893d6af6F996AB325f8ea26c949E",
+            "staking_contract_address": None,
+            "token_address": "0x765C9E1BCa00002e294c9aa9dC3F96C2a022025C",
+            "total_eligibility_amount": "150",
+            "chain_context": {}
+        }
+        result = airdrop_window_claim(event, None)
         result = json.loads(result['body'])
         final_result = result['data']
         self.assertEqual(expected_response, final_result)

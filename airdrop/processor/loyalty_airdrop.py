@@ -1,5 +1,6 @@
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT
 from airdrop.processor.base_airdrop import BaseAirdrop
+from airdrop.config import LoyaltyAirdropConfig
 
 
 class LoyaltyAirdrop(BaseAirdrop):
@@ -8,6 +9,11 @@ class LoyaltyAirdrop(BaseAirdrop):
         self.airdrop_window_id = airdrop_window_id
         self.register_all_window_at_once = True
         self.domain_name = "SingularityNet"
+        self.chain_context = {
+            "deposit_address": LoyaltyAirdropConfig.deposit_address,
+            "amount": LoyaltyAirdropConfig.pre_claim_transfer_amount.value["amount"],
+            "chain": LoyaltyAirdropConfig.chain
+        }
 
     def format_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
