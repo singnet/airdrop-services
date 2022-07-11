@@ -97,7 +97,7 @@ class AirdropClaims(TestCase):
                              'token_address': '0x5e94577b949a56279637ff74dfcff2c28408f049',
                              'total_eligibility_amount':str(0)}
 
-        status_code, result = AirdropServices().airdrop_window_claims(payload)
+        status_code, result = AirdropServices().occam_airdrop_window_claim(payload)
         self.assertEqual(expected_response, result)
 
     def test_get_signature_for_airdrop_window_claim_with_invalid_windows(self):
@@ -107,7 +107,7 @@ class AirdropClaims(TestCase):
             "airdrop_window_id": airdrop_window_id
         }
 
-        status_code, result = AirdropServices().airdrop_window_claims(payload)
+        status_code, result = AirdropServices().occam_airdrop_window_claim(payload)
 
         self.assertNotEqual(status_code, HTTPStatus.OK)
 

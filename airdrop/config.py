@@ -26,6 +26,7 @@ BALANCE_DB_CONFIG = {
 }
 
 NETWORK_ID = 3
+DEFAULT_REGION = "us-east-1"
 SLACK_HOOK = {
     "hostname": "https://hooks.slack.com",
     "port": 443,
@@ -54,5 +55,4 @@ class AirdropStrategy:
 class LoyaltyAirdropConfig(Enum):
     deposit_address = "addr"
     pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
-    network = "-testnet-magic 1097911063"
     chain = "Cardano"

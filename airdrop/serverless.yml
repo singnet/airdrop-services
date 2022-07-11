@@ -267,7 +267,7 @@ functions:
                   "application/json": "ErrorMessage"
   airdrop_window_claims:
     warmup: true
-    handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claims
+    handler: airdrop/application/handlers/airdrop_handlers.occam_airdrop_window_claim
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
       - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}

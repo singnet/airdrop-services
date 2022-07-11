@@ -2,21 +2,24 @@ import ast
 from datetime import datetime
 from http import HTTPStatus
 
+import web3
+from eth_account.messages import encode_defunct
 from jsonschema import validate, ValidationError
+from web3 import Web3
 
 from airdrop.application.services.user_registration_services import UserRegistrationServices
+from airdrop.config import NETWORK, DEFAULT_REGION
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
     NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY, SLACK_HOOK
-from airdrop.constants import STAKING_CONTRACT_PATH, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus
+from airdrop.constants import STAKING_CONTRACT_PATH, CLAIM_SCHEMA, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
-from airdrop.domain.models.airdrop_claim import AirdropClaim
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import generate_claim_signature, generate_claim_signature_with_total_eligibile_amount, \
     get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address, Utils
-from airdrop.processor.loyalty_airdrop import LoyaltyAirdrop
+
 logger = get_logger(__name__)
 
 
@@ -323,7 +326,7 @@ class AirdropServices:
                 raise Exception("Airdrop window id is not valid.")
 
             claimable_amount = AirdropRepository().fetch_total_rewards_amount(airdrop_id, user_address)
-            total_eligibility_amount = AirdropRepository().fetch_total_eligibility_amount(airdrop_id, user_address)
+            total_eligible_amount = AirdropRepository().fetch_total_eligibility_amount(airdrop_id, user_address)
 
             if claimable_amount == 0:
                 raise Exception("Airdrop Already claimed / pending")
@@ -331,9 +334,18 @@ class AirdropServices:
             airdrop_class = UserRegistrationServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            signature = self.get_signature_for_airdrop_window_id_with_totaleligibilty_amount(
-                claimable_amount, total_eligibility_amount, airdrop_id, airdrop_window_id, user_address,
-                airdrop.contract_address, airdrop.token_address)
+            claim_signature_private_key = self.get_private_key_for_generating_claim_signature(
+                secret_name=airdrop_object.claim_signature_private_key_secret)
+            signature_parameters = {
+                "claimable_amount": claimable_amount,
+                "total_eligible_amount": total_eligible_amount,
+                "user_address": user_address,
+                "contract_address": airdrop.contract_address,
+                "token_address": airdrop.token_address
+            }
+            signature_format, formatted_message = airdrop_object.format_and_get_claim_signature_details(
+                signature_parameters)
+            signature = self.generate_signature(claim_signature_private_key, signature_format, formatted_message)
 
             response = {
                 "airdrop_id": str(airdrop.id),
@@ -344,7 +356,7 @@ class AirdropServices:
                 "token_address": airdrop.token_address,
                 "contract_address": airdrop.contract_address,
                 "staking_contract_address": airdrop.staking_contract_address,
-                "total_eligibility_amount": str(total_eligibility_amount),
+                "total_eligibility_amount": str(total_eligible_amount),
                 "chain_context": airdrop_object.chain_context
             }
 
@@ -359,26 +371,18 @@ class AirdropServices:
 
     # this method is used only for Nunet OCCAM contract, once the claim window closes for Nunet OCCAM , we will
     # delete this method airdrop_window_claims
-    def airdrop_window_claims(self, inputs):
+    def occam_airdrop_window_claim(self, inputs):
         status = HTTPStatus.BAD_REQUEST
         try:
 
-            schema = {
-                "type": "object",
-                "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"},
-                               "airdrop_window_id": {"type": "string"}},
-                "required": ["address", "airdrop_id", "airdrop_window_id"],
-            }
-
-            validate(instance=inputs, schema=schema)
+            validate(instance=inputs, schema=CLAIM_SCHEMA)
 
             user_address = inputs["address"]
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
 
             airdrop_repo = AirdropRepository()
-            airdrop_repo.is_claimed_airdrop_window(
-                user_address, airdrop_window_id)
+            airdrop_repo.is_claimed_airdrop_window(user_address, airdrop_window_id)
 
             claimable_amount, user_wallet_address, contract_address, token_address, staking_contract_address, total_eligibility_amount = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_address)
@@ -386,9 +390,17 @@ class AirdropServices:
             signature = self.get_signature_for_airdrop_window_id(
                 claimable_amount, airdrop_id, airdrop_window_id, user_wallet_address, contract_address, token_address)
 
-            response = AirdropClaim(airdrop_id,
-                                    airdrop_window_id, user_wallet_address, signature, claimable_amount, token_address,
-                                    contract_address, staking_contract_address, total_eligibility_amount).to_dict()
+            response = {
+                "airdrop_id": airdrop_id,
+                "airdrop_window_id": airdrop_window_id,
+                "user_address": user_address,
+                "signature": signature,
+                "claimable_amount": str(claimable_amount),
+                "token_address": token_address,
+                "contract_address": contract_address,
+                "staking_contract_address": staking_contract_address,
+                "total_eligibility_amount": str(total_eligibility_amount)
+            }
 
             status = HTTPStatus.OK
         except ValidationError as e:
@@ -433,7 +445,6 @@ class AirdropServices:
 
     def get_airdrops_schedule(self, airdrop_id):
         status = HTTPStatus.BAD_REQUEST
-
         try:
             response = AirdropRepository().get_airdrops_schedule(airdrop_id)
             status = HTTPStatus.OK
@@ -441,5 +452,21 @@ class AirdropServices:
             response = e.message
         except BaseException as e:
             response = str(e)
-
         return status, response
+
+    @staticmethod
+    def generate_signature(private_key, data_types: list, values: list):
+        message = Web3.soliditySha3(data_types, values)
+        message_hash = encode_defunct(message)
+        web3_object = Web3(web3.providers.HTTPProvider(NETWORK["http_provider"]))
+        signed_message = web3_object.eth.account.sign_message(message_hash, private_key=private_key)
+
+        return signed_message.signature.hex()
+
+    @staticmethod
+    def get_private_key_for_generating_claim_signature(secret_name):
+        boto_client = BotoUtils(region_name=DEFAULT_REGION)
+        try:
+            return boto_client.get_parameter_value_from_secrets_manager(secret_name=secret_name)
+        except Exception as e:
+            raise Exception("Unable to fetch private key for generating claim signature.")
