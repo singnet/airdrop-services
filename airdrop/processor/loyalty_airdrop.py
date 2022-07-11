@@ -1,4 +1,5 @@
 from airdrop.config import LoyaltyAirdropConfig
+from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT
 from airdrop.processor.base_airdrop import BaseAirdrop
 
@@ -15,7 +16,7 @@ class LoyaltyAirdrop(BaseAirdrop):
             "chain": LoyaltyAirdropConfig.chain
         }
         self.claim_signature_data_format = ["string", "uint256", "uint256", "address", "uint256", "string"]
-        self.claim_signature_private_key_secret = "NUNET_SIGNER_PRIVATE_KEY"
+        self.claim_signature_private_key_secret = NUNET_SIGNER_PRIVATE_KEY
 
     def format_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
