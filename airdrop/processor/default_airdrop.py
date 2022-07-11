@@ -2,6 +2,7 @@ from web3 import Web3
 
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
 from airdrop.processor.base_airdrop import BaseAirdrop
+from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
 
 
 class DefaultAirdrop(BaseAirdrop):
@@ -13,7 +14,7 @@ class DefaultAirdrop(BaseAirdrop):
         self.chain_context = {}
         self.claim_signature_data_format = ["string", "uint256", "uint256", "address", "uint256", "uint256", "address",
                                             "address"]
-        self.claim_signature_private_key_secret = "NUNET_SIGNER_PRIVATE_KEY"
+        self.claim_signature_private_key_secret = NUNET_SIGNER_PRIVATE_KEY
 
     def format_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
