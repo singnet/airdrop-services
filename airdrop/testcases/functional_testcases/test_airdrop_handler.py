@@ -9,7 +9,7 @@ from eth_account.messages import encode_defunct
 from web3 import Web3
 
 from airdrop.application.handlers.airdrop_handlers import get_airdrop_schedules, user_eligibility, \
-    airdrop_window_claims, airdrop_window_claim_status, user_notifications, airdrop_window_claim, \
+    occam_airdrop_window_claim, airdrop_window_claim_status, user_notifications, airdrop_window_claim, \
     airdrop_window_claim_history
 from airdrop.config import NETWORK
 from airdrop.config import NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
@@ -225,7 +225,7 @@ class TestAirdropHandler(unittest.TestCase):
                 "staking_contract_address": staking_contract_address
             })
         }
-        result = airdrop_window_claims(event, None)
+        result = occam_airdrop_window_claim(event, None)
         result = json.loads(result['body'])
         claim_signature_object = result['data']
         self.assertEqual(result['status'], HTTPStatus.OK.value)
@@ -423,7 +423,7 @@ class TestAirdropHandler(unittest.TestCase):
                              'staking_contract_address': None,
                              'token_address': '0x765C9E1BCa00002e294c9aa9dC3F96C2a022025C',
                              'total_eligibility_amount': str(reward)}
-        result = airdrop_window_claims(event, None)
+        result = occam_airdrop_window_claim(event, None)
         result = json.loads(result['body'])
         final_result = result['data']
         self.assertEqual(expected_response, final_result)

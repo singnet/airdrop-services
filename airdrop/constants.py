@@ -24,10 +24,22 @@ USER_REGISTRATION_SCHEMA = {
     },
     "required": ["signature", "address", "airdrop_id", "airdrop_window_id", "block_number"],
 }
+OCCAM_CLAIM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "address": {"type": "string"},
+        "airdrop_id": {"type": "string"},
+        "airdrop_window_id": {"type": "string"}
+    },
+    "required": ["address", "airdrop_id", "airdrop_window_id"],
+}
 CLAIM_SCHEMA = {
     "type": "object",
-    "properties": {"address": {"type": "string"}, "airdrop_id": {"type": "string"},
-                   "airdrop_window_id": {"type": "string"}},
+    "properties": {
+        "address": {"type": "string"},
+        "airdrop_id": {"type": "string"},
+        "airdrop_window_id": {"type": "string"}
+    },
     "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
 
@@ -80,5 +92,3 @@ class AirdropClaimStatus(Enum):
 class AirdropEvents(Enum):
     AIRDROP_CLAIM = 'Claim'
     AIRDROP_WINDOW_OPEN = 'AirdropWindowOpen'
-
-

@@ -64,10 +64,9 @@ def user_eligibility(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
-def airdrop_window_claims(event, context):
-    logger.info(f"Got Airdrops Window Claims Events {event}")
-    status, response = AirdropServices(
-    ).airdrop_window_claims(request(event))
+def occam_airdrop_window_claim(event, context):
+    logger.info(f"Got occam_airdrop_window_claim event {event}")
+    status, response = AirdropServices().occam_airdrop_window_claim(request(event))
     return generate_lambda_response(
         status.value,
         status.phrase,
