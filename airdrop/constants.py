@@ -24,15 +24,7 @@ USER_REGISTRATION_SCHEMA = {
     },
     "required": ["signature", "address", "airdrop_id", "airdrop_window_id", "block_number"],
 }
-OCCAM_CLAIM_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "address": {"type": "string"},
-        "airdrop_id": {"type": "string"},
-        "airdrop_window_id": {"type": "string"}
-    },
-    "required": ["address", "airdrop_id", "airdrop_window_id"],
-}
+
 CLAIM_SCHEMA = {
     "type": "object",
     "properties": {
@@ -42,7 +34,6 @@ CLAIM_SCHEMA = {
     },
     "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
-
 USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT = {
     "types": {
         "EIP712Domain": [

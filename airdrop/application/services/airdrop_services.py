@@ -11,7 +11,7 @@ from airdrop.application.services.user_registration_services import UserRegistra
 from airdrop.config import NETWORK, DEFAULT_REGION
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
     NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY, SLACK_HOOK
-from airdrop.constants import STAKING_CONTRACT_PATH, OCCAM_CLAIM_SCHEMA, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus
+from airdrop.constants import STAKING_CONTRACT_PATH, CLAIM_SCHEMA, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
@@ -375,7 +375,7 @@ class AirdropServices:
         status = HTTPStatus.BAD_REQUEST
         try:
 
-            validate(instance=inputs, schema=OCCAM_CLAIM_SCHEMA)
+            validate(instance=inputs, schema=CLAIM_SCHEMA)
 
             user_address = inputs["address"]
             airdrop_id = inputs["airdrop_id"]
