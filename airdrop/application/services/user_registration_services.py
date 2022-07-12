@@ -1,15 +1,13 @@
 from datetime import datetime as dt
 from http import HTTPStatus
-from pydoc import locate
 
 from jsonschema import validate, ValidationError
 from web3 import Web3
 
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION, AIRDROP_RECEIPT_SECRET_KEY
-from airdrop.constants import PROCESSOR_PATH, AirdropClaimStatus
+from airdrop.constants import AirdropClaimStatus
 from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA
-from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_repository import UserRepository

@@ -8,11 +8,10 @@ from eth_account.messages import encode_defunct
 from jsonschema import validate, ValidationError
 from web3 import Web3
 
-from airdrop.application.services.user_registration_services import UserRegistrationServices
 from airdrop.config import NETWORK, DEFAULT_REGION
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
     NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY, SLACK_HOOK
-from airdrop.constants import STAKING_CONTRACT_PATH, CLAIM_SCHEMA, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus, \
+from airdrop.constants import STAKING_CONTRACT_PATH, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus, \
     PROCESSOR_PATH
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
