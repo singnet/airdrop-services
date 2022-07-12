@@ -12,6 +12,7 @@ class DefaultAirdrop(BaseAirdrop):
         self.register_all_window_at_once = False
         self.domain_name = "Nunet Airdrop"
         self.chain_context = {}
+        self.is_claim_signature_required = True
         self.claim_signature_data_format = ["string", "uint256", "uint256", "address", "uint256", "uint256", "address",
                                             "address"]
         self.claim_signature_private_key_secret = NUNET_SIGNER_PRIVATE_KEY

@@ -334,18 +334,21 @@ class AirdropServices:
             airdrop_class = UserRegistrationServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            claim_signature_private_key = self.get_private_key_for_generating_claim_signature(
-                secret_name=airdrop_object.claim_signature_private_key_secret)
-            signature_parameters = {
-                "claimable_amount": claimable_amount,
-                "total_eligible_amount": total_eligible_amount,
-                "user_address": user_address,
-                "contract_address": airdrop.contract_address,
-                "token_address": airdrop.token_address
-            }
-            signature_format, formatted_message = airdrop_object.format_and_get_claim_signature_details(
-                signature_parameters)
-            signature = self.generate_signature(claim_signature_private_key, signature_format, formatted_message)
+            if airdrop_object.is_claim_signature_required:
+                claim_signature_private_key = self.get_private_key_for_generating_claim_signature(
+                    secret_name=airdrop_object.claim_signature_private_key_secret)
+                signature_parameters = {
+                    "claimable_amount": claimable_amount,
+                    "total_eligible_amount": total_eligible_amount,
+                    "user_address": user_address,
+                    "contract_address": airdrop.contract_address,
+                    "token_address": airdrop.token_address
+                }
+                signature_format, formatted_message = airdrop_object.format_and_get_claim_signature_details(
+                    signature_parameters)
+                signature = self.generate_signature(claim_signature_private_key, signature_format, formatted_message)
+            else:
+                signature = "Not Applicable."
 
             response = {
                 "airdrop_id": str(airdrop.id),
