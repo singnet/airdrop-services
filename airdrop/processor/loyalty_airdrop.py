@@ -16,6 +16,7 @@ class LoyaltyAirdrop(BaseAirdrop):
             "chain": LoyaltyAirdropConfig.chain.value
         }
         self.is_claim_signature_required = False
+        self.reward_processor_name = ""
 
     def format_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]

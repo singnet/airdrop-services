@@ -100,7 +100,7 @@ package:
 
 functions:
   process_eligibility:
-    timeout: 300
+    timeout: 600
     warmup: false
     handler: airdrop/job/eligibility.process_eligibility
     layers:
