@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from py_eth_sig_utils.signing import v_r_s_to_signature, sign_typed_data
 
-from airdrop.application.handlers.airdrop_handlers import user_eligibility, user_registration
+from airdrop.application.handlers.airdrop_handlers import user_eligibility, user_registration, airdrop_window_claim
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT
 from airdrop.testcases.functional_testcases.load_test_data import clear_database, load_airdrop_data, \
     load_airdrop_window_data, load_user_reward_data, load_airdrop_user_registration
@@ -111,6 +111,22 @@ class TestLoyaltyAirdropServices(TestCase):
         response_body = json.loads(response["body"])
         self.assertTrue(response_body["data"]["is_eligible"])
         self.assertFalse(response_body["data"]["is_claimable"])
+
+    def test_airdrop_window_claim(self):
+        load_user_reward_data(self.airdrop.id, self.loyalty_airdrop_window1.id, LoyaltyAirdropUser1)
+        load_airdrop_user_registration(self.loyalty_airdrop_window1.id, LoyaltyAirdropUser1)
+        event = {
+            "body": json.dumps({
+                "address": LoyaltyAirdropUser1.address,
+                "airdrop_id": str(self.airdrop.id),
+                "airdrop_window_id": str(self.loyalty_airdrop_window1.id)
+            })
+        }
+        response = airdrop_window_claim(event=event, context=None)
+        assert (response["statusCode"] == 200)
+        response_body = json.loads(response["body"])
+        assert(response_body["data"]["airdrop_id"]==str(self.airdrop.id))
+        assert(response_body["data"]["signature"]=="Not Applicable.")
 
     def tearDown(self):
         clear_database()

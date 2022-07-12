@@ -11,12 +11,11 @@ class LoyaltyAirdrop(BaseAirdrop):
         self.register_all_window_at_once = True
         self.domain_name = "SingularityNet"
         self.chain_context = {
-            "deposit_address": LoyaltyAirdropConfig.deposit_address,
+            "deposit_address": LoyaltyAirdropConfig.deposit_address.value,
             "amount": LoyaltyAirdropConfig.pre_claim_transfer_amount.value["amount"],
-            "chain": LoyaltyAirdropConfig.chain
+            "chain": LoyaltyAirdropConfig.chain.value
         }
-        self.claim_signature_data_format = ["string", "uint256", "uint256", "address", "uint256", "string"]
-        self.claim_signature_private_key_secret = NUNET_SIGNER_PRIVATE_KEY
+        self.is_claim_signature_required = False
 
     def format_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
@@ -41,13 +40,6 @@ class LoyaltyAirdrop(BaseAirdrop):
         elif unclaimed_reward > 0:
             return True
         return False
-
-    def format_and_get_claim_signature_details(self, signature_parameters):
-        deposit_address = self.chain_context["deposit_address"]
-        amount = self.chain_context["amount"]
-        chain = self.chain_context["chain"]
-        data = ["__airdropclaim", int(self.airdrop_id), int(self.airdrop_window_id), deposit_address, amount, chain]
-        return self.claim_signature_data_format, data
 
     @staticmethod
     def trim_prefix_from_string_message(prefix, message):
