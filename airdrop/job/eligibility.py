@@ -1,5 +1,9 @@
 
 import sys
+
+from airdrop.application.services.airdrop_services import AirdropServices
+from airdrop.constants import PROCESSOR_PATH
+
 sys.path.append('/opt')
 import time
 import uuid
@@ -103,9 +107,11 @@ class EligibilityProcessor:
         if len(self._reward_airdrop_window_map) > 0:
             logger.info("Processing final rewards")
             for window in self._reward_airdrop_window_map:
-                processor_name = self._reward_airdrop_window_map[window]["airdrop_processor"]
                 airdrop_id = self._reward_airdrop_window_map[window]["airdrop_id"]
-                self.__process_reward(processor_name, airdrop_id, window, "FINAL", True)
+                airdrop_class_name = self._reward_airdrop_window_map[window]["airdrop_processor"]
+                airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop_class_name}")
+                reward_processor_name = airdrop_class(airdrop_id).reward_processor_name
+                self.__process_reward(reward_processor_name, airdrop_id, window, "FINAL", True)
 
         if len(self._active_airdrop_window_map) == 0:
             logger.info(f"No airdrop windows to process for")

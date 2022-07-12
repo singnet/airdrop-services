@@ -5,6 +5,7 @@ from pydoc import locate
 from jsonschema import validate, ValidationError
 from web3 import Web3
 
+from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION, AIRDROP_RECEIPT_SECRET_KEY
 from airdrop.constants import PROCESSOR_PATH, AirdropClaimStatus
 from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA
@@ -38,7 +39,7 @@ class UserRegistrationServices:
             if airdrop_window is None:
                 raise Exception("Airdrop window id is not valid.")
 
-            airdrop_class = UserRegistrationServices.load_airdrop_class(airdrop)
+            airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             user_eligible_for_given_window = UserRepository(). \
@@ -113,7 +114,7 @@ class UserRegistrationServices:
             if not airdrop:
                 raise Exception("Airdrop id is not valid.")
 
-            airdrop_class = self.load_airdrop_class(airdrop)
+            airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             signature_verified, recovered_address, signature_details = self. \
@@ -196,11 +197,3 @@ class UserRegistrationServices:
         formatted_message = airdrop_object.format_signature_message(address, signature_parameters)
         signature_verified, recovered_address = airdrop_object.match_signature(address, formatted_message, signature)
         return signature_verified, recovered_address, formatted_message
-
-    @staticmethod
-    def load_airdrop_class(airdrop):
-        if airdrop.airdrop_processor:
-            airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop.airdrop_processor}")
-        else:
-            airdrop_class = DefaultAirdrop
-        return airdrop_class

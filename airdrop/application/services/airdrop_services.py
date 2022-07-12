@@ -1,6 +1,7 @@
 import ast
 from datetime import datetime
 from http import HTTPStatus
+from pydoc import locate
 
 import web3
 from eth_account.messages import encode_defunct
@@ -11,10 +12,12 @@ from airdrop.application.services.user_registration_services import UserRegistra
 from airdrop.config import NETWORK, DEFAULT_REGION
 from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
     NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY, SLACK_HOOK
-from airdrop.constants import STAKING_CONTRACT_PATH, CLAIM_SCHEMA, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus
+from airdrop.constants import STAKING_CONTRACT_PATH, CLAIM_SCHEMA, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus, \
+    PROCESSOR_PATH
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
+from airdrop.processor.default_airdrop import DefaultAirdrop
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import generate_claim_signature, generate_claim_signature_with_total_eligibile_amount, \
@@ -331,7 +334,7 @@ class AirdropServices:
             if claimable_amount == 0:
                 raise Exception("Airdrop Already claimed / pending")
 
-            airdrop_class = UserRegistrationServices.load_airdrop_class(airdrop)
+            airdrop_class = self.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             if airdrop_object.is_claim_signature_required:
@@ -473,3 +476,11 @@ class AirdropServices:
             return boto_client.get_parameter_value_from_secrets_manager(secret_name=secret_name)
         except Exception as e:
             raise Exception("Unable to fetch private key for generating claim signature.")
+
+    @staticmethod
+    def load_airdrop_class(airdrop):
+        if airdrop.airdrop_processor:
+            airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop.airdrop_processor}")
+        else:
+            airdrop_class = DefaultAirdrop
+        return airdrop_class
