@@ -1,21 +1,9 @@
-from sqlalchemy import (
-    BIGINT,
-    BigInteger,
-    VARCHAR,
-    Column,
-    DECIMAL,
-    TEXT,
-    text,
-    UniqueConstraint,
-    INTEGER,
-    ForeignKey,
-    JSON
-)
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import BIGINT, VARCHAR, Column, DECIMAL, TEXT, text, UniqueConstraint, INTEGER, ForeignKey, JSON, Index
 from sqlalchemy.dialects.mysql import TIMESTAMP, BIT
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.relationships import foreign
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -121,6 +109,7 @@ class UserBalanceSnapshot(Base, AuditClass):
     staked = Column("staked", DECIMAL(64, 0), nullable=False)
     total = Column("total", DECIMAL(64, 0), nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
+    Index("window_snapshotguid_addr_idx", airdrop_window_id, snapshot_guid, address)
 
 
 class UserRegistration(Base, AuditClass):

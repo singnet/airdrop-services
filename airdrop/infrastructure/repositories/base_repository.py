@@ -10,7 +10,7 @@ password=NETWORK['db']["DB_PASSWORD"]
 port=NETWORK['db']["DB_PORT"]
 
 connection_string = f"{driver}://{user}:{password}@{host}:{port}/{db_name}"
-engine = create_engine(connection_string, pool_pre_ping=True, echo=False)
+engine = create_engine(connection_string, pool_pre_ping=True, echo=False, isolation_level="READ COMMITTED")
 
 Session = sessionmaker(bind=engine)
 default_session = Session()
