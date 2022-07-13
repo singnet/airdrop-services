@@ -1,3 +1,5 @@
+from enum import Enum
+
 NETWORK = {
     "name": "test",
     "http_provider": "https://ropsten.infura.io",
@@ -24,6 +26,7 @@ BALANCE_DB_CONFIG = {
 }
 
 NETWORK_ID = 3
+DEFAULT_REGION = "us-east-1"
 SLACK_HOOK = {
     "hostname": "https://hooks.slack.com",
     "port": 443,
@@ -47,3 +50,9 @@ MAX_STAKE_LIMIT = 25000
 
 class AirdropStrategy:
     AGIX = "AGIX"
+
+
+class LoyaltyAirdropConfig(Enum):
+    deposit_address = "addr"
+    pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
+    chain = "Cardano"
