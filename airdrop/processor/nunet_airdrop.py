@@ -1,11 +1,11 @@
 from web3 import Web3
 
+from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
 from airdrop.processor.base_airdrop import BaseAirdrop
-from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
 
 
-class DefaultAirdrop(BaseAirdrop):
+class NunetAirdrop(BaseAirdrop):
     def __init__(self, airdrop_id, airdrop_window_id=None):
         self.airdrop_id = airdrop_id
         self.airdrop_window_id = airdrop_window_id
