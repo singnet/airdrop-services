@@ -118,9 +118,11 @@ class EligibilityProcessor:
         logger.info(f"Processing eligibility for windows {self._active_airdrop_window_map.keys()}. Snapshot Index is {self._snapshot_guid}")
         self.__populate_snapshot()
         for window in self._active_airdrop_window_map:
-            processor_name = self._active_airdrop_window_map[window]["airdrop_processor"]
             airdrop_id = self._active_airdrop_window_map[window]["airdrop_id"]
-            self.__process_reward(processor_name, airdrop_id, window, self._snapshot_guid, False)
+            airdrop_class_name = self._active_airdrop_window_map[window]["airdrop_processor"]
+            airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop_class_name}")
+            reward_processor_name = airdrop_class(airdrop_id).reward_processor_name
+            self.__process_reward(reward_processor_name, airdrop_id, window, self._snapshot_guid, False)
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
 def process_eligibility(event, context):      
