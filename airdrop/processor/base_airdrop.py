@@ -11,3 +11,10 @@ class BaseAirdrop:
         if recovered_address.lower() == address.lower():
             signature_verified = True
         return signature_verified, recovered_address
+
+    @staticmethod
+    def trim_prefix_from_string_message(prefix, message):
+        # move to utils
+        if message.startswith(prefix):
+            message = message[len(prefix):]
+        return message

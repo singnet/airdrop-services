@@ -1,13 +1,11 @@
-
 import sys
-
-from airdrop.application.services.airdrop_services import AirdropServices
-from airdrop.constants import PROCESSOR_PATH
-
 sys.path.append('/opt')
+
+
 import time
 import uuid
 
+from airdrop.constants import PROCESSOR_PATH
 from airdrop.job.repository import Repository
 from common.exception_handler import exception_handler
 from common.utils import generate_lambda_response
@@ -133,7 +131,7 @@ def process_eligibility(event, context):
         e.process_specific_reward(event)
     else: 
         e.process_eligibility()
-    
+
     logger.info(f"Completed Processing eligibility")
     return generate_lambda_response(
         200,
