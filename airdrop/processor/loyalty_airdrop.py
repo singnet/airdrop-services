@@ -1,5 +1,4 @@
 from airdrop.config import LoyaltyAirdropConfig
-from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT
 from airdrop.processor.base_airdrop import BaseAirdrop
 
@@ -41,10 +40,3 @@ class LoyaltyAirdrop(BaseAirdrop):
         elif unclaimed_reward > 0:
             return True
         return False
-
-    @staticmethod
-    def trim_prefix_from_string_message(prefix, message):
-        # move to utils
-        if message.startswith(prefix):
-            message = message[len(prefix):]
-        return message
