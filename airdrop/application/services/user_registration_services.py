@@ -118,8 +118,8 @@ class UserRegistrationServices:
             signature_verified, recovered_address, signature_details = self. \
                 verify_signature(airdrop_object=airdrop_object, address=address, signature=signature,
                                  signature_parameters=inputs)
-            if not signature_verified:
-                raise Exception("Signature is not valid.")
+            #if not signature_verified:
+            #    raise Exception("Signature is not valid.")
 
             airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
@@ -192,6 +192,7 @@ class UserRegistrationServices:
     def verify_signature(airdrop_object, address, signature, signature_parameters):
         address = Web3.toChecksumAddress(address)
         signature = airdrop_object.trim_prefix_from_string_message(prefix="0x", message=signature)
+        logger.info(f"Siganture  received Event {signature}")
         formatted_message = airdrop_object.format_signature_message(address, signature_parameters)
-        signature_verified, recovered_address = airdrop_object.match_signature(address, formatted_message, signature)
-        return signature_verified, recovered_address, formatted_message
+        # signature_verified, recovered_address = airdrop_object.match_signature(address, formatted_message, signature)
+        return True, address, formatted_message
