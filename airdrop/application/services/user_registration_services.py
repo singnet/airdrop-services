@@ -70,7 +70,7 @@ class UserRegistrationServices:
                 registration_id = user_registration.id
                 reject_reason = user_registration.reject_reason
                 registration_details = {
-                    "registration_id": user_registration.id,
+                    "registration_id": user_registration.receipt_generated,
                     "reject_reason": user_registration.reject_reason,
                     "other_details": user_registration.signature_details.get("message", {}).get("Airdrop", {}),
                     "registered_at": str(user_registration.registered_at),
