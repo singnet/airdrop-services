@@ -67,10 +67,10 @@ class UserRegistrationServices:
             # gas in trying to claim again)
             registration_id, reject_reason, registration_details = "", None, dict()
             if user_registered:
-                registration_id = user_registration.id
+                registration_id = user_registration.receipt_generated
                 reject_reason = user_registration.reject_reason
                 registration_details = {
-                    "registration_id": user_registration.id,
+                    "registration_id": user_registration.receipt_generated,
                     "reject_reason": user_registration.reject_reason,
                     "other_details": user_registration.signature_details.get("message", {}).get("Airdrop", {}),
                     "registered_at": str(user_registration.registered_at),
