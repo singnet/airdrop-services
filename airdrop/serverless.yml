@@ -113,7 +113,7 @@ resources:
           deadLetterTargetArn: !GetAtt airdropEventConsumerDLQQueue.Arn
           maxReceiveCount: 15
 
-    airdropEventConsumerQueuePolicy:
+  airdropEventConsumerQueuePolicy:
       Type: AWS::SQS::QueuePolicy
       Properties:
         PolicyDocument:
