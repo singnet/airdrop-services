@@ -50,7 +50,7 @@ class AirdropRepository(BaseRepository):
             ).join(AirdropWindow,
                    ClaimHistory.airdrop_window_id == AirdropWindow.id).filter(
                 ClaimHistory.airdrop_id == airdrop_id).filter(ClaimHistory.address == address). \
-                filter(UserRegistration.address == address).all()
+                filter(UserRegistration.address == address).order_by(ClaimHistory.row_updated.desc()).all()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
