@@ -333,3 +333,6 @@ class AirdropRepository(BaseRepository):
 
     def get_airdrop_details(self, airdrop_id):
         return self.session.query(Airdrop).filter(Airdrop.id == airdrop_id).first()
+
+    def get_airdrop_window_details(self, airdrop_window_id):
+        return self.session.query(AirdropWindow).filter(AirdropWindow.id == airdrop_window_id).first()
