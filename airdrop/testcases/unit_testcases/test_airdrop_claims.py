@@ -53,7 +53,7 @@ class AirdropClaims(TestCase):
                                                    registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
 
     @patch('common.utils.recover_address')
-    @patch('airdrop.infrastructure.repositories.user_repository.UserRepository.check_rewards_awarded')
+    @patch('airdrop.infrastructure.repositories.user_registration_repo.UserRegistrationRepository.check_rewards_awarded')
     @patch('airdrop.application.services.airdrop_services.AirdropServices.get_signature_for_airdrop_window_id')
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
     @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.is_claimed_airdrop_window')
