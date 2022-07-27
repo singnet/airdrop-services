@@ -114,14 +114,15 @@ class AirdropServices:
 
             user_wallet_address = get_checksum_address(user_address)
 
-            airdrop_rewards, user_address, contract_address, token_address, staking_contract_address, total_eligibility_amount = AirdropRepository().get_airdrop_window_claimable_info(
+            airdrop_rewards, user_address, contract_address, token_address, staking_contract_address, \
+            total_eligibility_amount = AirdropRepository().get_airdrop_window_claimable_info(
                 airdrop_id, airdrop_window_id, user_wallet_address)
 
             staking_contract_address, token_name = AirdropRepository(
             ).get_staking_contract_address(airdrop_id)
 
             is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_info(
-                staking_contract_address, user_wallet_address, int(airdrop_rewards))
+                staking_contract_address, user_wallet_address, int(airdrop_rewards), int(airdrop_window_id))
             stakable_tokens = stakable_amount
 
             stake_details = AirdropFactory.convert_stake_claim_details_to_model(
@@ -139,7 +140,7 @@ class AirdropServices:
 
         return status, response
 
-    def get_stake_info(self, contract_address, user_wallet_address, airdrop_rewards):
+    def get_stake_info(self, contract_address, user_wallet_address, airdrop_rewards, airdrop_window_id):
         try:
 
             is_stake_window_is_open, max_stake_amount, max_window_stake_amount, total_window_amount_staked \
@@ -151,7 +152,7 @@ class AirdropServices:
 
             is_stakable, stake_amount, transfer_to_wallet = self.get_stake_and_claimable_amounts(
                 airdrop_rewards, is_stake_window_is_open, max_stake_amount, already_staked_amount,
-                max_window_stake_amount, total_window_amount_staked)
+                max_window_stake_amount, total_window_amount_staked, airdrop_window_id)
             return is_stakable, stake_amount, transfer_to_wallet
 
         except BaseException as e:
@@ -163,11 +164,13 @@ class AirdropServices:
             return False, 0, airdrop_rewards
 
     def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount,
-                                        already_staked_amount, max_window_stake_amount, total_window_amount_staked):
+                                        already_staked_amount, max_window_stake_amount, total_window_amount_staked,
+                                        airdrop_window_id):
 
         transfer_to_wallet = airdrop_rewards
         stakable_amount = 0
-
+        airdrop_window_details = AirdropRepository().get_airdrop_window_details(airdrop_window_id)
+        minimum_stake_amount = airdrop_window_details.minimum_stake_amount
         # User can stake if stake window is open and user can stake
         if is_stake_window_is_open:
             # get the limit per user
@@ -189,6 +192,9 @@ class AirdropServices:
             else:
                 stakable_amount = allowed_amount_for_stake
 
+            # Ensure the stake amount is greater than minimum stake amount
+            if minimum_stake_amount > stakable_amount:
+                stakable_amount = 0
             # Amount user can claim to wallet after staking
             if stakable_amount > 0:
                 transfer_to_wallet = airdrop_rewards - stakable_amount
