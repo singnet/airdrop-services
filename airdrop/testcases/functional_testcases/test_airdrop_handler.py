@@ -191,19 +191,19 @@ class TestAirdropHandler(unittest.TestCase):
             user_eligibility_object['airdrop_window_id'], airdrop_window_id)
 
     @patch("common.utils.Utils.report_slack")
-    @patch('common.utils.recover_address')
-    @patch('airdrop.infrastructure.repositories.user_repository.UserRepository.check_rewards_awarded')
-    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_signature_for_airdrop_window_id')
-    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
-    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.is_claimed_airdrop_window')
+    @patch("common.utils.recover_address")
+    @patch("airdrop.infrastructure.repositories.user_registration_repo.UserRegistrationRepository.check_rewards_awarded")
+    @patch("airdrop.application.services.airdrop_services.AirdropServices.get_signature_for_airdrop_window_id")
+    @patch("airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info")
+    @patch("airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.is_claimed_airdrop_window")
     def test_airdrop_window_claim(self, mock_is_claimed_airdrop_window, mock_get_airdrop_window_claimable_info,
                                   mock_get_signature_for_airdrop_window_id, mock_check_rewards_awarded,
                                   mock_recover_address, mock_report_slack):
-        address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
-        airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
-        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
-        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
-        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        address = "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8"
+        airdrop_claim_signature = "958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F"
+        contract_address = "0x5e94577b949a56279637ff74dfcff2c28408f049"
+        token_address = "0x5e94577b949a56279637ff74dfcff2c28408f049"
+        staking_contract_address = "0x5e94577b949a56279637ff74dfcff2c28408f049"
 
         mock_recover_address.return_value = address
         mock_is_claimed_airdrop_window.return_value = {}
@@ -226,20 +226,20 @@ class TestAirdropHandler(unittest.TestCase):
             })
         }
         result = occam_airdrop_window_claim(event, None)
-        result = json.loads(result['body'])
-        claim_signature_object = result['data']
-        self.assertEqual(result['status'], HTTPStatus.OK.value)
-        self.assertEqual(claim_signature_object['user_address'], address)
+        result = json.loads(result["body"])
+        claim_signature_object = result["data"]
+        self.assertEqual(result["status"], HTTPStatus.OK.value)
+        self.assertEqual(claim_signature_object["user_address"], address)
 
     @patch("common.boto_utils.BotoUtils.get_parameter_value_from_secrets_manager")
     def test_airdrop_config_and_signature(self, mock_get_parameter_value_from_secrets_manager):
-        private_key = '12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001'
+        private_key = "12b7972e86b2f45f130a3089ff1908d00d8fed70dc9b7b002c6656d983776001"
         mock_get_parameter_value_from_secrets_manager.return_value = private_key
         reward = 10000000000000000000000
         user_address = "0xd1C9246f6A15A86bae293a3E72F28C57Da6e1dCD"
 
-        contract_address = '0x5E94577b949a56279637ff74DfcFf2C28408f049'
-        token_address = '0x5E94577b949a56279637ff74DfcFf2C28408f049'
+        contract_address = "0x5E94577b949a56279637ff74DfcFf2C28408f049"
+        token_address = "0x5E94577b949a56279637ff74DfcFf2C28408f049"
         AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, reward,
                                                   user_address, 1, 1)
         AirdropRepository().register_user_registration(airdrop_window_id, user_address)
@@ -253,7 +253,7 @@ class TestAirdropHandler(unittest.TestCase):
         message_hash = encode_defunct(message)
 
         web3_object = Web3(web3.providers.HTTPProvider(
-            NETWORK['http_provider']))
+            NETWORK["http_provider"]))
         signed_message = web3_object.eth.account.sign_message(
             message_hash, private_key=private_key)
         self.assertIsNotNone(NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION)
@@ -268,14 +268,14 @@ class TestAirdropHandler(unittest.TestCase):
             })
         }
         result = airdrop_window_claim(event, None)
-        result = json.loads(result['body'])
-        final_result = result['data']
-        self.assertEqual(expected_signature, final_result['signature'])
+        result = json.loads(result["body"])
+        final_result = result["data"]
+        self.assertEqual(expected_signature, final_result["signature"])
 
     @patch("common.utils.Utils.report_slack")
     def test_airdrop_window_claim_update_txn(self, mock_report_slack):
-        address = '0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8'
-        airdrop_claim_signature = '958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F'
+        address = "0xEA674fdDe714fd979de3EdF0F56AA9716B898ec8"
+        airdrop_claim_signature = "958449C28930970989dB5fFFbEdd9F44989d33a958B5fF989dB5f33a958F"
 
         event = {
             "body": json.dumps({
@@ -287,7 +287,7 @@ class TestAirdropHandler(unittest.TestCase):
             })
         }
         result = airdrop_window_claim_status(event, None)
-        result = json.loads(result['body'])
+        result = json.loads(result["body"])
         self.assertIsNotNone(result)
 
     @patch("common.utils.Utils.report_slack")
@@ -298,7 +298,7 @@ class TestAirdropHandler(unittest.TestCase):
             })
         }
         result = user_notifications(event, None)
-        result = json.loads(result['body'])
+        result = json.loads(result["body"])
         self.assertIsNotNone(result)
 
     @patch("common.utils.Utils.report_slack")

@@ -18,7 +18,7 @@ class DefaultAirdrop(BaseAirdrop):
         self.claim_signature_private_key_secret = NUNET_SIGNER_PRIVATE_KEY
         self.reward_processor_name = ""
 
-    def format_signature_message(self, address, signature_parameters):
+    def format_user_registration_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
         formatted_message = USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
         formatted_message["message"] = {

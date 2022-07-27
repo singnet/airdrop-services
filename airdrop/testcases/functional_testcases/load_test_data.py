@@ -3,12 +3,12 @@ from datetime import datetime as dt
 from airdrop.infrastructure.models import Airdrop, AirdropWindow, UserRegistration, UserReward
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
-from airdrop.infrastructure.repositories.user_repository import UserRepository
+from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.infrastructure.repositories.user_reward_repository import UserRewardRepository
 
 airdrop_repository = AirdropRepository()
 airdrop_window_repository = AirdropWindowRepository()
-user_repository = UserRepository()
+user_repository = UserRegistrationRepository()
 user_reward_repository = UserRewardRepository()
 
 
@@ -73,7 +73,7 @@ def load_airdrop_user_registration(airdrop_window_id, airdrop_user):
             address=airdrop_user.address,
             airdrop_window_id=airdrop_window_id,
             registered_at=dt.utcnow(),
-            receipt_generated="",
+            receipt_generated="VkMBsWZsK1bn3mxXQlhPxW8FWzKvewws+yZjHourUGpsIkV0ytus2JrIWs9uA8x5q0le4cMyqmJNmq+2ZbLanxw=",
             user_signature="",
             signature_details={"message": {"Airdrop": {"address": "addr_test", "block_no": 54321}}},
             user_signature_block_number=airdrop_user.signature_details["block_no"]

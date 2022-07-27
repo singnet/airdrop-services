@@ -1,6 +1,6 @@
 from jsonschema import validate, ValidationError, FormatChecker
 from http import HTTPStatus
-from airdrop.infrastructure.repositories.user_repository import UserRepository
+from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 
 
 class UserNotificationService:
@@ -19,7 +19,7 @@ class UserNotificationService:
                      format_checker=FormatChecker())
             email = inputs["email"]
             airdrop_id = inputs["airdrop_id"]
-            UserRepository().subscribe_to_notifications(email,airdrop_id)
+            UserRegistrationRepository().subscribe_to_notifications(email, airdrop_id)
             response = HTTPStatus.OK.phrase
             status = HTTPStatus.OK
         except ValidationError as e:
