@@ -68,6 +68,7 @@ class AirdropWindow(Base, AuditClass):
         "claim_start_period", TIMESTAMP(), nullable=True)
     claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=True)
     total_airdrop_tokens = Column("total_airdrop_tokens", INTEGER, default=0)
+    minimum_stake_amount = Column("minimum_stake_amount", INTEGER, default=0)
     airdrop = relationship(Airdrop, backref="windows")
 
 
