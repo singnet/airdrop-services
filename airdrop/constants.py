@@ -5,9 +5,9 @@ from enum import Enum
 from airdrop.config import NETWORK_ID
 
 PROCESSOR_PATH = "airdrop.processor"
-COMMON_CNTRCT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'resources'))
-AIRDROP_ADDR_PATH = COMMON_CNTRCT_PATH + '/singularitynet-airdrop-contracts/networks/SingularityAirdrop.json'
-STAKING_CONTRACT_PATH = COMMON_CNTRCT_PATH + '/singularitynet-staking-contract'
+COMMON_CNTRCT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources"))
+AIRDROP_ADDR_PATH = COMMON_CNTRCT_PATH + "/singularitynet-airdrop-contracts/networks/SingularityAirdrop.json"
+STAKING_CONTRACT_PATH = COMMON_CNTRCT_PATH + "/singularitynet-staking-contract"
 
 ELIGIBILITY_SCHEMA = {
     "type": "object",
@@ -71,15 +71,50 @@ USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT = deepcopy(USER_REGISTRATION_
 USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT["types"]["AirdropSignatureTypes"] \
     .append({"name": "cardanoAddress", "type": "string"})
 USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT["message"]["Airdrop"]["cardanoAddress"] = ""
+USER_CLAIM_SIGNATURE_DEFAULT_FORMAT = {
+    "types": {
+        "EIP712Domain": [
+            {"name": "name", "type": "string"},
+            {"name": "version", "type": "string"},
+            {"name": "chainId", "type": "uint256"},
+        ],
+        "AirdropSignatureTypes": [
+            {"name": "airdropWindowId", "type": "uint256"},
+            {"name": "receipt", "type": "string"},
+        ],
+        "Mail": [
+            {"name": "Airdrop", "type": "AirdropSignatureTypes"},
+        ],
+    },
+    "primaryType": "Mail",
+    "domain": {
+        "name": "",
+        "version": "1",
+        "chainId": NETWORK_ID,
+    },
+    "message": {
+        "Airdrop": {
+            "airdropWindowId": 0,
+            "receipt": ""
+        },
+
+    },
+}
 
 
 class AirdropClaimStatus(Enum):
-    PENDING = 'PENDING'
-    SUCCESS = 'SUCCESS'
-    FAILED = 'FAILED'
-    NOT_STARTED = 'NOT_STARTED'
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    NOT_STARTED = "NOT_STARTED"
 
 
 class AirdropEvents(Enum):
-    AIRDROP_CLAIM = 'Claim'
-    AIRDROP_WINDOW_OPEN = 'AirdropWindowOpen'
+    AIRDROP_CLAIM = "Claim"
+    AIRDROP_WINDOW_OPEN = "AirdropWindowOpen"
+
+
+class BlockFrostAPI:
+    get_last_block = "https://cardano-testnet.blockfrost.io/api/v0/blocks/latest"
+    get_stake_address = "https://cardano-testnet.blockfrost.io/api/v0/addresses/{address}"
+    get_account_associated_addresses = "https://cardano-testnet.blockfrost.io/api/v0/accounts/{stake_address}/addresses"

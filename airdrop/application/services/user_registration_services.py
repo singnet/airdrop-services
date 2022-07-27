@@ -10,12 +10,14 @@ from airdrop.constants import AirdropClaimStatus
 from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
-from airdrop.infrastructure.repositories.user_repository import UserRepository
+from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
+from airdrop.utils import Utils
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import get_registration_receipt
 
 logger = get_logger(__name__)
+utils = Utils()
 
 
 class UserRegistrationServices:
@@ -40,16 +42,16 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            user_eligible_for_given_window = UserRepository(). \
+            user_eligible_for_given_window = UserRegistrationRepository(). \
                 is_user_eligible_for_given_window(address, airdrop_id, airdrop_window_id)
 
-            unclaimed_reward = UserRepository().get_unclaimed_reward(airdrop_id, address)
+            unclaimed_reward = UserRegistrationRepository().get_unclaimed_reward(airdrop_id, address)
 
             is_user_eligible = airdrop_object.check_user_eligibility(user_eligible_for_given_window, unclaimed_reward)
 
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
-            user_registered, user_registration = UserRepository(). \
+            user_registered, user_registration = UserRegistrationRepository(). \
                 get_user_registration_details(address, airdrop_window_id)
 
             is_airdrop_window_claimed = False
@@ -105,6 +107,7 @@ class UserRegistrationServices:
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"].lower()
+            checksum_address = Web3.toChecksumAddress(address)
             signature = inputs["signature"]
             block_number = inputs["block_number"]
 
@@ -115,11 +118,12 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            signature_verified, recovered_address, signature_details = self. \
-                verify_signature(airdrop_object=airdrop_object, address=address, signature=signature,
-                                 signature_parameters=inputs)
-            #if not signature_verified:
-            #    raise Exception("Signature is not valid.")
+            formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, signature_parameters=inputs)
+            formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
+            # disable signature check
+            # sign_verified, recovered_address = utils.match_signature(address, formatted_message,formatted_signature)
+            # if not sign_verified:
+            #     raise Exception("Signature is not valid.")
 
             airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
@@ -129,16 +133,16 @@ class UserRegistrationServices:
             if airdrop_window.registration_required and not is_registration_open:
                 raise Exception("Airdrop window is not accepting registration at this moment.")
 
-            user_eligible_for_given_window = UserRepository(). \
+            user_eligible_for_given_window = UserRegistrationRepository(). \
                 is_user_eligible_for_given_window(address, airdrop_id, airdrop_window_id)
 
-            unclaimed_reward = UserRepository().get_unclaimed_reward(airdrop_id, address)
+            unclaimed_reward = UserRegistrationRepository().get_unclaimed_reward(airdrop_id, address)
 
             is_user_eligible = airdrop_object.check_user_eligibility(user_eligible_for_given_window, unclaimed_reward)
             if not is_user_eligible:
                 raise Exception("Address is not eligible for this airdrop.")
 
-            user_registered, user_registration = UserRepository(). \
+            user_registered, user_registration = UserRegistrationRepository(). \
                 get_user_registration_details(address, airdrop_window_id)
 
             if user_registered:
@@ -149,13 +153,13 @@ class UserRegistrationServices:
                 airdrop_windows = AirdropWindowRepository().get_airdrop_windows(airdrop_id)
                 for airdrop_window in airdrop_windows:
                     receipt = self.generate_user_registration_receipt(airdrop_id, airdrop_window.id, address)
-                    UserRepository().register_user(airdrop_window.id, address, receipt, signature, signature_details,
-                                                   block_number)
+                    UserRegistrationRepository().register_user(airdrop_window.id, address, receipt, signature,
+                                                               formatted_message, block_number)
                     response.append({"airdrop_window_id": airdrop_window.id, "receipt": receipt})
             else:
                 receipt = self.generate_user_registration_receipt(airdrop_id, airdrop_window_id, address)
-                UserRepository().register_user(airdrop_window_id, address, receipt, signature, signature_details,
-                                               block_number)
+                UserRegistrationRepository().register_user(airdrop_window_id, address, receipt, signature,
+                                                           formatted_message, block_number)
                 # Keeping it backward compatible
                 response = receipt
         except ValidationError as e:
@@ -187,12 +191,3 @@ class UserRegistrationServices:
         if now > start_period or now < end_period:
             return True
         return False
-
-    @staticmethod
-    def verify_signature(airdrop_object, address, signature, signature_parameters):
-        address = Web3.toChecksumAddress(address)
-        signature = airdrop_object.trim_prefix_from_string_message(prefix="0x", message=signature)
-        logger.info(f"Siganture  received Event {signature}")
-        formatted_message = airdrop_object.format_signature_message(address, signature_parameters)
-        # signature_verified, recovered_address = airdrop_object.match_signature(address, formatted_message, signature)
-        return True, address, formatted_message

@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 
-class UserRepository(BaseRepository):
+class UserRegistrationRepository(BaseRepository):
 
     def subscribe_to_notifications(self, email, airdrop_id):
         try:
@@ -110,15 +110,19 @@ class UserRepository(BaseRepository):
         else:
             return False
 
-    def get_user_registration_details(self, address, airdrop_window_id):
-        user_registration = self.session.query(UserRegistration) \
-            .filter(UserRegistration.airdrop_window_id == airdrop_window_id) \
-            .filter(UserRegistration.address == address) \
-            .filter(UserRegistration.registered_at != None) \
-            .first()
-        if user_registration:
-            return True, user_registration
-        return False, user_registration
+    def get_user_registration_details(self, address=None, airdrop_window_id=None, registration_id=None):
+        query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
+        if address:
+            query = query.filter(UserRegistration.address == address)
+        if airdrop_window_id:
+            query = query.filter(UserRegistration.airdrop_window_id == airdrop_window_id)
+        if registration_id:
+            query = query.filter(UserRegistration.receipt_generated == registration_id)
+        user_registrations = query.all()
+        registration_count = len(user_registrations)
+        if registration_count:
+            return True, user_registrations[0] if registration_count == 1 else user_registrations
+        return False, None
 
     def get_unclaimed_reward(self, airdrop_id, address):
         try:
