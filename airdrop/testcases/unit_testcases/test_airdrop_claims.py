@@ -178,7 +178,7 @@ class AirdropClaims(TestCase):
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertEqual(response, {})
-    
+
     def test_airdrop_event_consumer_with_airdropAmount_in_payload(self):
 
         payload = {
@@ -657,3 +657,54 @@ class AirdropClaims(TestCase):
 
         response = AirdropServices().airdrop_txn_watcher()
         self.assertEqual(response, None)
+    @patch('airdrop.infrastructure.repositories.airdrop_repository.AirdropRepository.get_airdrop_window_claimable_info')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_window_details')
+    @patch('airdrop.application.services.airdrop_services.AirdropServices.get_stake_details_of_address')
+    def test_get_airdrop_window_stake_details_user_can_stake_but_amount_lessthan_minimum_stake_amount(self, mock_get_stake_details_of_address, mock_get_stake_window_details, mock_get_airdrop_window_claimable_info):
+
+        user_wallet_address = "0x46EF7d49aaA68B29C227442BDbD18356415f8304"
+        contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+        staking_contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
+
+        is_stake_window_open = True
+        is_already_staked_user = False
+        window_max_stake = 100000
+        window_stake_amount = 200
+        max_stakable_amount = 10000
+        already_staked_amount = 0
+        airdrop_rewards = 10000
+        AirdropRepository().update_minimum_stake_amount(airdrop_window_id,10001)
+
+
+        mock_get_stake_window_details.return_value = is_stake_window_open, max_stakable_amount,window_max_stake,window_stake_amount
+        mock_get_stake_details_of_address.return_value = is_already_staked_user, already_staked_amount
+        mock_get_airdrop_window_claimable_info.return_value = airdrop_rewards, user_wallet_address, contract_address, \
+                                                              token_address, staking_contract_address,0
+
+        event = {
+            "address": user_wallet_address,
+            "airdrop_id": str(airdrop_id),
+            "airdrop_window_id": str(airdrop_window_id)
+        }
+
+        expected_result = {
+            "stake_details": {
+                "airdrop_id": str(airdrop_id),
+                "airdrop_window_id": str(airdrop_window_id),
+                "address": user_wallet_address,
+                "claimable_tokens_to_wallet": str(airdrop_rewards),
+                "stakable_tokens": str(0),
+                "is_stakable": False,
+                "token_name": "AGIX",
+                "airdrop_rewards": str(airdrop_rewards),
+                "total_eligible_amount": str(0)
+            }
+        }
+
+        status_code, response = AirdropServices().get_airdrop_window_stake_details(event)
+        self.assertEqual(response, expected_result)
+        self.assertEqual(status_code, HTTPStatus.OK.value)
+        #reset the value
+        AirdropRepository().update_minimum_stake_amount(airdrop_window_id,0)
+
