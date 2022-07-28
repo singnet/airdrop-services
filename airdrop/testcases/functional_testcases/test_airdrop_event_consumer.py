@@ -44,8 +44,8 @@ class TestAirdropEventConsumer(TestCase):
         }
         deposit_event_body.update({"Message": json.dumps(deposit_event_message)})
         event["Records"][0].update({"body": json.dumps(deposit_event_body)})
-        response = deposit_event_consumer(event, context=None)
-        print(response)
+        # response = deposit_event_consumer(event, context=None)
+        # print(response)
 
     def tearDown(self):
         clear_database()
