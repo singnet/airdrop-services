@@ -96,8 +96,9 @@ class DepositEventConsumerService(EventConsumerService):
         message = json.loads(json.loads(self.event["Records"][0]["body"])["Message"])
         transaction_details = message["transaction_detail"]
         tx_metadata = transaction_details["tx_metadata"][0]["json_metadata"]
-        ethereum_signature = tx_metadata["r"] + tx_metadata["s"] + tx_metadata["v"]
-        airdrop_window_id = tx_metadata["airdrop_window_id"]
+        ethereum_signature = tx_metadata["s1"] + tx_metadata["s2"] + tx_metadata["s3"]
+        airdrop_window_id = tx_metadata["wid"]
+        registration_id = tx_metadata["r1"]+tx_metadata["r2"]
 
         # Validate block confirmations.
         self.validate_block_confirmation(transaction_details["block_number"])
@@ -115,7 +116,6 @@ class DepositEventConsumerService(EventConsumerService):
         self.validate_user_input_addresses_for_unique_stake_address(input_addresses, stake_address_from_event)
 
         #  Fetch user ethereum address for given registration id
-        registration_id = tx_metadata["registration_id"]
         user_registered, user_registration = user_registration_repo. \
             get_user_registration_details(registration_id=registration_id)
         if not user_registered:
