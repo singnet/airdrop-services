@@ -1,15 +1,17 @@
 from datetime import datetime as dt
 
-from airdrop.infrastructure.models import Airdrop, AirdropWindow, UserRegistration, UserReward
+from airdrop.infrastructure.models import Airdrop, AirdropWindow, UserRegistration, UserReward, ClaimHistory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.infrastructure.repositories.user_reward_repository import UserRewardRepository
+from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 
 airdrop_repository = AirdropRepository()
 airdrop_window_repository = AirdropWindowRepository()
 user_repository = UserRegistrationRepository()
 user_reward_repository = UserRewardRepository()
+claim_history_repo = ClaimHistoryRepository()
 
 
 def load_airdrop_data(airdrop_data):
@@ -73,18 +75,20 @@ def load_airdrop_user_registration(airdrop_window_id, airdrop_user):
             address=airdrop_user.address,
             airdrop_window_id=airdrop_window_id,
             registered_at=dt.utcnow(),
-            receipt_generated="VkMBsWZsK1bn3mxXQlhPxW8FWzKvewws+yZjHourUGpsIkV0ytus2JrIWs9uA8x5q0le4cMyqmJNmq+2ZbLanxw=",
+            receipt_generated=airdrop_user.receipt_generated,
             user_signature="",
-            signature_details={"message": {"Airdrop": {"address": "addr_test", "block_no": 54321}}},
+            signature_details={"message": {"Airdrop": {"address": airdrop_user.cardano_address, "block_no": 54321}}},
             user_signature_block_number=airdrop_user.signature_details["block_no"]
         )
     )
 
 
 def clear_database():
+    claim_history_repo.session.query(ClaimHistory).delete()
     user_reward_repository.session.query(UserReward).delete()
     user_repository.session.query(UserRegistration).delete()
     airdrop_repository.session.query(Airdrop).delete()
     airdrop_repository.session.query(AirdropWindow).delete()
     user_repository.session.commit()
     airdrop_repository.session.commit()
+    claim_history_repo.session.commit()

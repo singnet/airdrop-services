@@ -659,7 +659,7 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):airdrop_cron_status}
 
   deposit_event_consumer:
-    handler: airdrop/application/handlers/consumer_handlers.deposit_event_consumer
+    handler: airdrop/application/handlers/consumer_handler.deposit_event_consumer
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
       - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}

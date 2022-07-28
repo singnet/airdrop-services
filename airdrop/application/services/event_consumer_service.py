@@ -110,8 +110,8 @@ class DepositEventConsumerService(EventConsumerService):
         # Validate user cardano address.
         input_addresses = transaction_details["input_addresses"]
         first_input_address = input_addresses[0]
-        stake_address = self.get_stake_key_address(first_input_address)
-        self.validate_user_input_addresses_for_unique_stake_address(input_addresses, stake_address)
+        stake_address_from_event = self.get_stake_key_address(first_input_address)
+        self.validate_user_input_addresses_for_unique_stake_address(input_addresses, stake_address_from_event)
 
         #  Fetch user ethereum address for given registration id
         registration_id = tx_metadata["registration_id"]
@@ -120,6 +120,13 @@ class DepositEventConsumerService(EventConsumerService):
         if not user_registered:
             raise Exception(f"Unable to find user for given registration_id in the event {self.event}")
         ethereum_address = user_registration.address
+        cardano_address = user_registration.signature_details.get("message", {}).get("Airdrop", {}).get("address", None)
+        user_stake_address = self.get_stake_key_address(cardano_address)
+
+        # Validate cardano address.
+        if user_stake_address != stake_address_from_event:
+            raise Exception(f"Stake address mismatch.\nUser stake address {user_stake_address}."
+                            f"\nEvent stake address {stake_address_from_event}")
 
         # Validate ethereum eip 712 signature format
         ethereum_signature = utils.trim_prefix_from_string_message(prefix="0x", message=tx_metadata["signature"])
