@@ -96,6 +96,7 @@ class DepositEventConsumerService(EventConsumerService):
         message = json.loads(json.loads(self.event["Records"][0]["body"])["Message"])
         transaction_details = message["transaction_detail"]
         tx_metadata = transaction_details["tx_metadata"][0]["json_metadata"]
+        ethereum_signature = tx_metadata["r"] + tx_metadata["s"] + tx_metadata["v"]
         airdrop_window_id = tx_metadata["airdrop_window_id"]
 
         # Validate block confirmations.
@@ -129,7 +130,7 @@ class DepositEventConsumerService(EventConsumerService):
                             f"\nEvent stake address {stake_address_from_event}")
 
         # Validate ethereum eip 712 signature format
-        ethereum_signature = utils.trim_prefix_from_string_message(prefix="0x", message=tx_metadata["signature"])
+        ethereum_signature = utils.trim_prefix_from_string_message(prefix="0x", message=ethereum_signature)
         airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
         airdrop_id = airdrop_window.airdrop_id
         airdrop = AirdropRepository().get_airdrop_details(airdrop_id)

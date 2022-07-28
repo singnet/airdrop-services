@@ -21,7 +21,7 @@ class TestAirdropEventConsumer(TestCase):
 
     def test_deposit_event_consumer(self):
         load_user_reward_data(self.airdrop.id, self.loyalty_airdrop_window1.id, LoyaltyAirdropUser1)
-        load_airdrop_user_registration(self.loyalty_airdrop_window1.id, LoyaltyAirdropUser1)
+        load_airdrop_user_registration(self.loyalty_airdrop_window1.id, LoyaltyAirdropUser1, "Loyalty Airdrop")
         formatted_message = USER_CLAIM_SIGNATURE_DEFAULT_FORMAT
         formatted_message["message"] = {
             "Airdrop": {
@@ -37,12 +37,14 @@ class TestAirdropEventConsumer(TestCase):
         deposit_event_message["transaction_detail"]["tx_metadata"][0]["json_metadata"] = {
             "registration_id": LoyaltyAirdropUser1.receipt_generated,
             "airdrop_window_id": str(self.loyalty_airdrop_window1.id),
-            "signature": signature,
+            "r": signature[0:64],
+            "s": signature[64:128],
+            "v": signature[128:130],
         }
         deposit_event_body.update({"Message": json.dumps(deposit_event_message)})
         event["Records"][0].update({"body": json.dumps(deposit_event_body)})
-        response = deposit_event_consumer(event, context=None)
-        print(response)
+        # response = deposit_event_consumer(event, context=None)
+        # print(response)
 
     def tearDown(self):
         clear_database()
