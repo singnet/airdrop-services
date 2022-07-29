@@ -15,14 +15,7 @@ DEPOSIT_EVENT = {
                            "gpjul3awg0p8tz664fse7qsex",
                 "event_status": None,
                 "updated_at": "2022-07-21 15:09:32",
-                "asset": {
-                    "id": "1aa646b44ce44febba7b75f8716339c7",
-                    "asset": "6f1a1f0c7ccf632cc9ff4b79687ed13ffe5b624cce288b364ebdce5041474958",
-                    "policy_id": "6f1a1f0c7ccf632cc9ff4b79687ed13ffe5b624cce288b364ebdce50",
-                    "asset_name": "41474958",
-                    "allowed_decimal": 8,
-                    "updated_at": "2022-03-17 12:51:13"
-                },
+                "asset": {},
                 "transaction_detail": {
                     "id": "dcdd4145cb4840baa44e2dce8a404839",
                     "tx_type": "ADA_TRANSFER",

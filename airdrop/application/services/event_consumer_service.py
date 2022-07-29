@@ -1,12 +1,12 @@
 import json
 from datetime import datetime as dt
 from http import HTTPStatus
-
+from jsonschema import validate
 import requests
 
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import BlockFrostAccountDetails, DepositDetails, MIN_BLOCK_CONFIRMATION_REQUIRED
-from airdrop.constants import AirdropClaimStatus, BlockFrostAPI
+from airdrop.constants import AirdropClaimStatus, BlockFrostAPI, CLAIM_SCHEMA, DEPOSIT_EVENT_TX_METADATA
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
@@ -69,9 +69,8 @@ class DepositEventConsumerService(EventConsumerService):
             return None
         raise ValidationFailedException(f"Deposit address validation failed for event {self.event}")
 
-    def validate_token_details(self, asset, tx_amount):
-        if DepositDetails.policy_id == asset["policy_id"] and DepositDetails.asset_name == asset["asset_name"] \
-                and float(tx_amount) > float(DepositDetails.amount_in_lovelace):
+    def validate_token_details(self, tx_amount):
+        if float(tx_amount) >= float(DepositDetails.amount_in_lovelace):
             return None
         raise ValidationFailedException(f"Token details validation failed for event {self.event}")
 
@@ -82,11 +81,19 @@ class DepositEventConsumerService(EventConsumerService):
             return None
         raise ValidationFailedException(f"Multiple stake address for given input addresses for event {self.event}")
 
+    def fetch_transaction_metadata(self, tx_metadata):
+        try:
+            json_metadata = tx_metadata[0]["json_metadata"]
+            validate(instance=json_metadata, schema=DEPOSIT_EVENT_TX_METADATA)
+        except Exception as e:
+            raise ValidationFailedException(f"Metadata is not valid for event {self.event}.")
+        return json_metadata
+
     def validate_deposit_event(self):
         """
             1. Validate block confirmations.
             2. Validate destination address.
-            3. Validate token details.
+            3. Validate token amount.
             4. Validate user input address for unique stake address.
             5. Fetch user ethereum address for given registration id.
             6. Validate user ethereum signature.
@@ -96,7 +103,7 @@ class DepositEventConsumerService(EventConsumerService):
         """
         message = json.loads(json.loads(self.event["Records"][0]["body"])["Message"])
         transaction_details = message["transaction_detail"]
-        tx_metadata = transaction_details["tx_metadata"][0]["json_metadata"]
+        tx_metadata = self.fetch_transaction_metadata(transaction_details["tx_metadata"])
         ethereum_signature = tx_metadata["s1"] + tx_metadata["s2"] + tx_metadata["s3"]
         airdrop_window_id = tx_metadata["wid"]
         registration_id = tx_metadata["r1"] + tx_metadata["r2"]
@@ -107,8 +114,8 @@ class DepositEventConsumerService(EventConsumerService):
         # Validate destination address.
         self.validate_event_destination_address(message["address"])
 
-        # Validate token details.
-        self.validate_token_details(message["asset"], transaction_details["tx_amount"])
+        # Validate token amount.
+        self.validate_token_details(transaction_details["tx_amount"])
 
         # Validate user cardano address.
         input_addresses = transaction_details["input_addresses"]

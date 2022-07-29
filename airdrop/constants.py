@@ -34,6 +34,20 @@ CLAIM_SCHEMA = {
     },
     "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
+
+DEPOSIT_EVENT_TX_METADATA = {
+    "type": "object",
+    "properties": {
+        "s1": {"type": "string"},
+        "s2": {"type": "string"},
+        "s3": {"type": "string"},
+        "r1": {"type": "string"},
+        "r2": {"type": "string"},
+        "wid": {"type": "string"}
+    },
+    "required": ["s1", "s2", "s3", "r1", "r2", "wid"]
+}
+
 USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT = {
     "types": {
         "EIP712Domain": [
