@@ -12,6 +12,7 @@ from airdrop.infrastructure.repositories.airdrop_window_repository import Airdro
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils
+from common.exceptions import ValidationFailedException
 
 user_registration_repo = UserRegistrationRepository()
 utils = Utils()
@@ -63,23 +64,23 @@ class EventConsumerService:
 
 
 class DepositEventConsumerService(EventConsumerService):
-    def validate_event_destination_address(self, destination_address):
-        if DepositDetails.address == destination_address:
+    def validate_event_destination_address(self, deposit_address):
+        if DepositDetails.address == deposit_address:
             return None
-        raise Exception(f"Destination address validation failed for event {self.event}")
+        raise ValidationFailedException(f"Deposit address validation failed for event {self.event}")
 
     def validate_token_details(self, asset, tx_amount):
         if DepositDetails.policy_id == asset["policy_id"] and DepositDetails.asset_name == asset["asset_name"] \
                 and float(tx_amount) > float(DepositDetails.amount_in_lovelace):
             return None
-        raise Exception(f"Token details validation failed for event {self.event}")
+        raise ValidationFailedException(f"Token details validation failed for event {self.event}")
 
     def validate_user_input_addresses_for_unique_stake_address(self, input_addresses, stake_address):
         # In case of multiple input address, stake address should be same
         associated_addresses = self.get_account_associated_addresses(stake_address)
         if set(input_addresses).issubset(associated_addresses):
             return None
-        raise Exception(f"Multiple stake address for given input addresses for event {self.event}")
+        raise ValidationFailedException(f"Multiple stake address for given input addresses for event {self.event}")
 
     def validate_deposit_event(self):
         """
@@ -96,8 +97,9 @@ class DepositEventConsumerService(EventConsumerService):
         message = json.loads(json.loads(self.event["Records"][0]["body"])["Message"])
         transaction_details = message["transaction_detail"]
         tx_metadata = transaction_details["tx_metadata"][0]["json_metadata"]
-        ethereum_signature = tx_metadata["r"] + tx_metadata["s"] + tx_metadata["v"]
-        airdrop_window_id = tx_metadata["airdrop_window_id"]
+        ethereum_signature = tx_metadata["s1"] + tx_metadata["s2"] + tx_metadata["s3"]
+        airdrop_window_id = tx_metadata["wid"]
+        registration_id = tx_metadata["r1"] + tx_metadata["r2"]
 
         # Validate block confirmations.
         self.validate_block_confirmation(transaction_details["block_number"])
@@ -115,19 +117,18 @@ class DepositEventConsumerService(EventConsumerService):
         self.validate_user_input_addresses_for_unique_stake_address(input_addresses, stake_address_from_event)
 
         #  Fetch user ethereum address for given registration id
-        registration_id = tx_metadata["registration_id"]
         user_registered, user_registration = user_registration_repo. \
             get_user_registration_details(registration_id=registration_id)
         if not user_registered:
-            raise Exception(f"Unable to find user for given registration_id in the event {self.event}")
+            raise ValidationFailedException(f"Unable to find user for given registration_id in the event {self.event}")
         ethereum_address = user_registration.address
         cardano_address = user_registration.signature_details.get("message", {}).get("Airdrop", {}).get("address", None)
         user_stake_address = self.get_stake_key_address(cardano_address)
 
         # Validate cardano address.
         if user_stake_address != stake_address_from_event:
-            raise Exception(f"Stake address mismatch.\nUser stake address {user_stake_address}."
-                            f"\nEvent stake address {stake_address_from_event}")
+            raise ValidationFailedException(f"Stake address mismatch.\nUser stake address {user_stake_address}."
+                                            f"\nEvent stake address {stake_address_from_event}")
 
         # Validate ethereum eip 712 signature format
         ethereum_signature = utils.trim_prefix_from_string_message(prefix="0x", message=ethereum_signature)
@@ -140,7 +141,7 @@ class DepositEventConsumerService(EventConsumerService):
         claim_sign_verified, recovered_address = utils.match_signature(ethereum_address, formatted_message,
                                                                        ethereum_signature)
         if not claim_sign_verified:
-            raise Exception(f"Claim signature verification failed for event {self.event}")
+            raise ValidationFailedException(f"Claim signature verification failed for event {self.event}")
 
         # Get claimable amount
         claimable_amount = AirdropRepository().fetch_total_rewards_amount(airdrop_id, ethereum_address)

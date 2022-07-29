@@ -35,11 +35,7 @@ DEPOSIT_EVENT = {
                     "input_addresses": ["addr_test1qqera830frgpvw9f0jj2873lwe8nd8vcsf0q0ftuqqgd9g8ucaczw427uq8y7axn2v3w8dua87kjgdgurmgl38vd2hysk4dfj9"],
                     "tx_metadata": [{
                         "label": "1",
-                        "json_metadata": {
-                            "registration_id": "VkMBsWZsK1bn3mxXQlhPxW8FWzKvewws+yZjHourUGpsIkV0ytus2JrIWs9uA8x5q0le4cMyqmJNmq+2ZbLanxw=",
-                            "signature": "0xbabc34c8c4a26f58c7dffa6cec28af2abcdb0e2cf6f289baea2d52ee3cd56ef058a2794c27a00411f8a7756dd0cefeb0f166b970d6a8196bc4c2d3722bbf1eb21c",
-                            "airdrop_window_id": "23"
-                        }
+                        "json_metadata": {}
                     }],
                     "updated_at": "2022-07-21 15:11:26"
                 }

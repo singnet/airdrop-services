@@ -35,11 +35,12 @@ class TestAirdropEventConsumer(TestCase):
         deposit_event_body = json.loads(event["Records"][0]["body"])
         deposit_event_message = json.loads(deposit_event_body["Message"])
         deposit_event_message["transaction_detail"]["tx_metadata"][0]["json_metadata"] = {
-            "registration_id": LoyaltyAirdropUser1.receipt_generated,
-            "airdrop_window_id": str(self.loyalty_airdrop_window1.id),
-            "r": signature[0:64],
-            "s": signature[64:128],
-            "v": signature[128:130],
+            "r1": LoyaltyAirdropUser1.receipt_generated[0:64],
+            "r2": LoyaltyAirdropUser1.receipt_generated[64:88],
+            "wid": str(self.loyalty_airdrop_window1.id),
+            "s1": signature[0:64],
+            "s2": signature[64:128],
+            "s3": signature[128:130],
         }
         deposit_event_body.update({"Message": json.dumps(deposit_event_message)})
         event["Records"][0].update({"body": json.dumps(deposit_event_body)})
