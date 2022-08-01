@@ -121,6 +121,9 @@ class AirdropClaimStatus(Enum):
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
     NOT_STARTED = "NOT_STARTED"
+    ADA_RECEIVED = "ADA_RECEIVED"
+    CLAIM_INITIATED = "CLAIM_INITIATED"
+    CLAIM_FAILED = "CLAIM_FAILED"
 
 
 class AirdropEvents(Enum):

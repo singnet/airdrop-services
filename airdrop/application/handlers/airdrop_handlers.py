@@ -9,6 +9,7 @@ from common.utils import generate_lambda_response, request
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.application.services.user_registration_services import UserRegistrationServices
 from airdrop.application.services.user_notification_service import UserNotificationService
+from airdrop.application.services.user_claim_service import UserClaimService
 
 logger = get_logger(__name__)
 
@@ -143,3 +144,10 @@ def user_notifications(event, context):
         response,
         cors_enabled=True,
     )
+
+
+def cardano_airdrop_transfer_claim_service(event, context):
+    logger.info(f"Initiate claims event {event}")
+    airdrop_id = event["airdrop_id"]
+    UserClaimService(airdrop_id).initiate_claim_for_users()
+    logger.info("success")

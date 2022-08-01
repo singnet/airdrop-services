@@ -1,12 +1,13 @@
 import json
 from datetime import datetime as dt
 from http import HTTPStatus
-from jsonschema import validate
+
 import requests
+from jsonschema import validate
 
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import BlockFrostAccountDetails, DepositDetails, MIN_BLOCK_CONFIRMATION_REQUIRED
-from airdrop.constants import AirdropClaimStatus, BlockFrostAPI, CLAIM_SCHEMA, DEPOSIT_EVENT_TX_METADATA
+from airdrop.constants import AirdropClaimStatus, BlockFrostAPI, DEPOSIT_EVENT_TX_METADATA
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
@@ -129,7 +130,8 @@ class DepositEventConsumerService(EventConsumerService):
         if not user_registered:
             raise ValidationFailedException(f"Unable to find user for given registration_id in the event {self.event}")
         ethereum_address = user_registration.address
-        cardano_address = user_registration.signature_details.get("message", {}).get("Airdrop", {}).get("address", None)
+        cardano_address = user_registration.signature_details.get("message", {}).get("Airdrop", {}).get(
+            "cardanoAddress", None)
         user_stake_address = self.get_stake_key_address(cardano_address)
 
         # Validate cardano address.
@@ -149,6 +151,11 @@ class DepositEventConsumerService(EventConsumerService):
                                                                        ethereum_signature)
         if not claim_sign_verified:
             raise ValidationFailedException(f"Claim signature verification failed for event {self.event}")
+
+        # Update transaction status for ADA deposited
+        blockchain_method = "ada_transfer"
+        ClaimHistoryRepository().update_claim_status(ethereum_address, airdrop_window_id, blockchain_method,
+                                                     AirdropClaimStatus.ADA_RECEIVED.value)
 
         # Get claimable amount
         claimable_amount = AirdropRepository().fetch_total_rewards_amount(airdrop_id, ethereum_address)
