@@ -32,9 +32,8 @@ class ClaimHistoryRepository(BaseRepository):
                             transaction_hash=None):
         try:
             claim = self.session.query(ClaimHistory) \
-                .filter(ClaimHistory.address == address) \
-                .filter(self.session.airdrop_window_id == airdrop_window_id) \
-                .filter(ClaimHistory.blockchain_method == blockchain_method) \
+                .filter(ClaimHistory.address == address, self.session.airdrop_window_id == airdrop_window_id,
+                        ClaimHistory.blockchain_method == blockchain_method) \
                 .first()
             if claim:
                 claim.transaction_status = transaction_status

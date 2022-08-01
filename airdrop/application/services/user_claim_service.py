@@ -38,7 +38,7 @@ class UserClaimService:
                                  headers=TokenTransferCardanoService.headers)
         if response.status_code != HTTPStatus.OK.value:
             logger.info("Error calling token transfer cardano service.")
-            return {"data": {"transaction_id": ""}}
+            return {}
         return response
 
     def initiate_claim_for_users(self):
