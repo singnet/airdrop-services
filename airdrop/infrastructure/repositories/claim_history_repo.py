@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.constants import AirdropClaimStatus
@@ -22,17 +23,31 @@ class ClaimHistoryRepository(BaseRepository):
         )
 
     def get_pending_claims_for_given_airdrop_id(self, airdrop_id, blockchain_method):
-        claims = self.session.query(ClaimHistory). \
-            filter(ClaimHistory.airdrop_id == airdrop_id). \
-            filter(ClaimHistory.blockchain_method == blockchain_method). \
-            filter(ClaimHistory.transaction_status == AirdropClaimStatus.PENDING.value).all()
-        return claims
+        response = []
+        try:
+            query = text("SELECT ur.address, json_extract(ur.signature_details, \"$.message.Airdrop.cardanoAddress\") "
+                         "AS cardano_address, ch.airdrop_window_id  FROM user_registrations ur, airdrop ad, "
+                         "airdrop_window aw, claim_history ch  WHERE ad.row_id = :airdrop_id AND "
+                         "ad.row_id = aw.airdrop_id  AND aw.row_id = ur.airdrop_window_id AND "
+                         "ch.airdrop_window_id = aw.row_id AND ch.transaction_status = :transaction_status AND "
+                         "ch.blockchain_method = :blockchain_method")
+            result = self.session.execute(query, {"airdrop_id": airdrop_id, "blockchain_method": blockchain_method,
+                                                  "transaction_status": AirdropClaimStatus.PENDING.value}
+                                          )
+            for record in result.fetchall():
+                response.append({"address": record["address"], "cardano_address": record["cardano_address"],
+                                 "airdrop_window_id": record["airdrop_window_id"]})
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        return response
 
     def update_claim_status(self, address, airdrop_window_id, blockchain_method, transaction_status,
                             transaction_hash=None):
         try:
             claim = self.session.query(ClaimHistory) \
-                .filter(ClaimHistory.address == address, self.session.airdrop_window_id == airdrop_window_id,
+                .filter(ClaimHistory.address == address, ClaimHistory.airdrop_window_id == airdrop_window_id,
                         ClaimHistory.blockchain_method == blockchain_method) \
                 .first()
             if claim:
