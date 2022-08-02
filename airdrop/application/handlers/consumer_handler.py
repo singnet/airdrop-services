@@ -1,7 +1,6 @@
 import sys
 
 sys.path.append('/opt')
-from http import HTTPStatus
 from airdrop.config import SLACK_HOOK, NETWORK_ID
 from airdrop.application.services.event_consumer_service import DepositEventConsumerService
 from common.logger import get_logger
@@ -17,6 +16,5 @@ EXCEPTIONS = (ValidationFailedException,)
                    RAISE_EXCEPTION=True)
 def deposit_event_consumer(event, context):
     logger.info(f"Got deposit event {event}")
-    DepositEventConsumerService(event).validate_deposit_event()
-    status = HTTPStatus.OK
-    return generate_lambda_response(200, status)
+    response = DepositEventConsumerService(event).validate_deposit_event()
+    return generate_lambda_response(200, response)

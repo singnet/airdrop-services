@@ -55,6 +55,7 @@ class AirdropStrategy:
 
 class LoyaltyAirdropConfig(Enum):
     deposit_address = "addr"
+    claim_address = "addr"
     pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
     chain = "Cardano"
 
@@ -69,3 +70,9 @@ class DepositDetails:
     policy_id = "6f1a1f0c7ccf632cc9ff4b79687ed13ffe5b624cce288b364ebdce50"
     asset_name = "41474958"
     amount_in_lovelace = "2000000"
+
+
+class TokenTransferCardanoService:
+    url = "http://127.0.0.1:5005/cardano/AGIX/transfer"
+    http_method = "post"
+    headers = {'content-type': 'application/json'}

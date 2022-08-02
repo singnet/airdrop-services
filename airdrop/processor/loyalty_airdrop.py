@@ -16,6 +16,7 @@ class LoyaltyAirdrop(BaseAirdrop):
         }
         self.is_claim_signature_required = False
         self.reward_processor_name = ""
+        self.claim_address = LoyaltyAirdropConfig.claim_address.value
 
     def format_user_registration_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
