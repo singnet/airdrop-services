@@ -700,3 +700,26 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_transfer_claim_cron_status}
           input:
             airdrop_id: ${file(./config.${self:provider.stage}.json):LoyaltyAirdropId}
+#
+
+  cardano-airdrop-update-claim-tx-status:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.update_user_claim_transaction_status_post_block_confirmation
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(1 hour)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-loyalty-airdrop-update-claim-tx-status
+          enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_update_claim_tx_cron_status}
+          input:
+            airdrop_id: ${file(./config.${self:provider.stage}.json):LoyaltyAirdropId}

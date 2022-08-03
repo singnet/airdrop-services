@@ -151,3 +151,10 @@ def cardano_airdrop_transfer_claim_service(event, context):
     airdrop_id = event["airdrop_id"]
     UserClaimService(airdrop_id).initiate_claim_for_users()
     logger.info("success")
+
+
+def update_user_claim_transaction_status_post_block_confirmation(event, context):
+    logger.info(f"Update claim transaction statuses event {event}")
+    airdrop_id = event["airdrop_id"]
+    UserClaimService(airdrop_id).update_user_claim_transaction_status_post_block_confirmation()
+    logger.info("success")

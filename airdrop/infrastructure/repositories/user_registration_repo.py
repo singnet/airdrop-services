@@ -130,7 +130,8 @@ class UserRegistrationRepository(BaseRepository):
     def get_unclaimed_reward(self, airdrop_id, address):
         in_progress_or_completed_tx_statuses = (
             AirdropClaimStatus.SUCCESS.value, AirdropClaimStatus.PENDING.value,
-            AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value
+            AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value,
+            AirdropClaimStatus.CLAIM_FAILED.value
         )
         try:
             query = text("SELECT IFNULL( sum(ur.rewards_awarded),0) AS 'unclaimed_reward' FROM user_rewards ur, "

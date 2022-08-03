@@ -34,6 +34,17 @@ class EventConsumerService:
                         f"Status: {response}"
                         f"Details: {response.text}")
 
+    @staticmethod
+    def get_transaction_details(transaction_hash):
+        url = BlockFrostAPI.get_transaction_details.format(hash=transaction_hash)
+        response = requests.get(url, headers={"project_id": BlockFrostAccountDetails.project_id})
+        if response.status_code == HTTPStatus.OK:
+            return json.loads(response.text)
+        raise Exception(f"Error in getting transaction details.\n"
+                        f"Response from blockfrost API:\n"
+                        f"Status: {response}"
+                        f"Details: {response.text}")
+
     def validate_block_confirmation(self, transaction_block_no):
         current_block_no = EventConsumerService.get_current_block_no()
         if current_block_no > (transaction_block_no + MIN_BLOCK_CONFIRMATION_REQUIRED):

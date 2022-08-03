@@ -134,5 +134,6 @@ class AirdropEvents(Enum):
 
 class BlockFrostAPI:
     get_last_block = "https://cardano-testnet.blockfrost.io/api/v0/blocks/latest"
+    get_transaction_details = "https://cardano-testnet.blockfrost.io/api/v0/txs/{hash}"
     get_stake_address = "https://cardano-testnet.blockfrost.io/api/v0/addresses/{address}"
     get_account_associated_addresses = "https://cardano-testnet.blockfrost.io/api/v0/accounts/{stake_address}/addresses"

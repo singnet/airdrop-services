@@ -4,10 +4,11 @@ from http import HTTPStatus
 import requests
 
 from airdrop.application.services.airdrop_services import AirdropServices
-from airdrop.config import TokenTransferCardanoService, SLACK_HOOK
+from airdrop.config import TokenTransferCardanoService, SLACK_HOOK, MIN_BLOCK_CONFIRMATION_REQUIRED
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
+from airdrop.application.services.event_consumer_service import EventConsumerService
 from common.logger import get_logger
 from common.utils import Utils
 
@@ -41,8 +42,8 @@ class UserClaimService:
         response_body = json.loads(response.text)
         if response.status_code != HTTPStatus.OK.value:
             error_message = f'Unable to call token transfer cardano service\nMessage ' \
-                            f'{response_body.get("error",{}).get("message", "")}\nDetails  ' \
-                            f'{response_body.get("error",{}).get("details", "")}.'
+                            f'{response_body.get("error", {}).get("message", "")}\nDetails  ' \
+                            f'{response_body.get("error", {}).get("details", "")}.'
             logger.exception(error_message)
             utils.report_slack(type=1, slack_message=error_message, slack_config=SLACK_HOOK)
             return {}
@@ -80,3 +81,18 @@ class UserClaimService:
             ClaimHistoryRepository().update_claim_status(claim["address"], claim["airdrop_window_id"],
                                                          blockchain_method, transaction_status, transaction_id)
         return {"status": "success"}
+
+    def update_user_claim_transaction_status_post_block_confirmation(self):
+        unique_transaction_hashes = ClaimHistoryRepository().\
+            get_unique_transaction_hashes(self.airdrop_id, AirdropClaimStatus.CLAIM_SUBMITTED.value)
+        hashes_with_enough_confirmations = []
+        for transaction_hash in unique_transaction_hashes:
+            transaction_detail = EventConsumerService.get_transaction_details(transaction_hash)
+            transaction_block_no = transaction_detail["block_height"]
+            current_block_no = EventConsumerService.get_current_block_no()
+            block_diff = current_block_no - transaction_block_no
+            if block_diff > MIN_BLOCK_CONFIRMATION_REQUIRED:
+                hashes_with_enough_confirmations.append(transaction_hash)
+
+        ClaimHistoryRepository().update_claim_status_for_given_transaction_hashes(hashes_with_enough_confirmations,
+                                                                                  AirdropClaimStatus.SUCCESS.value)
