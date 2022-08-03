@@ -1,12 +1,13 @@
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import text
+from datetime import datetime
 
-from airdrop.infrastructure.repositories.base_repository import BaseRepository
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+
+from airdrop.constants import AirdropClaimStatus
+from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserRegistration, \
     ClaimHistory, UserReward
-from airdrop.domain.factory.airdrop_factory import AirdropFactory
-from datetime import datetime
-from airdrop.constants import AirdropClaimStatus
+from airdrop.infrastructure.repositories.base_repository import BaseRepository
 
 
 class AirdropRepository(BaseRepository):
@@ -261,6 +262,10 @@ class AirdropRepository(BaseRepository):
         return total_rewards, user_wallet_address, contract_address, token_address, staking_contract_address, total_eligibility_amount
 
     def fetch_total_rewards_amount(self, airdrop_id, address):
+        in_progress_or_completed_tx_statuses = (
+            AirdropClaimStatus.SUCCESS.value, AirdropClaimStatus.PENDING.value,
+            AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value
+        )
         try:
             # return zero if there are no rewards, please note that MYSQL smartly sums up varchar columns and returns
             # it as a bigint if you have a very big number stored as a varchar in the rewards table.
@@ -271,19 +276,22 @@ class AirdropRepository(BaseRepository):
                 "current_timestamp <= claim_end_period  AND airdrop_id = :airdrop_id AND "
                 "claim_start_period <= current_timestamp) AND ur.airdrop_window_id > "
                 "(SELECT IFNULL (MAX(airdrop_window_id), -1) FROM claim_history ch WHERE ch.address = :address "
-                "AND ch.transaction_status IN ('SUCCESS', 'PENDING') AND ch.airdrop_id = :airdrop_id) "
+                "AND ch.transaction_status IN :in_progress_or_completed_tx_statuses AND ch.airdrop_id = :airdrop_id) "
                 "AND ur.airdrop_window_id IN ( SELECT airdrop_window_id FROM user_registrations  "
                 "WHERE address = :address AND airdrop_window_id IN (SELECT row_id FROM airdrop_window "
                 "WHERE airdrop_id = :airdrop_id));"
             )
-            result = self.session.execute(query, {'address': address, 'airdrop_id': airdrop_id})
+            result = self.session.execute(query, {
+                "address": address, "airdrop_id": airdrop_id,
+                "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
+            })
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
         # determine the final result here, this was the service layer does not have to deal
-        # with extracting 'total_rewards' from the o/p sent
-        total_rewards = result.fetchall()[0]['total_rewards']
+        # with extracting "total_rewards" from the o/p sent
+        total_rewards = result.fetchall()[0]["total_rewards"]
         return int(total_rewards)
 
     def fetch_total_eligibility_amount(self, airdrop_id, address):

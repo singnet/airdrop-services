@@ -1,3 +1,4 @@
+import json
 from http import HTTPStatus
 
 import requests
@@ -25,7 +26,7 @@ class UserClaimService:
         from_address_wallet_name = self.airdrop_class(self.airdrop_id).claim_address
         to_addresses = []
         for claim in claims:
-            to_addresses.append({"address": claim["cardano_address"], "amount": claim.claimable_amount})
+            to_addresses.append({"address": claim["cardano_address"], "amount": claim["claimable_amount"]})
         payload = {
             "token": token,
             "from_address_wallet_name": from_address_wallet_name,
@@ -37,10 +38,16 @@ class UserClaimService:
     def invoke_token_transfer_cardano_service(payload):
         response = requests.post(TokenTransferCardanoService.url, json=payload,
                                  headers=TokenTransferCardanoService.headers)
+        response_body = json.loads(response.text)
         if response.status_code != HTTPStatus.OK.value:
-            logger.info("Error calling token transfer cardano service.")
+            error_message = f'Unable to call token transfer cardano service\nMessage ' \
+                            f'{response_body.get("error",{}).get("message", "")}\nDetails  ' \
+                            f'{response_body.get("error",{}).get("details", "")}.'
+            logger.exception(error_message)
+            utils.report_slack(type=1, slack_message=error_message, slack_config=SLACK_HOOK)
             return {}
-        return response
+        logger.info(f"Response from token transfer cardano service {response.text}")
+        return response_body
 
     def initiate_claim_for_users(self):
         # Fetch eligible claim records
@@ -50,6 +57,7 @@ class UserClaimService:
 
         if not claims:
             logger.info(f"No pending claims for airdrop id {self.airdrop_id}")
+            return {"status": "success"}
 
         # Update transaction as claim initiated
         for claim in claims:
@@ -60,7 +68,7 @@ class UserClaimService:
         token_transfer_service_payload = self.prepare_token_transfer_cardano_service_payload(claims)
         response = self.invoke_token_transfer_cardano_service(token_transfer_service_payload)
         transaction_id = response.get("data", {}).get("transaction_id", "")
-        if transaction_status and len(transaction_status) > 0:
+        if transaction_id and len(transaction_id) > 0:
             transaction_status = AirdropClaimStatus.CLAIM_SUBMITTED.value
         else:
             transaction_status = AirdropClaimStatus.CLAIM_FAILED.value

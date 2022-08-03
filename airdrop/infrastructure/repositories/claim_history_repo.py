@@ -26,17 +26,22 @@ class ClaimHistoryRepository(BaseRepository):
         response = []
         try:
             query = text("SELECT ur.address, json_extract(ur.signature_details, \"$.message.Airdrop.cardanoAddress\") "
-                         "AS cardano_address, ch.airdrop_window_id  FROM user_registrations ur, airdrop ad, "
-                         "airdrop_window aw, claim_history ch  WHERE ad.row_id = :airdrop_id AND "
+                         "AS cardano_address, ch.airdrop_window_id, ch.claimable_amount FROM user_registrations ur, "
+                         "airdrop ad, airdrop_window aw, claim_history ch  WHERE ad.row_id = :airdrop_id AND "
                          "ad.row_id = aw.airdrop_id  AND aw.row_id = ur.airdrop_window_id AND "
                          "ch.airdrop_window_id = aw.row_id AND ch.transaction_status = :transaction_status AND "
-                         "ch.blockchain_method = :blockchain_method")
+                         "ch.blockchain_method = :blockchain_method AND ur.address = ch.address")
             result = self.session.execute(query, {"airdrop_id": airdrop_id, "blockchain_method": blockchain_method,
                                                   "transaction_status": AirdropClaimStatus.PENDING.value}
                                           )
             for record in result.fetchall():
-                response.append({"address": record["address"], "cardano_address": record["cardano_address"],
-                                 "airdrop_window_id": record["airdrop_window_id"]})
+                cardano_address = record["cardano_address"].strip('\"')
+                response.append({
+                    "address": record["address"],
+                    "cardano_address": cardano_address,
+                    "airdrop_window_id": record["airdrop_window_id"],
+                    "claimable_amount": int(record["claimable_amount"])
+                })
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()

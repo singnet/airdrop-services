@@ -1,10 +1,13 @@
-from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
-from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
-from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
+
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+
+from airdrop.constants import AirdropClaimStatus
+from airdrop.domain.factory.airdrop_factory import AirdropFactory
+from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
+from airdrop.infrastructure.repositories.base_repository import BaseRepository
 
 
 class UserRegistrationRepository(BaseRepository):
@@ -125,6 +128,10 @@ class UserRegistrationRepository(BaseRepository):
         return False, None
 
     def get_unclaimed_reward(self, airdrop_id, address):
+        in_progress_or_completed_tx_statuses = (
+            AirdropClaimStatus.SUCCESS.value, AirdropClaimStatus.PENDING.value,
+            AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value
+        )
         try:
             query = text("SELECT IFNULL( sum(ur.rewards_awarded),0) AS 'unclaimed_reward' FROM user_rewards ur, "
                          "airdrop_window aw WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address "
@@ -133,8 +140,12 @@ class UserRegistrationRepository(BaseRepository):
                          "AND airdrop_id = :airdrop_id AND claim_start_period <= current_timestamp) "
                          "AND ur.airdrop_window_id > (SELECT ifnull (max(airdrop_window_id), -1) from claim_history ch "
                          "where ch.airdrop_id = :airdrop_id and ch.address = :address "
-                         "and ch.transaction_status in ('SUCCESS', 'PENDING'))")
-            result = self.session.execute(query, {'address': address, 'airdrop_id': airdrop_id})
+                         "and ch.transaction_status in :in_progress_or_completed_tx_statuses)")
+            result = self.session.execute(query, {
+                "address": address,
+                "airdrop_id": airdrop_id,
+                "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
+            })
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
