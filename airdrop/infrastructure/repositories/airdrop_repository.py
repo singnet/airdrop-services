@@ -264,7 +264,8 @@ class AirdropRepository(BaseRepository):
     def fetch_total_rewards_amount(self, airdrop_id, address):
         in_progress_or_completed_tx_statuses = (
             AirdropClaimStatus.SUCCESS.value, AirdropClaimStatus.PENDING.value,
-            AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value
+            AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value,
+            AirdropClaimStatus.CLAIM_FAILED.value
         )
         try:
             # return zero if there are no rewards, please note that MYSQL smartly sums up varchar columns and returns

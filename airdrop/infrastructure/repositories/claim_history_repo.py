@@ -62,3 +62,24 @@ class ClaimHistoryRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+
+    def get_unique_transaction_hashes(self, airdrop_id=None, transaction_status=None):
+        query = self.session.query(ClaimHistory.transaction_hash)
+        if airdrop_id:
+            query = query.filter(ClaimHistory.airdrop_id == airdrop_id)
+        if transaction_status:
+            query = query.filter(ClaimHistory.transaction_status == transaction_status)
+        transaction_hashes_db = query.distinct().all()
+        return [transaction_hash_db[0] for transaction_hash_db in transaction_hashes_db]
+
+    def update_claim_status_for_given_transaction_hashes(self, transaction_hashes, transaction_status):
+        try:
+            claims = self.session.query(ClaimHistory) \
+                .filter(ClaimHistory.transaction_hash.in_(transaction_hashes)) \
+                .all()
+            for claim in claims:
+                claim.transaction_status = transaction_status
+            self.session.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
