@@ -2,7 +2,7 @@ import os
 from copy import deepcopy
 from enum import Enum
 
-from airdrop.config import NETWORK_ID
+from airdrop.config import NETWORK_ID, BlockFrostAPIBaseURL
 
 PROCESSOR_PATH = "airdrop.processor"
 COMMON_CNTRCT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources"))
@@ -133,7 +133,7 @@ class AirdropEvents(Enum):
 
 
 class BlockFrostAPI:
-    get_last_block = "https://cardano-testnet.blockfrost.io/api/v0/blocks/latest"
-    get_transaction_details = "https://cardano-testnet.blockfrost.io/api/v0/txs/{hash}"
-    get_stake_address = "https://cardano-testnet.blockfrost.io/api/v0/addresses/{address}"
-    get_account_associated_addresses = "https://cardano-testnet.blockfrost.io/api/v0/accounts/{stake_address}/addresses"
+    get_last_block = BlockFrostAPIBaseURL + "/v0/blocks/latest"
+    get_transaction_details = BlockFrostAPIBaseURL + "/v0/txs/{hash}"
+    get_stake_address = BlockFrostAPIBaseURL + "/v0/addresses/{address}"
+    get_account_associated_addresses = BlockFrostAPIBaseURL + "/v0/accounts/{stake_address}/addresses"
