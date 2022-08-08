@@ -1,13 +1,16 @@
-from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
-from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
-from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from datetime import datetime
+
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+from airdrop.constants import AirdropClaimStatus
+from airdrop.domain.factory.airdrop_factory import AirdropFactory
+from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
+from airdrop.infrastructure.repositories.base_repository import BaseRepository
 
-class UserRepository(BaseRepository):
+
+class UserRegistrationRepository(BaseRepository):
 
     def subscribe_to_notifications(self, email, airdrop_id):
         try:
@@ -110,17 +113,26 @@ class UserRepository(BaseRepository):
         else:
             return False
 
-    def get_user_registration_details(self, address, airdrop_window_id):
-        user_registration = self.session.query(UserRegistration) \
-            .filter(UserRegistration.airdrop_window_id == airdrop_window_id) \
-            .filter(UserRegistration.address == address) \
-            .filter(UserRegistration.registered_at != None) \
-            .first()
-        if user_registration:
-            return True, user_registration
-        return False, user_registration
+    def get_user_registration_details(self, address=None, airdrop_window_id=None, registration_id=None):
+        query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
+        if address:
+            query = query.filter(UserRegistration.address == address)
+        if airdrop_window_id:
+            query = query.filter(UserRegistration.airdrop_window_id == airdrop_window_id)
+        if registration_id:
+            query = query.filter(UserRegistration.receipt_generated == registration_id)
+        user_registrations = query.all()
+        registration_count = len(user_registrations)
+        if registration_count:
+            return True, user_registrations[0] if registration_count == 1 else user_registrations
+        return False, None
 
     def get_unclaimed_reward(self, airdrop_id, address):
+        in_progress_or_completed_tx_statuses = (
+            AirdropClaimStatus.SUCCESS.value, AirdropClaimStatus.PENDING.value,
+            AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value,
+            AirdropClaimStatus.CLAIM_FAILED.value
+        )
         try:
             query = text("SELECT IFNULL( sum(ur.rewards_awarded),0) AS 'unclaimed_reward' FROM user_rewards ur, "
                          "airdrop_window aw WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address "
@@ -129,8 +141,12 @@ class UserRepository(BaseRepository):
                          "AND airdrop_id = :airdrop_id AND claim_start_period <= current_timestamp) "
                          "AND ur.airdrop_window_id > (SELECT ifnull (max(airdrop_window_id), -1) from claim_history ch "
                          "where ch.airdrop_id = :airdrop_id and ch.address = :address "
-                         "and ch.transaction_status in ('SUCCESS', 'PENDING'))")
-            result = self.session.execute(query, {'address': address, 'airdrop_id': airdrop_id})
+                         "and ch.transaction_status in :in_progress_or_completed_tx_statuses)")
+            result = self.session.execute(query, {
+                "address": address,
+                "airdrop_id": airdrop_id,
+                "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
+            })
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()

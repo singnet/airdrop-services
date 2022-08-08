@@ -54,3 +54,4 @@ class LoyaltyAirdropUser1:
         "domain_name": LoyaltyAirdrop(None, None).domain_name,
         "block_no": 12432452
     }
+    receipt_generated = "VkMBsWZsK1bn3mxXQlhPxW8FWzKvewws+yZjHourUGpsIkV0ytus2JrIWs9uA8x5q0le4cMyqmJNmq+2ZbLanxw="

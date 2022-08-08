@@ -46,6 +46,7 @@ NUNET_SIGNER_PRIVATE_KEY = 'NUNET_AIRDROP_SIGNER_PRIVATE_KEY'
 NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION = 'TestValue'
 
 MAX_STAKE_LIMIT = 25000
+MIN_BLOCK_CONFIRMATION_REQUIRED = 5
 
 
 class AirdropStrategy:
@@ -54,5 +55,24 @@ class AirdropStrategy:
 
 class LoyaltyAirdropConfig(Enum):
     deposit_address = "addr"
+    claim_address = "addr"
     pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
     chain = "Cardano"
+
+
+class BlockFrostAccountDetails:
+    project_id = ""
+
+
+class DepositDetails:
+    address = "addr_test1qqllt2lmzypu9y9j9p6hgrcu9narh8rqczkdujqvqmqq4f9w9zv7f7pu6wefmn4t06y9e9ljggpjul3awg0p8tz664f" \
+              "se7qsex"
+    policy_id = "6f1a1f0c7ccf632cc9ff4b79687ed13ffe5b624cce288b364ebdce50"
+    asset_name = "41474958"
+    amount_in_lovelace = "2000000"
+
+
+class TokenTransferCardanoService:
+    url = "http://127.0.0.1:5005/cardano/AGIX/transfer"
+    http_method = "post"
+    headers = {'content-type': 'application/json'}

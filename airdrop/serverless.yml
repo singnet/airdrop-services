@@ -107,7 +107,7 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-cardano-event-consumer
-        VisibilityTimeout: 60
+        VisibilityTimeout: 120
         ReceiveMessageWaitTimeSeconds: 20
         MessageRetentionPeriod: ${self:custom.defaultMessageRetentionPeriod}
         RedrivePolicy:
@@ -232,7 +232,7 @@ functions:
             methodResponses:
               - statusCode: "200"
                 responseBody:
-                  description: "Airdropschedule Data"
+                  description: "Airdrop schedule Data"
                   "application/json": "AirdropScheduleOutput"
                 responseModels:
                   "application/json": "AirdropScheduleOutput"
@@ -659,7 +659,7 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):airdrop_cron_status}
 
   deposit_event_consumer:
-    handler: airdrop/application/handlers/consumer_handlers.deposit_event_consumer
+    handler: airdrop/application/handlers/consumer_handler.deposit_event_consumer
     layers:
       - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
       - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
@@ -678,3 +678,48 @@ functions:
               - cardanoEventConsumerQueue
               - Arn
           batchSize: 1
+
+  cardano-airdrop-transfer-claim-service:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.cardano_airdrop_transfer_claim_service
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):CardanoServiceSG}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(1 hour)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-loyalty-airdrop-transfer-claim
+          enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_transfer_claim_cron_status}
+          input:
+            airdrop_id: ${file(./config.${self:provider.stage}.json):LoyaltyAirdropId}
+#
+
+  cardano-airdrop-update-claim-tx-status:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.update_user_claim_transaction_status_post_block_confirmation
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - schedule:
+          rate: rate(1 hour)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-loyalty-airdrop-update-claim-tx-status
+          enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_update_claim_tx_cron_status}
+          input:
+            airdrop_id: ${file(./config.${self:provider.stage}.json):LoyaltyAirdropId}

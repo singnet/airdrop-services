@@ -52,3 +52,4 @@ class NuNetAirdropUser1:
         "domain_name": DefaultAirdrop(None, None).domain_name,
         "block_no": 12432452
     }
+    receipt_generated = ""

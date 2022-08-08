@@ -1,5 +1,5 @@
 from airdrop.config import LoyaltyAirdropConfig
-from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT
+from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT, USER_CLAIM_SIGNATURE_DEFAULT_FORMAT
 from airdrop.processor.base_airdrop import BaseAirdrop
 
 
@@ -16,8 +16,9 @@ class LoyaltyAirdrop(BaseAirdrop):
         }
         self.is_claim_signature_required = False
         self.reward_processor_name = ""
+        self.claim_address = LoyaltyAirdropConfig.claim_address.value
 
-    def format_signature_message(self, address, signature_parameters):
+    def format_user_registration_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
         cardano_address = signature_parameters["cardano_address"]
         formatted_message = USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT
@@ -40,3 +41,14 @@ class LoyaltyAirdrop(BaseAirdrop):
         elif unclaimed_reward > 0:
             return True
         return False
+
+    def format_user_claim_signature_message(self, receipt):
+        formatted_message = USER_CLAIM_SIGNATURE_DEFAULT_FORMAT
+        formatted_message["message"] = {
+            "Airdrop": {
+                "airdropWindowId": int(self.airdrop_window_id),
+                "receipt": receipt
+            },
+        }
+        formatted_message["domain"]["name"] = self.domain_name
+        return formatted_message
