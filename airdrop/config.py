@@ -67,8 +67,6 @@ class BlockFrostAccountDetails:
 class DepositDetails:
     address = "addr_test1qqllt2lmzypu9y9j9p6hgrcu9narh8rqczkdujqvqmqq4f9w9zv7f7pu6wefmn4t06y9e9ljggpjul3awg0p8tz664f" \
               "se7qsex"
-    policy_id = "6f1a1f0c7ccf632cc9ff4b79687ed13ffe5b624cce288b364ebdce50"
-    asset_name = "41474958"
     amount_in_lovelace = "2000000"
 
 
@@ -76,3 +74,6 @@ class TokenTransferCardanoService:
     url = "http://127.0.0.1:5005/cardano/AGIX/transfer"
     http_method = "post"
     headers = {'content-type': 'application/json'}
+
+
+BlockFrostAPIBaseURL = "https://cardano-testnet.blockfrost.io/api"
