@@ -49,7 +49,7 @@ class ClaimHistoryRepository(BaseRepository):
         return response
 
     def update_claim_status(self, address, airdrop_window_id, blockchain_method, transaction_status,
-                            transaction_hash=None):
+                            transaction_hash=None, transaction_details=None):
         try:
             claim = self.session.query(ClaimHistory) \
                 .filter(ClaimHistory.address == address, ClaimHistory.airdrop_window_id == airdrop_window_id,
@@ -58,6 +58,8 @@ class ClaimHistoryRepository(BaseRepository):
             if claim:
                 claim.transaction_status = transaction_status
                 claim.transaction_hash = transaction_hash if transaction_hash else claim.transaction_hash
+                if transaction_details:
+                    claim.transaction_details = transaction_details
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
