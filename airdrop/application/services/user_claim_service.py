@@ -1,6 +1,7 @@
 import json
+import time
 from http import HTTPStatus
-
+from uuid import uuid4
 import requests
 
 from airdrop.application.services.airdrop_services import AirdropServices
@@ -22,7 +23,7 @@ class UserClaimService:
         self.airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
         self.airdrop_class = AirdropServices().load_airdrop_class(self.airdrop)
 
-    def prepare_token_transfer_cardano_service_payload(self, claims):
+    def prepare_token_transfer_cardano_service_payload(self, batch_id, claims):
         token = self.airdrop.token_name
         from_address_wallet_name = self.airdrop_class(self.airdrop_id).claim_address
         to_addresses = []
@@ -32,6 +33,7 @@ class UserClaimService:
             "token": token,
             "from_address_wallet_name": from_address_wallet_name,
             "to_addresses": to_addresses,
+            "metadata": {"batch_id": batch_id, "airdrop_id": self.airdrop_id}
         }
         return payload
 
@@ -61,12 +63,15 @@ class UserClaimService:
             return {"status": "success"}
 
         # Update transaction as claim initiated
+        epoch_time = int(time.time())
+        batch_id = f"{epoch_time}-{uuid4().hex}"
+        transaction_details = {"batch_id": batch_id}
         for claim in claims:
             ClaimHistoryRepository().update_claim_status(claim["address"], claim["airdrop_window_id"],
-                                                         blockchain_method, transaction_status)
+                                                         blockchain_method, transaction_status, transaction_details)
 
         # Invoke token transfer cardano service
-        token_transfer_service_payload = self.prepare_token_transfer_cardano_service_payload(claims)
+        token_transfer_service_payload = self.prepare_token_transfer_cardano_service_payload(batch_id, claims)
         response = self.invoke_token_transfer_cardano_service(token_transfer_service_payload)
         transaction_id = response.get("data", {}).get("transaction_id", "")
         if transaction_id and len(transaction_id) > 0:

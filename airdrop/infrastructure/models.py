@@ -216,6 +216,7 @@ class ClaimHistory(Base, AuditClass):
     transaction_status = Column(
         "transaction_status", VARCHAR(50), nullable=False)
     transaction_hash = Column("transaction_hash", VARCHAR(256), nullable=True)
+    transaction_details = Column("transaction_details", JSON, default={})
     claimed_on = Column("claimed_on", TIMESTAMP(), nullable=True)
     user_registrations = relationship(
         UserRegistration, backref="claim_history",

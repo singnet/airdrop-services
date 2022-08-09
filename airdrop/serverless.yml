@@ -700,7 +700,6 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_transfer_claim_cron_status}
           input:
             airdrop_id: ${file(./config.${self:provider.stage}.json):LoyaltyAirdropId}
-#
 
   cardano-airdrop-update-claim-tx-status:
     warmup: true
@@ -718,7 +717,7 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC2}
     events:
       - schedule:
-          rate: rate(1 hour)
+          rate: rate(5 minutes)
           name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-loyalty-airdrop-update-claim-tx-status
           enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_update_claim_tx_cron_status}
           input:
