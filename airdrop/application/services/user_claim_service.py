@@ -67,8 +67,10 @@ class UserClaimService:
         batch_id = f"{epoch_time}-{uuid4().hex}"
         transaction_details = {"batch_id": batch_id}
         for claim in claims:
-            ClaimHistoryRepository().update_claim_status(claim["address"], claim["airdrop_window_id"],
-                                                         blockchain_method, transaction_status, transaction_details)
+            ClaimHistoryRepository().update_claim_status(
+                claim["address"], claim["airdrop_window_id"], blockchain_method, transaction_status,
+                transaction_details=transaction_details
+            )
 
         # Invoke token transfer cardano service
         token_transfer_service_payload = self.prepare_token_transfer_cardano_service_payload(batch_id, claims)
@@ -88,7 +90,7 @@ class UserClaimService:
         return {"status": "success"}
 
     def update_user_claim_transaction_status_post_block_confirmation(self):
-        unique_transaction_hashes = ClaimHistoryRepository().\
+        unique_transaction_hashes = ClaimHistoryRepository(). \
             get_unique_transaction_hashes(self.airdrop_id, AirdropClaimStatus.CLAIM_SUBMITTED.value)
         hashes_with_enough_confirmations = []
         for transaction_hash in unique_transaction_hashes:
