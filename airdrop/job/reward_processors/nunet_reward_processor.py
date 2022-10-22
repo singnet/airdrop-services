@@ -105,7 +105,7 @@ class NunetRewardProcessor:
             user_pending_rewards[row["address"].lower()] = row["pending_reward"]
         return additional_rewards, user_pending_rewards
 
-    @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
+    # @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
     def process_rewards(self, only_registered):
         if only_registered:
             self.__send_slack_message(f"Computing final rewards for window {self._window_id}")
