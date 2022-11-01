@@ -14,9 +14,12 @@ from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryR
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils
 from common.exceptions import ValidationFailedException
+from common.logger import get_logger
 
 user_registration_repo = UserRegistrationRepository()
 utils = Utils()
+
+logger = get_logger(__name__)
 
 
 class EventConsumerService:
@@ -98,7 +101,9 @@ class DepositEventConsumerService(EventConsumerService):
             json_metadata = tx_metadata[0]["json_metadata"]
             validate(instance=json_metadata, schema=DEPOSIT_EVENT_TX_METADATA)
         except Exception as e:
-            raise ValidationFailedException(f"Metadata is not valid for event {self.event}.")
+            logger.info(f"Metadata is not valid for event {self.event}.")
+            return None
+
         return json_metadata
 
     def validate_deposit_event(self):
@@ -115,7 +120,13 @@ class DepositEventConsumerService(EventConsumerService):
         """
         message = json.loads(json.loads(self.event["Records"][0]["body"])["Message"])
         transaction_details = message["transaction_detail"]
-        tx_metadata = self.fetch_transaction_metadata(transaction_details["tx_metadata"])
+        transaction_metadata = transaction_details.get("tx_metadata")
+
+        tx_metadata = self.fetch_transaction_metadata(transaction_metadata)
+        if not tx_metadata or tx_metadata is None:
+            logger.info(f"Transaction metadata not available for the given event {json.dumps(self.event)} ")
+            return
+
         ethereum_signature = tx_metadata["s1"] + tx_metadata["s2"] + tx_metadata["s3"]
         airdrop_window_id = tx_metadata["wid"]
         registration_id = tx_metadata["r1"] + tx_metadata["r2"]
