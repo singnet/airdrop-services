@@ -31,7 +31,7 @@ class TestLoyaltyAirdropServices(TestCase):
                 "blockNumber": LoyaltyAirdropUser1.signature_details["block_no"],
                 "walletAddress": LoyaltyAirdropUser1.address,
                 "cardanoAddress": LoyaltyAirdropUser1.cardano_address,
-                "cardano_wallet_name": LoyaltyAirdropUser1.cardano_wallet_name
+                "cardanoWalletName": LoyaltyAirdropUser1.cardano_wallet_name
             }
         }
         formatted_message["domain"]["name"] = LoyaltyAirdropUser1.signature_details["domain_name"]

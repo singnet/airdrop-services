@@ -30,7 +30,7 @@ class LoyaltyAirdrop(BaseAirdrop):
                 "blockNumber": block_number,
                 "walletAddress": address,
                 "cardanoAddress": cardano_address,
-                "cardano_wallet_name": cardano_wallet_name
+                "cardanoWalletName": cardano_wallet_name
             },
         }
         formatted_message["domain"]["name"] = self.domain_name
