@@ -40,6 +40,7 @@ class TestLoyaltyAirdropServices(TestCase):
             "body": json.dumps({
                 "address": LoyaltyAirdropUser1.address,
                 "cardano_address": LoyaltyAirdropUser1.cardano_address,
+                "cardano_wallet_name": LoyaltyAirdropUser1.cardano_wallet_name,
                 "airdrop_id": self.airdrop.id,
                 "airdrop_window_id": self.loyalty_airdrop_window1.id,
                 "signature": signature,
