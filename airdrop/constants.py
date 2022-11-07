@@ -84,7 +84,11 @@ USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT = {
 USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT = deepcopy(USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT)
 USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT["types"]["AirdropSignatureTypes"] \
     .append({"name": "cardanoAddress", "type": "string"})
+USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT["types"]["AirdropSignatureTypes"] \
+    .append({"name": "cardanoWalletName", "type": "string"})
+
 USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT["message"]["Airdrop"]["cardanoAddress"] = ""
+USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT["message"]["Airdrop"]["cardanoWalletName"] = ""
 USER_CLAIM_SIGNATURE_DEFAULT_FORMAT = {
     "types": {
         "EIP712Domain": [

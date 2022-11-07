@@ -71,9 +71,11 @@ def load_user_reward_data(airdrop_id, airdrop_window_id, airdrop_user):
 
 def load_airdrop_user_registration(airdrop_window_id, airdrop_user, airdrop_name=None):
     address=""
+    cardano_wallet_name = ""
     if airdrop_name == "Loyalty Airdrop":
         address = airdrop_user.cardano_address
-    signature_details = {"message": {"Airdrop": {"address": address, "block_no": 54321}}}
+        cardano_wallet_name = airdrop_user.cardano_wallet_name
+    signature_details = {"message": {"Airdrop": {"address": address,"cardano_wallet_name":cardano_wallet_name,"block_no": 54321}}}
     user_repository.add(
         UserRegistration(
             address=airdrop_user.address,

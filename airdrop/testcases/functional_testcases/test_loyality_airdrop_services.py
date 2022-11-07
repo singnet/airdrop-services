@@ -30,7 +30,8 @@ class TestLoyaltyAirdropServices(TestCase):
                 "airdropWindowId": self.loyalty_airdrop_window1.id,
                 "blockNumber": LoyaltyAirdropUser1.signature_details["block_no"],
                 "walletAddress": LoyaltyAirdropUser1.address,
-                "cardanoAddress": LoyaltyAirdropUser1.cardano_address
+                "cardanoAddress": LoyaltyAirdropUser1.cardano_address,
+                "cardanoWalletName": LoyaltyAirdropUser1.cardano_wallet_name
             }
         }
         formatted_message["domain"]["name"] = LoyaltyAirdropUser1.signature_details["domain_name"]
@@ -39,6 +40,7 @@ class TestLoyaltyAirdropServices(TestCase):
             "body": json.dumps({
                 "address": LoyaltyAirdropUser1.address,
                 "cardano_address": LoyaltyAirdropUser1.cardano_address,
+                "cardano_wallet_name": LoyaltyAirdropUser1.cardano_wallet_name,
                 "airdrop_id": self.airdrop.id,
                 "airdrop_window_id": self.loyalty_airdrop_window1.id,
                 "signature": signature,
