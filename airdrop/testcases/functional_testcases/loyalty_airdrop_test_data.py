@@ -50,6 +50,7 @@ class LoyaltyAirdropUser1:
     private_key = bytes.fromhex("1c4162244e5ec8f53a51ab6bb0a29c50432d82afd0a168e6e5c5c55c43b0a9c9")
     cardano_address = "addr_test1qqera830frgpvw9f0jj2873lwe8nd8vcsf0q0ftuqqgd9g8ucaczw427uq8y7axn2v3w8dua87kjgdgu" \
                       "rmgl38vd2hysk4dfj9"
+    cardano_wallet_name = "nami"
     signature_details = {
         "domain_name": LoyaltyAirdrop(None, None).domain_name,
         "block_no": 12432452
