@@ -88,4 +88,6 @@ class TokenTransferCardanoService:
 
 BlockFrostAPIBaseURL = "https://cardano-testnet.blockfrost.io/api"
 
+TOTAL_WALLET_BALANCE_IN_COGS = 0
+TOTAL_STAKE_BALANCE_IN_COGS = 0
 TOTAL_LOYALTY_REWARD_IN_COGS = 0

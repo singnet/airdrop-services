@@ -1,4 +1,5 @@
-from airdrop.config import NETWORK, TOKEN_SNAPSHOT_DB_CONFIG, TOTAL_LOYALTY_REWARD_IN_COGS
+from airdrop.config import NETWORK, TOKEN_SNAPSHOT_DB_CONFIG, TOTAL_LOYALTY_REWARD_IN_COGS, \
+    TOTAL_WALLET_BALANCE_IN_COGS, TOTAL_STAKE_BALANCE_IN_COGS
 from airdrop.job.repository import Repository
 from airdrop.utils import datetime_in_utcnow
 from common.logger import get_logger
@@ -20,7 +21,7 @@ class LoyaltyEligibilityProcessor:
                                      "SELECT sts.staker_address, tsm.wallet_address ,sts.balance_in_cogs AS stake_balance ," \
                                      "tsm.balance_in_cogs AS wallet_balance, tsm.is_contract FROM staking_token_snapshots sts RIGHT JOIN " \
                                      "token_snapshots_00MINS tsm  ON sts.staker_address = tsm.wallet_address ) a  where " \
-                                     "wallet_balance >= 1000000000 or staker_balance >= 1000000000 "
+                                     " wallet_balance >= 1000000000 or staker_balance >= 1000000000 "
         self.__insert_reward = "insert into user_rewards (airdrop_id, airdrop_window_id, address, rewards_awarded, " \
                                "score, normalized_score, row_created, row_updated) " + \
                                "values(%s,%s,%s,%s,0,0, current_timestamp, current_timestamp)  " + \
@@ -44,11 +45,14 @@ class LoyaltyEligibilityProcessor:
         if not stake_balance_in_cogs:
             stake_balance_in_cogs = 0
 
-        wallet_reward = (int(wallet_balance_in_cogs) + int(stake_balance_in_cogs)) / (
-                0.8 * int(TOTAL_LOYALTY_REWARD_IN_COGS))
-        staking_bonus = int(stake_balance_in_cogs) / (0.2 * int(TOTAL_LOYALTY_REWARD_IN_COGS))
+        wallet_proportion = wallet_balance_in_cogs / TOTAL_WALLET_BALANCE_IN_COGS
+        stake_proportion = stake_balance_in_cogs / TOTAL_STAKE_BALANCE_IN_COGS
 
-        total_reward = (wallet_reward + staking_bonus) / self.total_no_of_windows
+        wallet_bonus = wallet_proportion * 0.8 * TOTAL_LOYALTY_REWARD_IN_COGS
+        stake_bonus = stake_proportion * 0.2 * TOTAL_LOYALTY_REWARD_IN_COGS
+
+        total_reward = (wallet_bonus + stake_bonus) / self.total_no_of_windows
+
         return int(total_reward)
 
     def validate_loyalty_reward(self):
