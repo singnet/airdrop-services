@@ -156,14 +156,20 @@ def process_loyalty_airdrop_reward_eligibility(event, context):
 
     if not event or not isinstance(event, dict):
         logger.info("Empty event provided for processing or invalid input format provided")
-        return
+        return generate_lambda_response(
+            200,
+            "failed"
+        )
 
     airdrop_id = event.get('airdrop_id')
     window_id = event.get('window_id')
 
     if not airdrop_id or not window_id:
         logger.info(f"Invalid airdrop_id={airdrop_id} or window_id={window_id} provided")
-        return
+        return generate_lambda_response(
+            200,
+            "failed"
+        )
 
     response = LoyaltyEligibilityProcessor(airdrop_id=airdrop_id, window_id=window_id).process_reward()
 

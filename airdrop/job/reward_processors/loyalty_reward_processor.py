@@ -45,7 +45,7 @@ class LoyaltyEligibilityProcessor:
         if not stake_balance_in_cogs:
             stake_balance_in_cogs = 0
 
-        wallet_proportion = wallet_balance_in_cogs / TOTAL_WALLET_BALANCE_IN_COGS
+        wallet_proportion = (wallet_balance_in_cogs + stake_balance_in_cogs) / TOTAL_WALLET_BALANCE_IN_COGS
         stake_proportion = stake_balance_in_cogs / TOTAL_STAKE_BALANCE_IN_COGS
 
         wallet_bonus = wallet_proportion * 0.8 * TOTAL_LOYALTY_REWARD_IN_COGS
