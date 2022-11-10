@@ -30,7 +30,7 @@ TOKEN_SNAPSHOT_DB_CONFIG = {
     "DB_HOST": "localhost",
     "DB_USER": "unittest_root",
     "DB_PASSWORD": "unittest_pwd",
-    "DB_NAME": "token_snapshot_unittest_db",
+    "DB_NAME": "airdrop_unittest_db",
     "DB_PORT": 3306,
     "DB_LOGGING": True,
 }
@@ -88,6 +88,6 @@ class TokenTransferCardanoService:
 
 BlockFrostAPIBaseURL = "https://cardano-testnet.blockfrost.io/api"
 
-TOTAL_WALLET_BALANCE_IN_COGS = 0
-TOTAL_STAKE_BALANCE_IN_COGS = 0
-TOTAL_LOYALTY_REWARD_IN_COGS = 0
+TOTAL_WALLET_BALANCE_IN_COGS = 86591498730000000
+TOTAL_STAKE_BALANCE_IN_COGS = 10389461190327767
+TOTAL_LOYALTY_REWARD_IN_COGS = 829340100000000
