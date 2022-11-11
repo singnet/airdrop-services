@@ -45,6 +45,18 @@ class LoyaltyAirdropWindow2Data:
     total_airdrop_tokens = 2000000
 
 
+class LoyaltyAirdropWindow3Data:
+    airdrop_window_name = "Loyalty Airdrop Window 3"
+    description = 'Loyalty Airdrop Window 3'
+    registration_required = False
+    registration_start_date = dt.utcnow() - timedelta(days=25)
+    registration_end_date = dt.utcnow() - timedelta(days=30)
+    snapshot_required = False
+    claim_start_date = dt.utcnow() + timedelta(days=45)
+    claim_end_date = dt.utcnow() + timedelta(days=60)
+    total_airdrop_tokens = 2000000
+
+
 class LoyaltyAirdropUser1:
     address = Web3.toChecksumAddress("0x4e1388Acfd6237aeED2b01Da0d4ccFe242e8F6cA")
     private_key = bytes.fromhex("1c4162244e5ec8f53a51ab6bb0a29c50432d82afd0a168e6e5c5c55c43b0a9c9")
