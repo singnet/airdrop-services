@@ -1,9 +1,9 @@
 import json
 import sys
 
-from airdrop.job.reward_processors.loyalty_reward_processor import LoyaltyEligibilityProcessor
-
 sys.path.append('/opt')
+
+from airdrop.job.reward_processors.loyalty_reward_processor import LoyaltyEligibilityProcessor
 
 import time
 import uuid
