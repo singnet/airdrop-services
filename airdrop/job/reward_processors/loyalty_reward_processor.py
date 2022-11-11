@@ -119,7 +119,7 @@ class LoyaltyEligibilityProcessor:
                 tuple([self._airdrop_id, self._window_id, address, reward, reward]))
 
         if len(final_users):
-            self._token_snapshot_db.bulk_query(self.__insert_reward, final_users)
+            self._airdrop_db.bulk_query(self.__insert_reward, final_users)
 
         return f"{len(final_users)} users are eligible for claim on airdrop_id={self._airdrop_id}," \
                f" window_id={self._window_id}"
