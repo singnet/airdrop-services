@@ -1,9 +1,14 @@
+from datetime import datetime
+
 from py_eth_sig_utils.signing import recover_typed_data, signature_to_v_r_s
 
 from common.logger import get_logger
 
 logger = get_logger(__name__)
 
+
+def datetime_in_utcnow():
+    return datetime.utcnow()
 
 class Utils:
     pass
