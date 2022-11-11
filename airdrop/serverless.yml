@@ -170,7 +170,7 @@ resources:
 
 functions:
 
-  process_loyalty_airdrop_reward_eligibility:
+  process_loyalty_reward:
     timeout: 600
     warmup: false
     handler: airdrop/job/eligibility.process_loyalty_airdrop_reward_eligibility
