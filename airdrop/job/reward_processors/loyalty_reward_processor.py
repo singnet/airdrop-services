@@ -1,5 +1,5 @@
 from airdrop.config import NETWORK, TOKEN_SNAPSHOT_DB_CONFIG, TOTAL_LOYALTY_REWARD_IN_COGS, \
-    TOTAL_WALLET_BALANCE_IN_COGS, TOTAL_STAKE_BALANCE_IN_COGS
+    TOTAL_WALLET_BALANCE_IN_COGS, TOTAL_STAKE_BALANCE_IN_COGS, EXCLUDED_LOYALTY_WALLETS
 from airdrop.job.repository import Repository
 from airdrop.utils import datetime_in_utcnow
 from common.logger import get_logger
@@ -14,6 +14,7 @@ class LoyaltyEligibilityProcessor:
         self._token_snapshot_db = Repository(TOKEN_SNAPSHOT_DB_CONFIG)
         self._airdrop_id = airdrop_id
         self._window_id = window_id
+        excluded_wallets = "('" + "','".join(str(x) for x in EXCLUDED_LOYALTY_WALLETS) + "')"
         self.__eligible_user_query = "SELECT * FROM (SELECT sts.staker_address, tsm.wallet_address ," \
                                      "sts.balance_in_cogs AS staker_balance, tsm.balance_in_cogs AS " \
                                      "wallet_balance, tsm.is_contract  FROM staking_token_snapshots sts LEFT JOIN " \
@@ -21,7 +22,8 @@ class LoyaltyEligibilityProcessor:
                                      "SELECT sts.staker_address, tsm.wallet_address ,sts.balance_in_cogs AS stake_balance ," \
                                      "tsm.balance_in_cogs AS wallet_balance, tsm.is_contract FROM staking_token_snapshots sts RIGHT JOIN " \
                                      "token_snapshots_00MINS tsm  ON sts.staker_address = tsm.wallet_address ) a  where " \
-                                     " wallet_balance >= 1000000000 or staker_balance >= 1000000000 "
+                                     "( wallet_balance >= 1000000000 or staker_balance >= 1000000000 )and (" \
+                                     f"wallet_address is null or  wallet_address not in {excluded_wallets}) "
         self.__insert_reward = "insert into user_rewards (airdrop_id, airdrop_window_id, address, rewards_awarded, " \
                                "score, normalized_score, row_created, row_updated) " + \
                                "values(%s,%s,%s,%s,0,0, current_timestamp, current_timestamp)  " + \
