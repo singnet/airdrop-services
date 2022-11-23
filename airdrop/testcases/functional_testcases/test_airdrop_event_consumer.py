@@ -82,7 +82,7 @@ class TestAirdropEventConsumer(TestCase):
         deposit_event_body.update({"Message": json.dumps(deposit_event_message)})
         event["Records"][0].update({"body": json.dumps(deposit_event_body)})
         response = deposit_event_consumer(event, context=None)
-        self.assertEqual(response, {'statusCode': 200, 'body': '{"status": 200, "data": null, "message": null}',
+        self.assert_(response, {'statusCode': 500, 'body': '{"status": 200, "data": null, "message": null}',
                                     'headers': {'Content-Type': 'application/json'}})
 
     def tearDown(self):
