@@ -28,6 +28,7 @@ class EventConsumerService:
 
     @staticmethod
     def get_current_block_no():
+        logger.info(f"Getting current block no")
         response = requests.get(BlockFrostAPI.get_last_block,
                                 headers={"project_id": BlockFrostAccountDetails.project_id})
         if response.status_code == HTTPStatus.OK:
@@ -39,6 +40,7 @@ class EventConsumerService:
 
     @staticmethod
     def get_transaction_details(transaction_hash):
+        logger.info(f"Getting transaction details of transaction_hash={transaction_hash}")
         url = BlockFrostAPI.get_transaction_details.format(hash=transaction_hash)
         response = requests.get(url, headers={"project_id": BlockFrostAccountDetails.project_id})
         if response.status_code == HTTPStatus.OK:
@@ -56,6 +58,7 @@ class EventConsumerService:
 
     @staticmethod
     def get_stake_key_address(address):
+        logger.info(f"Getting stake key for the address={address}")
         url = BlockFrostAPI.get_stake_address.format(address=address)
         response = requests.get(url, headers={"project_id": BlockFrostAccountDetails.project_id})
         if response.status_code == HTTPStatus.OK:
@@ -67,6 +70,7 @@ class EventConsumerService:
 
     @staticmethod
     def get_account_associated_addresses(stake_address):
+        logger.info(f"Getting account associated addresses for the stake address={stake_address}")
         url = BlockFrostAPI.get_account_associated_addresses.format(stake_address=stake_address)
         response = requests.get(url, headers={"project_id": BlockFrostAccountDetails.project_id})
         if response.status_code == HTTPStatus.OK:
@@ -91,10 +95,14 @@ class DepositEventConsumerService(EventConsumerService):
 
     def validate_user_input_addresses_for_unique_stake_address(self, input_addresses, stake_address):
         # In case of multiple input address, stake address should be same
-        associated_addresses = self.get_account_associated_addresses(stake_address)
-        if set(input_addresses).issubset(associated_addresses):
-            return None
-        raise ValidationFailedException(f"Multiple stake address for given input addresses for event {self.event}")
+
+        for address in input_addresses:
+            stake_key = self.get_stake_key_address(address=address)
+            if stake_key != stake_address:
+                raise ValidationFailedException(
+                    f"Multiple stake address for given input addresses for event {self.event}")
+
+        return None
 
     def fetch_transaction_metadata(self, tx_metadata):
         try:
@@ -148,13 +156,16 @@ class DepositEventConsumerService(EventConsumerService):
         input_addresses = transaction_details["input_addresses"]
         first_input_address = input_addresses[0]
         stake_address_from_event = self.get_stake_key_address(first_input_address)
-        self.validate_user_input_addresses_for_unique_stake_address(input_addresses, stake_address_from_event)
+
+        if len(input_addresses) > 1:
+            self.validate_user_input_addresses_for_unique_stake_address(input_addresses, stake_address_from_event)
 
         #  Fetch user ethereum address for given registration id
         user_registered, user_registration = user_registration_repo. \
             get_user_registration_details(registration_id=registration_id)
         if not user_registered:
             raise ValidationFailedException(f"Unable to find user for given registration_id in the event {self.event}")
+
         ethereum_address = user_registration.address
         cardano_address = user_registration.signature_details.get("message", {}).get("Airdrop", {}).get(
             "cardanoAddress", None)
