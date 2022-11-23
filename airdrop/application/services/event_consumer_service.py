@@ -127,7 +127,11 @@ class DepositEventConsumerService(EventConsumerService):
             logger.info(f"Transaction metadata not available for the given event {json.dumps(self.event)} ")
             return
 
-        ethereum_signature = tx_metadata["s1"] + tx_metadata["s2"] + tx_metadata["s3"]
+        v = tx_metadata["s3"]
+        if v != '1c' and v != '1b':
+            v = hex(int(v) + 27).replace('0x', '')
+
+        ethereum_signature = tx_metadata["s1"] + tx_metadata["s2"] + v
         airdrop_window_id = tx_metadata["wid"]
         registration_id = tx_metadata["r1"] + tx_metadata["r2"]
 
