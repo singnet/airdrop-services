@@ -271,7 +271,7 @@ class AirdropRepository(BaseRepository):
         try:
             # return zero if there are no rewards, please note that MYSQL smartly sums up varchar columns and returns
             # it as a bigint if you have a very big number stored as a varchar in the rewards table.
-            if airdrop_id == 5:
+            if airdrop_id == 3:
                 query_rewards = text(
                     "SELECT IFNULL( SUM(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw "
                     "WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address AND aw.airdrop_id = :airdrop_id "
