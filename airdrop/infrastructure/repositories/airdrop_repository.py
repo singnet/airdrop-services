@@ -267,33 +267,62 @@ class AirdropRepository(BaseRepository):
             AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value,
             AirdropClaimStatus.CLAIM_FAILED.value
         )
+        tokens_claim_blockchain_methods = ("token_transfer",)
         try:
             # return zero if there are no rewards, please note that MYSQL smartly sums up varchar columns and returns
             # it as a bigint if you have a very big number stored as a varchar in the rewards table.
-            query = text(
-                "SELECT IFNULL( SUM(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw "
-                "WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address AND aw.airdrop_id = :airdrop_id "
-                "AND aw.claim_start_period <= current_timestamp  AND exists (SELECT 1 FROM airdrop_window WHERE "
-                "current_timestamp <= claim_end_period  AND airdrop_id = :airdrop_id AND "
-                "claim_start_period <= current_timestamp) AND ur.airdrop_window_id > "
-                "(SELECT IFNULL (MAX(airdrop_window_id), -1) FROM claim_history ch WHERE ch.address = :address "
-                "AND ch.transaction_status IN :in_progress_or_completed_tx_statuses AND ch.airdrop_id = :airdrop_id) "
-                "AND ur.airdrop_window_id IN ( SELECT airdrop_window_id FROM user_registrations  "
-                "WHERE address = :address AND airdrop_window_id IN (SELECT row_id FROM airdrop_window "
-                "WHERE airdrop_id = :airdrop_id));"
-            )
-            result = self.session.execute(query, {
-                "address": address, "airdrop_id": airdrop_id,
-                "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
-            })
+            if airdrop_id == 3:
+                query_rewards = text(
+                    "SELECT IFNULL( SUM(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw "
+                    "WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address AND aw.airdrop_id = :airdrop_id "
+                    "AND aw.claim_start_period <= current_timestamp  AND exists (SELECT 1 FROM airdrop_window WHERE "
+                    "current_timestamp <= claim_end_period  AND airdrop_id = :airdrop_id AND "
+                    "claim_start_period <= current_timestamp) AND ur.airdrop_window_id IN "
+                    "( SELECT airdrop_window_id FROM user_registrations WHERE address = :address AND "
+                    "airdrop_window_id IN (SELECT row_id FROM airdrop_window WHERE airdrop_id = :airdrop_id));"
+                )
+                result_rewards = self.session.execute(query_rewards, {
+                    "address": address, "airdrop_id": airdrop_id
+                })
+                query_claimed = text(
+                    "SELECT IFNULL(SUM(claimable_amount),0) AS 'total_claimed' FROM claim_history ch WHERE "
+                    "ch.address = :address AND ch.airdrop_id = :airdrop_id AND ch.blockchain_method IN "
+                    ":tokens_claim_blockchain_methods AND ch.transaction_status IN :in_progress_or_completed_tx_statuses"
+                )
+                result_claimed = self.session.execute(query_claimed, {
+                    "address": address, "airdrop_id": airdrop_id,
+                    "tokens_claim_blockchain_methods": tokens_claim_blockchain_methods,
+                    "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
+                })
+                full_rewards = int(result_rewards.fetchall()[0]["total_rewards"])
+                claimed_rewards = int(result_claimed.fetchall()[0]["total_claimed"])
+                total_rewards = full_rewards - claimed_rewards
+            else:
+                query = text(
+                    "SELECT IFNULL( SUM(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw "
+                    "WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address AND aw.airdrop_id = :airdrop_id "
+                    "AND aw.claim_start_period <= current_timestamp  AND exists (SELECT 1 FROM airdrop_window WHERE "
+                    "current_timestamp <= claim_end_period  AND airdrop_id = :airdrop_id AND "
+                    "claim_start_period <= current_timestamp) AND ur.airdrop_window_id > "
+                    "(SELECT IFNULL (MAX(airdrop_window_id), -1) FROM claim_history ch WHERE ch.address = :address "
+                    "AND ch.transaction_status IN :in_progress_or_completed_tx_statuses AND ch.airdrop_id = :airdrop_id) "
+                    "AND ur.airdrop_window_id IN ( SELECT airdrop_window_id FROM user_registrations  "
+                    "WHERE address = :address AND airdrop_window_id IN (SELECT row_id FROM airdrop_window "
+                    "WHERE airdrop_id = :airdrop_id));"
+                )
+                result = self.session.execute(query, {
+                    "address": address, "airdrop_id": airdrop_id,
+                    "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
+                })
+                total_rewards = int(result.fetchall()[0]["total_rewards"])
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
         # determine the final result here, this was the service layer does not have to deal
         # with extracting "total_rewards" from the o/p sent
-        total_rewards = result.fetchall()[0]["total_rewards"]
-        return int(total_rewards)
+
+        return total_rewards
 
     def fetch_total_eligibility_amount(self, airdrop_id, address):
         try:
