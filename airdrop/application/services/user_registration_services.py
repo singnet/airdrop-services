@@ -119,12 +119,11 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, signature_parameters=inputs)
+            formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, inputs)
             formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
-            # disable signature check
-            # sign_verified, recovered_address = utils.match_signature(address, formatted_message,formatted_signature)
-            # if not sign_verified:
-            #     raise Exception("Signature is not valid.")
+            sign_verified, recovered_address = utils.match_signature(address, formatted_message,formatted_signature)
+            if not sign_verified:
+                raise Exception("Signature is not valid.")
 
             airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
@@ -197,10 +196,9 @@ class UserRegistrationServices:
 
             formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, inputs)
             formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
-            # disable signature check
-            # sign_verified, recovered_address = utils.match_signature(address, formatted_message, formatted_signature)
-            # if not sign_verified:
-            #     raise Exception("Signature is not valid.")
+            sign_verified, recovered_address = utils.match_signature(address, formatted_message, formatted_signature)
+            if not sign_verified:
+                raise Exception("Signature is not valid.")
 
             airdrop_windows = airdrop_window_repo.get_airdrop_windows(airdrop_id) \
                 if airdrop_object.register_all_window_at_once \
