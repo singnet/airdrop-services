@@ -210,13 +210,15 @@ class UserRegistrationServices:
             for window in airdrop_windows:
                 try:
                     is_registered, receipt = registration_repo.is_registered_user(window.id, address)
+                    is_claimed = airdrop_window_repo.is_airdrop_window_claimed(window.id, address)
                     assert is_registered, "not registered"
+                    assert not is_claimed, "already claimed"
                     assert window.claim_end_period > utc_now, "claim period is over"
-                    assert not airdrop_window_repo.is_airdrop_window_claimed(window.id, address), "already claimed"
                     registration_repo.update_registration(window.id, address,
                                                           signature=signature,
                                                           signature_details=formatted_message,
-                                                          block_number=block_number)
+                                                          block_number=block_number,
+                                                          registered_at=utc_now)
                     response.append({"airdrop_window_id": window.id, "receipt": receipt})
                 except AssertionError as e:
                     warning = f"Airdrop window {window.id} registration update failed ({str(e)})"
