@@ -1,20 +1,18 @@
 from web3 import Web3
 
-from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
-from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
 from airdrop.processor.base_airdrop import BaseAirdrop
+from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
+from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
 
 
 class NunetAirdrop(BaseAirdrop):
+
     def __init__(self, airdrop_id, airdrop_window_id=None):
-        self.airdrop_id = airdrop_id
-        self.airdrop_window_id = airdrop_window_id
-        self.register_all_window_at_once = False
+        super().__init__(airdrop_id, airdrop_window_id)
         self.domain_name = "Nunet Airdrop"
-        self.chain_context = {}
         self.is_claim_signature_required = True
-        self.claim_signature_data_format = ["string", "uint256", "uint256", "address", "uint256", "uint256", "address",
-                                            "address"]
+        self.claim_signature_data_format = ["string", "uint256", "uint256", "address",
+                                            "uint256", "uint256", "address", "address"]
         self.claim_signature_private_key_secret = NUNET_SIGNER_PRIVATE_KEY
         self.reward_processor_name = "nunet_reward_processor.NunetRewardProcessor"
 
@@ -31,10 +29,6 @@ class NunetAirdrop(BaseAirdrop):
         }
         formatted_message["domain"]["name"] = self.domain_name
         return formatted_message
-
-    @staticmethod
-    def check_user_eligibility(user_eligible_for_given_window, unclaimed_reward):
-        return user_eligible_for_given_window
 
     def format_and_get_claim_signature_details(self, signature_parameters):
         total_eligible_amount = signature_parameters["total_eligible_amount"]

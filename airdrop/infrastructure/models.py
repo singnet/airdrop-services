@@ -47,25 +47,17 @@ class Airdrop(Base, AuditClass):
 
 class AirdropWindow(Base, AuditClass):
     __tablename__ = "airdrop_window"
-    airdrop_id = Column(
-        BIGINT, ForeignKey("airdrop.row_id", ondelete="CASCADE"), nullable=False
-    )
+    airdrop_id = Column(BIGINT, ForeignKey("airdrop.row_id", ondelete="CASCADE"), nullable=False)
     airdrop_window_order = Column("airdrop_window_order", INTEGER, default=1)
-    airdrop_window_name = Column(
-        "airdrop_window_name", VARCHAR(256), nullable=False)
+    airdrop_window_name = Column("airdrop_window_name", VARCHAR(256), nullable=False)
     description = Column("description", TEXT, nullable=True)
     registration_required = Column("registration_required", BIT, default=True)
-    registration_start_period = Column(
-        "registration_start_period", TIMESTAMP(), nullable=True
-    )
-    registration_end_period = Column(
-        "registration_end_period", TIMESTAMP(), nullable=True
-    )
+    registration_start_period = Column("registration_start_period", TIMESTAMP(), nullable=True)
+    registration_end_period = Column("registration_end_period", TIMESTAMP(), nullable=True)
     snapshot_required = Column("snapshot_required", BIT, default=True)
     first_snapshot_at = Column("first_snapshot_at", TIMESTAMP(), nullable=True)
     last_snapshot_at = Column("last_snapshot_at", TIMESTAMP(), nullable=True)
-    claim_start_period = Column(
-        "claim_start_period", TIMESTAMP(), nullable=True)
+    claim_start_period = Column("claim_start_period", TIMESTAMP(), nullable=True)
     claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=True)
     total_airdrop_tokens = Column("total_airdrop_tokens", INTEGER, default=0)
     minimum_stake_amount = Column("minimum_stake_amount", INTEGER, default=0)

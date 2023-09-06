@@ -11,7 +11,7 @@ from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
-from airdrop.utils import Utils
+from airdrop.utils import Utils, datetime_in_utcnow
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import get_registration_receipt
@@ -21,6 +21,7 @@ utils = Utils()
 
 
 class UserRegistrationServices:
+
     @staticmethod
     def eligibility(inputs):
         status = HTTPStatus.BAD_REQUEST
@@ -118,12 +119,11 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, signature_parameters=inputs)
+            formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, inputs)
             formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
-            # disable signature check
-            # sign_verified, recovered_address = utils.match_signature(address, formatted_message,formatted_signature)
-            # if not sign_verified:
-            #     raise Exception("Signature is not valid.")
+            sign_verified, recovered_address = utils.match_signature(address, formatted_message,formatted_signature)
+            if not sign_verified:
+                raise Exception("Signature is not valid.")
 
             airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
@@ -165,6 +165,66 @@ class UserRegistrationServices:
         except ValidationError as e:
             return HTTPStatus.BAD_REQUEST, repr(e)
         except BaseException as e:
+            return HTTPStatus.BAD_REQUEST, repr(e)
+        return HTTPStatus.OK, response
+
+    def update_registration(self, inputs):
+        try:
+            validate(instance=inputs, schema=USER_REGISTRATION_SCHEMA)
+
+            airdrop_id = inputs["airdrop_id"]
+            airdrop_window_id = inputs["airdrop_window_id"]
+            address = inputs["address"].lower()
+            checksum_address = Web3.toChecksumAddress(address)
+            signature = inputs["signature"]
+            block_number = inputs["block_number"]
+
+            airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
+            if not airdrop:
+                raise Exception("Airdrop id is not valid.")
+
+            airdrop_window_repo = AirdropWindowRepository()
+            airdrop_window = airdrop_window_repo.get_airdrop_window_by_id(airdrop_window_id)
+            if airdrop_window is None:
+                raise Exception("Airdrop window id is not valid.")
+
+            airdrop_class = AirdropServices.load_airdrop_class(airdrop)
+            airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
+
+            if not airdrop_object.allow_update_registration:
+                raise Exception("Registration update not allowed.")
+
+            formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, inputs)
+            formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
+            sign_verified, recovered_address = utils.match_signature(address, formatted_message, formatted_signature)
+            if not sign_verified:
+                raise Exception("Signature is not valid.")
+
+            airdrop_windows = airdrop_window_repo.get_airdrop_windows(airdrop_id) \
+                if airdrop_object.register_all_window_at_once \
+                else [airdrop_window]
+
+            response = []
+            registration_repo = UserRegistrationRepository()
+            utc_now = datetime_in_utcnow()
+            for window in airdrop_windows:
+                try:
+                    is_registered, receipt = registration_repo.is_registered_user(window.id, address)
+                    assert is_registered, "not registered"
+                    assert window.claim_end_period > utc_now, "claim period is over"
+                    assert not airdrop_window_repo.is_airdrop_window_claimed(window.id, address), "already claimed"
+                    registration_repo.update_registration(window.id, address,
+                                                          signature=signature,
+                                                          signature_details=formatted_message,
+                                                          block_number=block_number)
+                    response.append({"airdrop_window_id": window.id, "receipt": receipt})
+                except AssertionError as e:
+                    warning = f"Airdrop window {window.id} registration update failed ({str(e)})"
+                    if len(airdrop_windows) == 1 and window == airdrop_window:
+                        raise Exception(warning)
+                    response.append({"airdrop_window_id": window.id, "warning": warning})
+
+        except (ValidationError, BaseException) as e:
             return HTTPStatus.BAD_REQUEST, repr(e)
         return HTTPStatus.OK, response
 

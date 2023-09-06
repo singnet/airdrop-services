@@ -97,10 +97,33 @@ class UserRegistrationRepository(BaseRepository):
 
     def register_user(self, airdrop_window_id, address, receipt, signature, signature_details, block_number):
         user = UserRegistration(
-            address=address, airdrop_window_id=airdrop_window_id, registered_at=datetime.utcnow(),
-            receipt_generated=receipt, user_signature=signature, signature_details=signature_details,
-            user_signature_block_number=block_number)
+            airdrop_window_id=airdrop_window_id,
+            address=address,
+            registered_at=datetime.utcnow(),
+            receipt_generated=receipt,
+            user_signature=signature,
+            signature_details=signature_details,
+            user_signature_block_number=block_number
+        )
         self.add(user)
+
+    def update_registration(self, airdrop_window_id, address, **kwargs):
+        receipt = kwargs.get("receipt")
+        signature = kwargs.get("signature")
+        signature_details = kwargs.get("signature_details")
+        block_number = kwargs.get("block_number")
+        registration = self.session.query(UserRegistration) \
+            .filter_by(airdrop_window_id=airdrop_window_id, address=address).one()
+        if receipt is not None:
+            registration.receipt_generated = receipt
+        if signature is not None:
+            registration.user_signature = signature
+        if signature_details is not None:
+            registration.signature_details = signature_details
+        if block_number is not None:
+            registration.user_signature_block_number = block_number
+        self.session.commit()
+        return registration
 
     def is_user_eligible_for_given_window(self, address, airdrop_id, airdrop_window_id):
         user_reward = self.session.query(UserReward) \
