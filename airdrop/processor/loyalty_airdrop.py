@@ -28,6 +28,7 @@ class LoyaltyAirdrop(BaseAirdrop):
     def format_user_registration_signature_message(self, address, signature_parameters):
         block_number = signature_parameters["block_number"]
         cardano_address = signature_parameters["cardano_address"]
+        cardano_wallet_name = signature_parameters["cardano_wallet_name"]
         formatted_message = USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT
         formatted_message["message"] = {
             "Airdrop": {
@@ -36,6 +37,7 @@ class LoyaltyAirdrop(BaseAirdrop):
                 "blockNumber": block_number,
                 "walletAddress": address,
                 "cardanoAddress": cardano_address,
+                "cardanoWalletName": cardano_wallet_name
             },
         }
         formatted_message["domain"]["name"] = self.domain_name
