@@ -108,12 +108,18 @@ class UserRegistrationRepository(BaseRepository):
         self.add(user)
 
     def update_registration(self, airdrop_window_id, address, **kwargs):
+        registered_at = kwargs.get("registered_at")
+        reject_reason = kwargs.get("reject_reason")
         receipt = kwargs.get("receipt")
         signature = kwargs.get("signature")
         signature_details = kwargs.get("signature_details")
         block_number = kwargs.get("block_number")
         registration = self.session.query(UserRegistration) \
             .filter_by(airdrop_window_id=airdrop_window_id, address=address).one()
+        if registered_at is not None:
+            registration.registered_at = registered_at
+        if reject_reason is not None:
+            registration.reject_reason = reject_reason
         if receipt is not None:
             registration.receipt_generated = receipt
         if signature is not None:
