@@ -41,6 +41,18 @@ def user_registration(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def user_registration_update(event, context):
+    logger.info(f"Got Airdrops Event {event}")
+    status, response = UserRegistrationServices().update_registration(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_window_stake_details(event, context):
     logger.info(f"Got Airdrops Window Stake details {event}")
     status, response = AirdropServices().get_airdrop_window_stake_details(request(event))

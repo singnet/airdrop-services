@@ -2,8 +2,8 @@ from enum import Enum
 
 NETWORK = {
     "name": "test",
-    "http_provider": "https://ropsten.infura.io",
-    "ws_provider": "wss://ropsten.infura.io/ws",
+    "http_provider": "https://goerli.infura.io",
+    "ws_provider": "wss://goerli.infura.io/ws",
     "db": {
         "DB_DRIVER": "mysql+pymysql",
         "DB_HOST": "localhost",
@@ -35,7 +35,7 @@ TOKEN_SNAPSHOT_DB_CONFIG = {
     "DB_LOGGING": True,
 }
 
-NETWORK_ID = 3
+NETWORK_ID = 5
 DEFAULT_REGION = "us-east-1"
 SLACK_HOOK = {
     "hostname": "https://hooks.slack.com",
@@ -86,7 +86,7 @@ class TokenTransferCardanoService:
     headers = {'content-type': 'application/json'}
 
 
-BlockFrostAPIBaseURL = "https://cardano-testnet.blockfrost.io/api"
+BlockFrostAPIBaseURL = "https://cardano-preprod.blockfrost.io/api"
 
 TOTAL_WALLET_BALANCE_IN_COGS = 97105121106709400
 TOTAL_STAKE_BALANCE_IN_COGS = 10389461190327767

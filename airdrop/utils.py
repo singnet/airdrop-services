@@ -10,8 +10,8 @@ logger = get_logger(__name__)
 def datetime_in_utcnow():
     return datetime.utcnow()
 
+
 class Utils:
-    pass
 
     @staticmethod
     def match_signature(address, formatted_message, signature):

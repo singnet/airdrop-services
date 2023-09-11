@@ -187,7 +187,6 @@ functions:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
 
-
   process_eligibility:
     timeout: 600
     warmup: false
@@ -258,6 +257,7 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   user_registration:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.user_registration
@@ -306,6 +306,36 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+
+  user_registration_update:
+    warmup: true
+    handler: airdrop/application/handlers/airdrop_handlers.user_registration_update
+    layers:
+      - ${file(./config.${self:provider.stage}.json):MplaceCommonPythonLib}
+      - ${file(./config.${self:provider.stage}.json):MplacePythonWeb3AndGrpc}
+    role: ${file(./config.${self:provider.stage}.json):ROLE}
+    vpc:
+      securityGroupIds:
+        - ${file(./config.${self:provider.stage}.json):SG1}
+        - ${file(./config.${self:provider.stage}.json):SG2}
+      subnetIds:
+        - ${file(./config.${self:provider.stage}.json):VPC1}
+        - ${file(./config.${self:provider.stage}.json):VPC2}
+    events:
+      - http:
+          path: /airdrop/registration/update
+          method: post
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
   user_eligibility:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.user_eligibility
@@ -354,6 +384,7 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   airdrop_window_claims:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.occam_airdrop_window_claim
@@ -451,6 +482,7 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   airdrop_window_claim_status:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim_status
@@ -499,6 +531,7 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   airdrop_history:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim_history
@@ -547,6 +580,7 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   airdrop_user_notifications:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.user_notifications
@@ -595,6 +629,7 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   airdrop_window_stake_details:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_stake_details
@@ -643,6 +678,7 @@ functions:
               - statusCode: "400"
                 responseModels:
                   "application/json": "ErrorMessage"
+
   airdrop_event_listener:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_event_consumer
@@ -657,6 +693,7 @@ functions:
       subnetIds:
         - ${file(./config.${self:provider.stage}.json):VPC1}
         - ${file(./config.${self:provider.stage}.json):VPC2}
+
   airdrop_txn_watcher:
     warmup: true
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_txn_watcher
