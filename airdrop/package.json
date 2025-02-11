@@ -9,6 +9,7 @@
   "dependencies": {
     "serverless": "^4.4.18",
     "serverless-aws-documentation": "^1.1.0",
+    "serverless-latest-layer-version": "^2.1.2",
     "serverless-plugin-tracing": "^2.0.0",
     "serverless-prune-plugin": "^2.1.0",
     "serverless-python-requirements": "^6.1.1"

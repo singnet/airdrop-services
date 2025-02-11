@@ -1,3 +1,7 @@
+plugins:
+  - serverless-latest-layer-version
+  - serverless-prune-plugin
+
 service: airdrop-services
 
 provider:
