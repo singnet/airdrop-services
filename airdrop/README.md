@@ -19,12 +19,12 @@ alembic upgrade head # Sync database tables
 ### Start the service
 
 ```sh
-sls offline start
+sls offline start -s <stage>
 ```
 
 ## Requirements
 
 | Language     | Download                          |
 | ------------ | --------------------------------- |
-| Python 3.8   | https://www.python.org/downloads/ |
-| Node JS 12.X | https://nodejs.org/en/            |
+| Python 3.12   | https://www.python.org/downloads/ |
+| Node JS 22.13 | https://nodejs.org/en/            |
