@@ -4,6 +4,7 @@ provider:
   name: aws
   runtime: python3.12
   memorySize: 512
+  layers: ${file(./config.${self:provider.stage}.json):AirDropLayer}
   timeout: 30
   stage: ${opt:stage,'dev'}
   region: ${file(./config.${self:provider.stage}.json):REGION}
@@ -35,8 +36,6 @@ custom:
     automatic: true
     includeLayers: true
     number: 3
-  defaultLayers:
-    - ${file(./config.${self:provider.stage}.json):AirDropLayer}
 
 plugins:
   - serverless-offline
@@ -135,14 +134,10 @@ functions:
   process_loyalty_reward:
     timeout: 600
     handler: airdrop/job/eligibility.process_loyalty_airdrop_reward_eligibility
-    layers:
-      - ${self:custom.defaultLayers}
 
   process_eligibility:
     timeout: 600
     handler: airdrop/job/eligibility.process_eligibility
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - schedule:
           rate: cron(0 11 * * ? *)
@@ -151,8 +146,6 @@ functions:
 
   get_airdrop_schedules:
     handler: airdrop/application/handlers/airdrop_handlers.get_airdrop_schedules
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - http:
           path: /airdrop-schedule/{airdrop_id}
@@ -170,8 +163,6 @@ functions:
 
   user_registration:
     handler: airdrop/application/handlers/airdrop_handlers.user_registration
-    layers:
-      - ${self:custom.defaultLayers}
     role: ${file(./config.${self:provider.stage}.json):ROLE_WITH_SM}
     events:
       - http:
@@ -190,8 +181,6 @@ functions:
 
   user_registration_update:
     handler: airdrop/application/handlers/airdrop_handlers.user_registration_update
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - http:
           path: /airdrop/registration/update
@@ -209,8 +198,6 @@ functions:
 
   user_eligibility:
     handler: airdrop/application/handlers/airdrop_handlers.user_eligibility
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - http:
           path: /airdrop/user-eligibility
@@ -228,8 +215,6 @@ functions:
 
   airdrop_window_claims:
     handler: airdrop/application/handlers/airdrop_handlers.occam_airdrop_window_claim
-    layers:
-      - ${self:custom.defaultLayers}
     role: ${file(./config.${self:provider.stage}.json):ROLE_WITH_SM}
     events:
       - http:
@@ -248,8 +233,6 @@ functions:
 
   airdrop_window_claim:
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim
-    layers:
-      - ${self:custom.defaultLayers}
     role: ${file(./config.${self:provider.stage}.json):ROLE_WITH_SM}
     events:
       - http:
@@ -268,8 +251,6 @@ functions:
 
   airdrop_window_claim_status:
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim_status
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - http:
           path: /airdrop/claim-txn
@@ -287,8 +268,6 @@ functions:
 
   airdrop_history:
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_claim_history
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - http:
           path: /airdrop-history
@@ -306,8 +285,6 @@ functions:
 
   airdrop_user_notifications:
     handler: airdrop/application/handlers/airdrop_handlers.user_notifications
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - http:
           path: /airdrop-notifications
@@ -325,8 +302,6 @@ functions:
 
   airdrop_window_stake_details:
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_window_stake_details
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - http:
           path: /airdrop-window-stake-details
@@ -344,13 +319,9 @@ functions:
 
   airdrop_event_listener:
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_event_consumer
-    layers:
-      - ${self:custom.defaultLayers}
 
   airdrop_txn_watcher:
     handler: airdrop/application/handlers/airdrop_handlers.airdrop_txn_watcher
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - schedule:
           rate: rate(2 minutes)
@@ -359,8 +330,6 @@ functions:
 
   deposit_event_consumer:
     handler: airdrop/application/handlers/consumer_handler.deposit_event_consumer
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - sqs:
           arn:
@@ -371,8 +340,6 @@ functions:
 
   cardano-airdrop-transfer-claim-service:
     handler: airdrop/application/handlers/airdrop_handlers.cardano_airdrop_transfer_claim_service
-    layers:
-      - ${self:custom.defaultLayers}
     vpc:
       securityGroupIds:
         - ${file(./config.${self:provider.stage}.json):SG1}
@@ -390,8 +357,6 @@ functions:
 
   cardano-airdrop-update-claim-tx-status:
     handler: airdrop/application/handlers/airdrop_handlers.update_user_claim_transaction_status_post_block_confirmation
-    layers:
-      - ${self:custom.defaultLayers}
     events:
       - schedule:
           rate: rate(5 minutes)
