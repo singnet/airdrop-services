@@ -1,8 +1,14 @@
+import inspect
 from web3 import Web3
 
-from airdrop.processor.base_airdrop import BaseAirdrop
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
 from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
+from airdrop.infrastructure.models import AirdropWindow
+from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
+from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
+from airdrop.processor.base_airdrop import BaseAirdrop
+from airdrop.utils import Utils
+from common.exceptions import RequiredDataNotFound
 
 
 class DefaultAirdrop(BaseAirdrop):
@@ -15,13 +21,28 @@ class DefaultAirdrop(BaseAirdrop):
                                             "uint256", "uint256", "address", "address"]
         self.claim_signature_private_key_secret = NUNET_SIGNER_PRIVATE_KEY
 
-    def format_user_registration_signature_message(self, address, signature_parameters):
+    def check_user_eligibility(self, address: str) -> bool:
+        if not isinstance(address, str):
+            raise Exception("The address was sent in the wrong format.")
+
+        address = address.lower()
+        registration_repo = UserRegistrationRepository()
+        user_eligible_for_given_window = registration_repo.is_user_eligible_for_given_window(
+            address, self.id, self.window_id
+        )
+        unclaimed_reward = registration_repo.get_unclaimed_reward(self.id, address)
+
+        if user_eligible_for_given_window or unclaimed_reward > 0:
+            return True
+        return False
+
+    def format_user_registration_signature_message(self, address: str, signature_parameters: dict) -> dict:
         block_number = signature_parameters["block_number"]
         formatted_message = USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
         formatted_message["message"] = {
             "Airdrop": {
-                "airdropId": self.airdrop_id,
-                "airdropWindowId": self.airdrop_window_id,
+                "airdropId": self.id,
+                "airdropWindowId": self.window_id,
                 "blockNumber": block_number,
                 "walletAddress": address
             },
@@ -29,12 +50,72 @@ class DefaultAirdrop(BaseAirdrop):
         formatted_message["domain"]["name"] = self.domain_name
         return formatted_message
 
-    def format_and_get_claim_signature_details(self, signature_parameters):
+    def format_and_get_claim_signature_details(self, **kwargs) -> tuple[list, list]:
+        signature_parameters = kwargs.get("signature_parameters")
+        if not signature_parameters:
+            raise RequiredDataNotFound("signature_parameters parameter "
+                                       "not passed to function "
+                                       f"{inspect.currentframe().f_code.co_name} "
+                                       f"for airdrop_id = {self.id}, " 
+                                       f"window_id = {self.window_id}")
+
         total_eligible_amount = signature_parameters["total_eligible_amount"]
         contract_address = Web3.toChecksumAddress(signature_parameters["contract_address"])
         token_address = Web3.toChecksumAddress(signature_parameters["token_address"])
         user_address = Web3.toChecksumAddress(signature_parameters["user_address"])
         amount = signature_parameters["claimable_amount"]
-        formatted_message = ["__airdropclaim", total_eligible_amount, amount, user_address, int(self.airdrop_id),
-                             int(self.airdrop_window_id), contract_address, token_address]
+        formatted_message = ["__airdropclaim", total_eligible_amount, amount, user_address, int(self.id),
+                             int(self.window_id), contract_address, token_address]
         return self.claim_signature_data_format, formatted_message
+
+    def match_signature(self, data: dict) -> dict:
+        address = data["address"].lower()
+        checksum_address = Web3.toChecksumAddress(address)
+        signature = data["signature"]
+        utils = Utils()
+        formatted_message = self.format_user_registration_signature_message(checksum_address, data)
+        formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
+        sign_verified, _ = utils.match_ethereum_signature(address, formatted_message, formatted_signature)
+        if not sign_verified:
+            raise Exception("Signature is not valid.")
+        return formatted_message
+
+    def register(self, data: dict) -> list | str:
+        address = data["address"].lower()
+        signature = data["signature"]
+        block_number = data["block_number"]
+
+        registration_repo = UserRegistrationRepository()
+        airdrop_window_repo = AirdropWindowRepository()
+        airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
+
+        formatted_message = self.match_signature(data)
+
+        is_registration_open = self.is_registration_window_open(airdrop_window.registration_start_period,
+                                                                airdrop_window.registration_end_period)
+        if airdrop_window.registration_required and not is_registration_open:
+            raise Exception("Airdrop window is not accepting registration at this moment.")
+
+        is_user_eligible = self.check_user_eligibility(address=address)
+        if not is_user_eligible:
+            raise Exception("Address is not eligible for this airdrop.")
+
+        user_registered, _ = registration_repo. \
+            get_user_registration_details(address, self.window_id)
+        if user_registered:
+            raise Exception("Address is already registered for this airdrop window")
+
+        response = []
+        if self.register_all_window_at_once:
+            airdrop_windows = airdrop_window_repo.get_airdrop_windows(self.id)
+            for window in airdrop_windows:
+                receipt = self.generate_user_registration_receipt(self.id, window.id, address)
+                registration_repo.register_user(window.id, address, receipt, signature,
+                                                formatted_message, block_number)
+                response.append({"airdrop_window_id": window.id, "receipt": receipt})
+        else:
+            receipt = self.generate_user_registration_receipt(self.id, self.window_id, address)
+            registration_repo.register_user(self.window_id, address, receipt, signature,
+                                            formatted_message, block_number)
+            # Keeping it backward compatible
+            response = receipt

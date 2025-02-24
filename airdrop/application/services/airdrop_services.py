@@ -463,6 +463,7 @@ class AirdropServices:
             response = e.message
         except BaseException as e:
             response = str(e)
+            status = HTTPStatus.INTERNAL_SERVER_ERROR
         return status, response
 
     @staticmethod
