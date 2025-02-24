@@ -140,7 +140,7 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            airdrop_object.match_signature(inputs)
+            formatted_message = airdrop_object.match_signature(inputs)
 
             if not airdrop_object.allow_update_registration:
                 raise Exception("Registration update not allowed.")
