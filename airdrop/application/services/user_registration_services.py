@@ -39,7 +39,7 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            is_user_eligible = airdrop_object.check_user_eligibility(inputs)
+            is_user_eligible = airdrop_object.check_user_eligibility(address)
 
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
