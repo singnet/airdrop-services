@@ -1,20 +1,16 @@
-from datetime import datetime as dt
 from http import HTTPStatus
 
 from jsonschema import validate, ValidationError
-from web3 import Web3
 
 from airdrop.application.services.airdrop_services import AirdropServices
-from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION, AIRDROP_RECEIPT_SECRET_KEY
 from airdrop.constants import AirdropClaimStatus
 from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA
+from airdrop.infrastructure.models import AirdropWindow
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils, datetime_in_utcnow
-from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from common.utils import get_registration_receipt
 
 logger = get_logger(__name__)
 utils = Utils()
@@ -43,12 +39,7 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            user_eligible_for_given_window = UserRegistrationRepository(). \
-                is_user_eligible_for_given_window(address, airdrop_id, airdrop_window_id)
-
-            unclaimed_reward = UserRegistrationRepository().get_unclaimed_reward(airdrop_id, address)
-
-            is_user_eligible = airdrop_object.check_user_eligibility(user_eligible_for_given_window, unclaimed_reward)
+            is_user_eligible = airdrop_object.check_user_eligibility(address)
 
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
@@ -101,67 +92,26 @@ class UserRegistrationServices:
 
         return status, response
 
-    def register(self, inputs):
+    def register(self, inputs: dict):
         try:
             validate(instance=inputs, schema=USER_REGISTRATION_SCHEMA)
 
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
-            address = inputs["address"].lower()
-            checksum_address = Web3.toChecksumAddress(address)
-            signature = inputs["signature"]
-            block_number = inputs["block_number"]
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
                 raise Exception("Airdrop id is not valid.")
 
+            airdrop_window_repo = AirdropWindowRepository()
+            airdrop_window = airdrop_window_repo.get_airdrop_window_by_id(airdrop_window_id)
+            if airdrop_window is None:
+                raise Exception("Airdrop window id is not valid.")
+
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, inputs)
-            formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
-            sign_verified, recovered_address = utils.match_signature(address, formatted_message,formatted_signature)
-            if not sign_verified:
-                raise Exception("Signature is not valid.")
-
-            airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
-            if airdrop_window is None:
-                raise Exception("Airdrop window id is not valid.")
-            is_registration_open = self.is_registration_window_open(airdrop_window.registration_start_period,
-                                                                    airdrop_window.registration_end_period)
-            if airdrop_window.registration_required and not is_registration_open:
-                raise Exception("Airdrop window is not accepting registration at this moment.")
-
-            user_eligible_for_given_window = UserRegistrationRepository(). \
-                is_user_eligible_for_given_window(address, airdrop_id, airdrop_window_id)
-
-            unclaimed_reward = UserRegistrationRepository().get_unclaimed_reward(airdrop_id, address)
-
-            is_user_eligible = airdrop_object.check_user_eligibility(user_eligible_for_given_window, unclaimed_reward)
-            if not is_user_eligible:
-                raise Exception("Address is not eligible for this airdrop.")
-
-            user_registered, user_registration = UserRegistrationRepository(). \
-                get_user_registration_details(address, airdrop_window_id)
-
-            if user_registered:
-                raise Exception("Address is already registered for this airdrop window")
-
-            response = []
-            if airdrop_object.register_all_window_at_once:
-                airdrop_windows = AirdropWindowRepository().get_airdrop_windows(airdrop_id)
-                for airdrop_window in airdrop_windows:
-                    receipt = self.generate_user_registration_receipt(airdrop_id, airdrop_window.id, address)
-                    UserRegistrationRepository().register_user(airdrop_window.id, address, receipt, signature,
-                                                               formatted_message, block_number)
-                    response.append({"airdrop_window_id": airdrop_window.id, "receipt": receipt})
-            else:
-                receipt = self.generate_user_registration_receipt(airdrop_id, airdrop_window_id, address)
-                UserRegistrationRepository().register_user(airdrop_window_id, address, receipt, signature,
-                                                           formatted_message, block_number)
-                # Keeping it backward compatible
-                response = receipt
+            response: list | str = airdrop_object.register(inputs)
         except ValidationError as e:
             return HTTPStatus.BAD_REQUEST, repr(e)
         except BaseException as e:
@@ -175,7 +125,6 @@ class UserRegistrationServices:
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"].lower()
-            checksum_address = Web3.toChecksumAddress(address)
             signature = inputs["signature"]
             block_number = inputs["block_number"]
 
@@ -191,16 +140,12 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
+            formatted_message = airdrop_object.match_signature(inputs)
+
             if not airdrop_object.allow_update_registration:
                 raise Exception("Registration update not allowed.")
 
-            formatted_message = airdrop_object.format_user_registration_signature_message(checksum_address, inputs)
-            formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
-            sign_verified, recovered_address = utils.match_signature(address, formatted_message, formatted_signature)
-            if not sign_verified:
-                raise Exception("Signature is not valid.")
-
-            airdrop_windows = airdrop_window_repo.get_airdrop_windows(airdrop_id) \
+            airdrop_windows: list[AirdropWindow] = airdrop_window_repo.get_airdrop_windows(airdrop_id) \
                 if airdrop_object.register_all_window_at_once \
                 else [airdrop_window]
 
@@ -229,27 +174,3 @@ class UserRegistrationServices:
         except (ValidationError, BaseException) as e:
             return HTTPStatus.BAD_REQUEST, repr(e)
         return HTTPStatus.OK, response
-
-    def generate_user_registration_receipt(self, airdrop_id, airdrop_window_id, address):
-        # Get the unique receipt to be issued , users can use this receipt as evidence that
-        # registration was done
-        secret_key = self.get_secret_key_for_receipt()
-        receipt = get_registration_receipt(airdrop_id, airdrop_window_id, address, secret_key)
-        return receipt
-
-    @staticmethod
-    def get_secret_key_for_receipt():
-        boto_client = BotoUtils(region_name=AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION)
-        try:
-            private_key = boto_client. \
-                get_parameter_value_from_secrets_manager(secret_name=AIRDROP_RECEIPT_SECRET_KEY)
-        except BaseException as e:
-            raise e
-        return private_key
-
-    @staticmethod
-    def is_registration_window_open(start_period, end_period):
-        now = dt.utcnow()
-        if now > start_period or now < end_period:
-            return True
-        return False

@@ -6,7 +6,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from airdrop.constants import AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
-from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -28,27 +27,6 @@ class UserRegistrationRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-    def check_rewards_awarded(self, airdrop_id, airdrop_window_id, address):
-        try:
-            is_eligible = (
-                self.session.query(UserReward)
-                .filter(UserReward.address == address)
-                .filter(UserReward.airdrop_id == airdrop_id)
-                .filter(UserReward.airdrop_window_id == airdrop_window_id)
-                .first()
-            )
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
-
-        total_rewards = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
-        eligible_for_window = False
-        # Simplified the logic, if rewards_awarded > 0 => the user is eligible
-        if is_eligible is not None and int(is_eligible.rewards_awarded) > 0:
-            eligible_for_window = True
-        else:
-            eligible_for_window = False
-        return eligible_for_window, total_rewards
 
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (

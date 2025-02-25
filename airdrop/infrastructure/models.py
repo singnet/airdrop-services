@@ -52,13 +52,13 @@ class AirdropWindow(Base, AuditClass):
     airdrop_window_name = Column("airdrop_window_name", VARCHAR(256), nullable=False)
     description = Column("description", TEXT, nullable=True)
     registration_required = Column("registration_required", BIT, default=True)
-    registration_start_period = Column("registration_start_period", TIMESTAMP(), nullable=True)
-    registration_end_period = Column("registration_end_period", TIMESTAMP(), nullable=True)
+    registration_start_period = Column("registration_start_period", TIMESTAMP(), nullable=False)
+    registration_end_period = Column("registration_end_period", TIMESTAMP(), nullable=False)
     snapshot_required = Column("snapshot_required", BIT, default=True)
     first_snapshot_at = Column("first_snapshot_at", TIMESTAMP(), nullable=True)
     last_snapshot_at = Column("last_snapshot_at", TIMESTAMP(), nullable=True)
-    claim_start_period = Column("claim_start_period", TIMESTAMP(), nullable=True)
-    claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=True)
+    claim_start_period = Column("claim_start_period", TIMESTAMP(), nullable=False)
+    claim_end_period = Column("claim_end_period", TIMESTAMP(), nullable=False)
     total_airdrop_tokens = Column("total_airdrop_tokens", INTEGER, default=0)
     minimum_stake_amount = Column("minimum_stake_amount", INTEGER, default=0)
     airdrop = relationship(Airdrop, backref="windows")
@@ -112,7 +112,7 @@ class UserRegistration(Base, AuditClass):
         ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),
         nullable=False,
     )
-    address = Column("address", VARCHAR(50), nullable=False, index=True)
+    address = Column("address", VARCHAR(250), nullable=False, index=True)
     registered_at = Column("registered_at", TIMESTAMP(), nullable=True)
     reject_reason = Column("reject_reason", JSON, nullable=True)
     receipt_generated = Column("receipt_generated", VARCHAR(250), nullable=True, index=True)
@@ -211,5 +211,9 @@ class ClaimHistory(Base, AuditClass):
     transaction_details = Column("transaction_details", JSON, default={})
     claimed_on = Column("claimed_on", TIMESTAMP(), nullable=True)
     user_registrations = relationship(
-        UserRegistration, backref="claim_history",
-        primaryjoin=airdrop_window_id == foreign(UserRegistration.airdrop_window_id), lazy="joined", uselist=False)
+        UserRegistration,
+        backref="claim_history",
+        primaryjoin="foreign(ClaimHistory.airdrop_window_id) == UserRegistration.airdrop_window_id",
+        lazy="joined",
+        uselist=False
+    )

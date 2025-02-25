@@ -368,8 +368,13 @@ class AirdropRepository(BaseRepository):
                 .join(
                     AirdropWindow,
                     Airdrop.id == AirdropWindow.airdrop_id,
+                    isouter = True
                 )
-                .join(AirdropWindowTimelines, AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id)
+                .join(
+                    AirdropWindowTimelines,
+                    AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id,
+                    isouter = True
+                )
                 .filter(Airdrop.id == airdrop_id)
                 .first()
             )

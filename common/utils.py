@@ -42,7 +42,7 @@ class Utils:
         print(resp.status_code, resp.text)
 
 
-def request(event):
+def request(event) -> dict | None:
     try:
         inputs = event["body"] or None
         if inputs is not None:
