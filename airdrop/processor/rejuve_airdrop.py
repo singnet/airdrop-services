@@ -42,17 +42,17 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def match_signature(self, data: dict) -> dict:
         address = data["address"].lower()
-        checksum_address = Web3.toChecksumAddress(address)
         signature = data["signature"]
         utils = Utils()
         network = self.recognize_blockchain_network(address)
         if network == "Ethereum":
+            checksum_address = Web3.toChecksumAddress(address)
             formatted_message = self.format_user_registration_signature_message(checksum_address, data)
             formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
             sign_verified, _ = utils.match_ethereum_signature(address, formatted_message, formatted_signature)
         elif network == "Cardano":
             key = data["key"]
-            formatted_message = self.format_user_registration_signature_message(checksum_address, data)
+            formatted_message = self.format_user_registration_signature_message(address, data)
             sign_verified, _ = utils.match_cardano_signature(address, formatted_message, signature, key)
         if not sign_verified:
             raise Exception("Signature is not valid.")

@@ -10,8 +10,6 @@ class UserBalanceSnapshotRepository(BaseRepository):
         try:
             user_balance = self.session.query(UserBalanceSnapshot).filter(
                 UserBalanceSnapshot.address == address).first()
-
-            self.session.commit()
             return user_balance
         except SQLAlchemyError as e:
             self.session.rollback()

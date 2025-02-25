@@ -112,7 +112,7 @@ class UserRegistration(Base, AuditClass):
         ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),
         nullable=False,
     )
-    address = Column("address", VARCHAR(128), nullable=False, index=True)
+    address = Column("address", VARCHAR(250), nullable=False, index=True)
     registered_at = Column("registered_at", TIMESTAMP(), nullable=True)
     reject_reason = Column("reject_reason", JSON, nullable=True)
     receipt_generated = Column("receipt_generated", VARCHAR(250), nullable=True, index=True)

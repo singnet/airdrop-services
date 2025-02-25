@@ -1,5 +1,6 @@
 import inspect
 
+from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT, USER_CLAIM_SIGNATURE_DEFAULT_FORMAT
 from airdrop.config import LoyaltyAirdropConfig
@@ -20,6 +21,21 @@ class LoyaltyAirdrop(DefaultAirdrop):
             "chain": LoyaltyAirdropConfig.chain.value
         }
         self.claim_address = LoyaltyAirdropConfig.claim_address.value
+
+    def check_user_eligibility(self, address: str) -> bool:
+        if not isinstance(address, str):
+            raise Exception("The address was sent in the wrong format.")
+
+        address = address.lower()
+        registration_repo = UserRegistrationRepository()
+        user_eligible_for_given_window = registration_repo.is_user_eligible_for_given_window(
+            address, self.id, self.window_id
+        )
+        unclaimed_reward = registration_repo.get_unclaimed_reward(self.id, address)
+
+        if user_eligible_for_given_window or unclaimed_reward > 0:
+            return True
+        return False
 
     def format_user_registration_signature_message(self, address: str, signature_parameters: dict) -> dict:
         block_number = signature_parameters["block_number"]
