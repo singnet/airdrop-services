@@ -13,6 +13,7 @@ from airdrop.application.services.user_registration_services import \
     UserRegistrationServices
 from airdrop.infrastructure.repositories.airdrop_repository import \
     AirdropRepository
+from airdrop.utils import datetime_in_utcnow
 
 
 class UserRegistration(TestCase):
@@ -29,11 +30,11 @@ class UserRegistration(TestCase):
         description = "This is a test airdrop"
         github_link = "https://github.com/singnet/airdrop-services"
         global current_time
-        current_time = datetime.utcnow()
-        registration_start_date = datetime.utcnow() - timedelta(days=2)
-        registration_end_date = datetime.utcnow() + timedelta(days=30)
-        claim_start_date = datetime.utcnow() - timedelta(days=2)
-        claim_end_date = datetime.utcnow() + timedelta(days=30)
+        current_time = datetime_in_utcnow()
+        registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+        registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=2)
+        claim_end_date = datetime_in_utcnow() + timedelta(days=30)
         private_key = "0x" + secrets.token_hex(32)
         acct = Account.from_key(private_key)
         contract_address = acct.address
@@ -41,7 +42,7 @@ class UserRegistration(TestCase):
         user_address = "0xCc3cD60FF9936B7C9272a649b24f290ADa562469"
         token_name = "AGIX"
 
-        now = datetime.utcnow()
+        now = datetime_in_utcnow()
         one_month_later = now + timedelta(days=30)
         registration_start_window = now - timedelta(days=2)
         token_name = "AGIX"
@@ -91,13 +92,13 @@ class UserRegistration(TestCase):
     #     contract_address = "0x5e94577b949a56279637ff74dfcff2c28408f049"
     #     token_address = "0x5e94577b949a56279637ff74dfcff2c28408f049"
     #     mock_check_rewards_awarded.value = True, 1000
-    #     registration_start_date = datetime.utcnow() - timedelta(days=2)
-    #     registration_end_date = datetime.utcnow() + timedelta(days=30)
-    #     claim_start_date = datetime.utcnow() - timedelta(days=2)
-    #     claim_end_date = datetime.utcnow() + timedelta(days=30)
+    #     registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+    #     registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+    #     claim_start_date = datetime_in_utcnow() - timedelta(days=2)
+    #     claim_end_date = datetime_in_utcnow() + timedelta(days=30)
     #     airdrop_ = AirdropRepository().register_airdrop(
     #         token_address, "org", "tkanme", "NA", contract_address, "", "", "", "")
-    #     airdrop_window_= AirdropRepository().register_airdrop_window(airdrop_id=airdrop_.id, airdrop_window_name=str(datetime.utcnow()), description="reg Long description", registration_required=True,
+    #     airdrop_window_= AirdropRepository().register_airdrop_window(airdrop_id=airdrop_.id, airdrop_window_name=str(datetime_in_utcnow()), description="reg Long description", registration_required=True,
     #                                                            registration_start_period=registration_start_date, registration_end_period=registration_end_date, snapshot_required=True, claim_start_period=claim_start_date, claim_end_period=claim_end_date, total_airdrop_tokens=1000000)
     #
     #     inputs = {

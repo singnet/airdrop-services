@@ -244,7 +244,7 @@ class TestAirdropHandler(unittest.TestCase):
         AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, reward,
                                                   user_address, 1, 1)
         AirdropRepository().register_user_registration(airdrop_window_id, user_address)
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "uint256", "uint256", "address", "uint256",
              "uint256", "address", "address"],
             ["__airdropclaim", int(reward), int(reward), user_address, int(airdrop_id),
@@ -401,7 +401,7 @@ class TestAirdropHandler(unittest.TestCase):
         print("Generate claim signature token_address: ", token_address)
         print("Generate claim signature contract_address: ", contract_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "uint256", "address", "uint256",
              "uint256", "address", "address"],
             ["__airdropclaim", int(reward), user_address, int(airdrop.id),
@@ -479,7 +479,7 @@ class TestAirdropHandler(unittest.TestCase):
         print("Generate claim signature token_address: ", token_address)
         print("Generate claim signature contract_address: ", contract_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "uint256", "uint256", "address", "uint256",
              "uint256", "address", "address"],
             ["__airdropclaim", int(150), int(150), user_address, int(airdrop.id),

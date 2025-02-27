@@ -468,7 +468,7 @@ class AirdropServices:
 
     @staticmethod
     def generate_signature(private_key, data_types: list, values: list):
-        message = Web3.soliditySha3(data_types, values)
+        message = Web3.solidity_keccak(data_types, values)
         message_hash = encode_defunct(message)
         web3_object = Web3(web3.providers.HTTPProvider(NETWORK["http_provider"]))
         signed_message = web3_object.eth.account.sign_message(message_hash, private_key=private_key)

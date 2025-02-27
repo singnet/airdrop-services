@@ -9,6 +9,9 @@ from airdrop.infrastructure.repositories.user_registration_repo import UserRegis
 from airdrop.processor.base_airdrop import BaseAirdrop
 from airdrop.utils import Utils, datetime_in_utcnow
 from common.exceptions import RequiredDataNotFound
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class DefaultAirdrop(BaseAirdrop):
@@ -69,15 +72,19 @@ class DefaultAirdrop(BaseAirdrop):
         address = data["address"].lower()
         checksum_address = Web3.to_checksum_address(address)
         signature = data["signature"]
+        logger.info(f"Start of the signature matching for {address = }, {signature = }")
         utils = Utils()
         formatted_message = self.format_user_registration_signature_message(checksum_address, data)
         formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
         sign_verified, _ = utils.match_ethereum_signature_eip712(address, formatted_message, formatted_signature)
         if not sign_verified:
-            raise Exception("Signature is not valid.")
+            logger.error("Signature is not valid")
+            raise Exception("Signature is not valid")
+        logger.info("Signature validity confirmed")
         return formatted_message
 
     def register(self, data: dict) -> list | str:
+        logger.info(f"Start of the registration process for the {self.__class__.__name__}")
         address = data["address"].lower()
         signature = data["signature"]
         block_number = data["block_number"]
@@ -91,15 +98,18 @@ class DefaultAirdrop(BaseAirdrop):
         is_registration_open = self.is_registration_window_open(airdrop_window.registration_start_period,
                                                                 airdrop_window.registration_end_period)
         if airdrop_window.registration_required and not is_registration_open:
-            raise Exception("Airdrop window is not accepting registration at this moment.")
+            logger.error("Airdrop window is not accepting registration at this moment")
+            raise Exception("Airdrop window is not accepting registration at this moment")
 
         is_user_eligible = self.check_user_eligibility(address=address)
         if not is_user_eligible:
-            raise Exception("Address is not eligible for this airdrop.")
+            logger.error("Address is not eligible for this airdrop")
+            raise Exception("Address is not eligible for this airdrop")
 
         user_registered, _ = registration_repo. \
             get_user_registration_details(address, self.window_id)
         if user_registered:
+            logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
 
         response = []

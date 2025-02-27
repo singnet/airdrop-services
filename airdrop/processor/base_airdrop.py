@@ -3,7 +3,10 @@ from datetime import datetime, timezone
 
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY, AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION
 from common.boto_utils import BotoUtils
+from common.logger import get_logger
 from common.utils import get_registration_receipt
+
+logger = get_logger(__name__)
 
 
 class BaseAirdrop(ABC):
@@ -43,6 +46,7 @@ class BaseAirdrop(ABC):
                                            window_id: int, address: str) -> str:
         # Get the unique receipt to be issued , users can use this receipt as evidence that
         # registration was done
+        logger.info("Generate user registration receipt")
         secret_key = self.get_secret_key_for_receipt()
         receipt = get_registration_receipt(airdrop_id, window_id, address, secret_key)
         return receipt

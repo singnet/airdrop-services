@@ -121,7 +121,7 @@ def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address
         print("Generate claim signature token_address: ", token_address)
         print("Generate claim signature contract_address: ", contract_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "uint256", "address", "uint256",
              "uint256", "address", "address"],
             ["__airdropclaim", int(amount), user_address, int(airdrop_id),
@@ -151,7 +151,7 @@ def generate_claim_signature_with_total_eligibile_amount(totalEligibleAmount,air
         print("Generate secured claim signature token_address: ", token_address)
         print("Generate secured claim signature contract_address: ", contract_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string","uint256","uint256", "address", "uint256",
                 "uint256", "address", "address"],
             ["__airdropclaim",int(totalEligibleAmount) ,int(airdropAmount), user_address, int(airdrop_id),
@@ -230,7 +230,7 @@ def verify_signature(airdrop_id, airdrop_window_id, address, signature, block_nu
 
 def recover_address(airdrop_id, airdrop_window_id, address, signature, block_number):
     address = Web3.to_checksum_address(address)
-    message = web3.Web3.soliditySha3(
+    message = web3.Web3.solidity_keccak(
         ["uint256", "uint256", "uint256", "address"],
         [int(airdrop_id), int(airdrop_window_id), int(block_number), address],
     )
@@ -245,7 +245,7 @@ def get_registration_receipt(airdrop_id, airdrop_window_id, user_address, privat
     try:
         user_address = Web3.to_checksum_address(user_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "address", "uint256", "uint256"],
             ["__receipt_ack_message", user_address, int(airdrop_id), int(airdrop_window_id)],
         )
