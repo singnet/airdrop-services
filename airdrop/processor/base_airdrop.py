@@ -29,15 +29,22 @@ class BaseAirdrop(ABC):
     @staticmethod
     def is_registration_window_open(start_period, end_period) -> bool:
         now = datetime.now(timezone.utc)
+
+        if start_period.tzinfo is None:
+            start_period = start_period.replace(tzinfo=timezone.utc)
+        if end_period.tzinfo is None:
+            end_period = end_period.replace(tzinfo=timezone.utc)
+
         if now > start_period and now < end_period:
             return True
         return False
 
-    def generate_user_registration_receipt(self, address: str) -> str:
+    def generate_user_registration_receipt(self, airdrop_id: int,
+                                           window_id: int, address: str) -> str:
         # Get the unique receipt to be issued , users can use this receipt as evidence that
         # registration was done
         secret_key = self.get_secret_key_for_receipt()
-        receipt = get_registration_receipt(self.id, self.window_id, address, secret_key)
+        receipt = get_registration_receipt(airdrop_id, window_id, address, secret_key)
         return receipt
 
     @staticmethod

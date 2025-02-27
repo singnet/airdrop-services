@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from eth_account.messages import encode_defunct
+from eth_account.messages import encode_defunct, encode_typed_data
 from pycardano import cip8
 from web3 import Web3
 
@@ -16,18 +16,34 @@ def datetime_in_utcnow():
 class Utils:
 
     @staticmethod
-    def match_ethereum_signature(
+    def match_ethereum_signature_eip191(
+        address: str,
+        formatted_message: str,
+        signature: str
+    ) -> tuple[bool, str]:
+        logger.info(f"signature {signature}")
+        signature_verified = False
+        message_encoded = encode_defunct(text=formatted_message)
+        extracted_address: str = Web3().eth.account.recover_message(
+            message_encoded,
+            signature=signature
+        )
+        if extracted_address.lower() == address.lower():
+            signature_verified = True
+        return signature_verified, extracted_address
+
+    def match_ethereum_signature_eip712(
         address: str,
         formatted_message: dict,
         signature: str
     ) -> tuple[bool, str]:
         logger.info(f"signature {signature}")
         signature_verified = False
-        extracted_address: str =  Web3().eth.account.recover_message(
-            encode_defunct(text = formatted_message),
+        extracted_address: str = Web3().eth.account.recover_message(
+            encode_typed_data(full_message = formatted_message),
             signature = signature
         )
-        if extracted_address.lower() != address.lower():
+        if extracted_address.lower() == address.lower():
             signature_verified = True
         return signature_verified, extracted_address
 

@@ -46,7 +46,7 @@ class NuNetAirdropWindow2Data:
 
 
 class NuNetAirdropUser1:
-    address = Web3.toChecksumAddress("0x4e1388Acfd6237aeED2b01Da0d4ccFe242e8F6cA")
+    address = Web3.to_checksum_address("0x4e1388Acfd6237aeED2b01Da0d4ccFe242e8F6cA")
     private_key = bytes.fromhex("1c4162244e5ec8f53a51ab6bb0a29c50432d82afd0a168e6e5c5c55c43b0a9c9")
     signature_details = {
         "domain_name": DefaultAirdrop(None, None).domain_name,

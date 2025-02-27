@@ -119,11 +119,6 @@ USER_CLAIM_SIGNATURE_DEFAULT_FORMAT = {
     },
 }
 
-USER_REGISTRATION_SIGNATURE_REJUVE_AIRDROP_FORMAT = deepcopy(USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT)
-USER_REGISTRATION_SIGNATURE_REJUVE_AIRDROP_FORMAT["types"]["AirdropSignatureTypes"] \
-    .append({"name": "walletName", "type": "string"})
-USER_REGISTRATION_SIGNATURE_REJUVE_AIRDROP_FORMAT["message"]["Airdrop"]["walletName"] = ""
-
 class AirdropClaimStatus(Enum):
     PENDING = "PENDING"
     SUCCESS = "SUCCESS"
