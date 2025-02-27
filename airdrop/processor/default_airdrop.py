@@ -7,7 +7,7 @@ from airdrop.infrastructure.models import AirdropWindow
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.base_airdrop import BaseAirdrop
-from airdrop.utils import Utils
+from airdrop.utils import Utils, datetime_in_utcnow
 from common.exceptions import RequiredDataNotFound
 
 
@@ -116,3 +116,46 @@ class DefaultAirdrop(BaseAirdrop):
                                             formatted_message, block_number)
             # Keeping it backward compatible
             response = receipt
+
+        return response
+
+    def update_registration(self, data: dict) -> list | str:
+        address = data["address"].lower()
+        signature = data["signature"]
+        block_number = data["block_number"]
+
+        airdrop_window_repo = AirdropWindowRepository()
+        airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
+
+        formatted_message = self.match_signature(data)
+
+        if not self.allow_update_registration:
+            raise Exception("Registration update not allowed.")
+
+        airdrop_windows: list[AirdropWindow] = airdrop_window_repo.get_airdrop_windows(self.id) \
+            if self.register_all_window_at_once \
+            else [airdrop_window]
+
+        response = []
+        registration_repo = UserRegistrationRepository()
+        utc_now = datetime_in_utcnow()
+        for window in airdrop_windows:
+            try:
+                is_registered, receipt = registration_repo.is_registered_user(window.id, address)
+                is_claimed = airdrop_window_repo.is_airdrop_window_claimed(window.id, address)
+                assert is_registered, "not registered"
+                assert not is_claimed, "already claimed"
+                assert window.claim_end_period > utc_now, "claim period is over"
+                registration_repo.update_registration(window.id, address,
+                                                      signature=signature,
+                                                      signature_details=formatted_message,
+                                                      block_number=block_number,
+                                                      registered_at=utc_now)
+                response.append({"airdrop_window_id": window.id, "receipt": receipt})
+            except AssertionError as e:
+                warning = f"Airdrop window {window.id} registration update failed ({str(e)})"
+                if len(airdrop_windows) == 1 and window == airdrop_window:
+                    raise Exception(warning)
+                response.append({"airdrop_window_id": window.id, "warning": warning})
+
+        return response

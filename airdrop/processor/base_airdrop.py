@@ -58,6 +58,6 @@ class BaseAirdrop(ABC):
     def update_registration(self, **kwargs) -> list:
         pass
 
-    @abstractmethod
-    def eligibility(self, **kwargs) -> dict:
-        pass
+    # @abstractmethod
+    # def eligibility(self, **kwargs) -> dict:
+    #     pass
