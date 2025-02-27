@@ -13,6 +13,7 @@ from pydoc import locate
 from airdrop.constants import PROCESSOR_PATH
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.processor.loyalty_airdrop import LoyaltyAirdrop
+from airdrop.utils import datetime_in_utcnow
 
 
 class AirdropRepository(BaseRepository):
@@ -23,7 +24,7 @@ class AirdropRepository(BaseRepository):
                 ClaimHistory.transaction_hash == txn_hash).first()
 
             if transaction is not None and txn_status == AirdropClaimStatus.SUCCESS.value:
-                transaction.claimed_on = datetime.utcnow()
+                transaction.claimed_on = datetime_in_utcnow()
 
             if transaction is not None:
                 transaction.transaction_status = txn_status
@@ -82,7 +83,7 @@ class AirdropRepository(BaseRepository):
                 if existing_txn_hash != txn_hash:
                     transaction.transaction_hash = txn_hash
                 if txn_status == AirdropClaimStatus.SUCCESS.value:
-                    transaction.claimed_on = datetime.utcnow()
+                    transaction.claimed_on = datetime_in_utcnow()
                 transaction.transaction_status = txn_status
                 return self.session.commit()
             else:

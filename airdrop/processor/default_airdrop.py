@@ -57,9 +57,9 @@ class DefaultAirdrop(BaseAirdrop):
                                        f"window_id = {self.window_id}")
 
         total_eligible_amount = signature_parameters["total_eligible_amount"]
-        contract_address = Web3.toChecksumAddress(signature_parameters["contract_address"])
-        token_address = Web3.toChecksumAddress(signature_parameters["token_address"])
-        user_address = Web3.toChecksumAddress(signature_parameters["user_address"])
+        contract_address = Web3.to_checksum_address(signature_parameters["contract_address"])
+        token_address = Web3.to_checksum_address(signature_parameters["token_address"])
+        user_address = Web3.to_checksum_address(signature_parameters["user_address"])
         amount = signature_parameters["claimable_amount"]
         formatted_message = ["__airdropclaim", total_eligible_amount, amount, user_address, int(self.id),
                              int(self.window_id), contract_address, token_address]
@@ -67,12 +67,12 @@ class DefaultAirdrop(BaseAirdrop):
 
     def match_signature(self, data: dict) -> dict:
         address = data["address"].lower()
-        checksum_address = Web3.toChecksumAddress(address)
+        checksum_address = Web3.to_checksum_address(address)
         signature = data["signature"]
         utils = Utils()
         formatted_message = self.format_user_registration_signature_message(checksum_address, data)
         formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
-        sign_verified, _ = utils.match_ethereum_signature(address, formatted_message, formatted_signature)
+        sign_verified, _ = utils.match_ethereum_signature_eip712(address, formatted_message, formatted_signature)
         if not sign_verified:
             raise Exception("Signature is not valid.")
         return formatted_message

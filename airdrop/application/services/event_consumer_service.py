@@ -184,9 +184,9 @@ class DepositEventConsumerService(EventConsumerService):
         airdrop_class = AirdropServices().load_airdrop_class(airdrop)
         formatted_message = airdrop_class(airdrop_id, airdrop_window_id) \
             .format_user_claim_signature_message(registration_id)
-        claim_sign_verified, recovered_address = utils.match_ethereum_signature(ethereum_address,
-                                                                                formatted_message,
-                                                                                ethereum_signature)
+        claim_sign_verified, recovered_address = utils.match_ethereum_signature_eip712(ethereum_address,
+                                                                                       formatted_message,
+                                                                                       ethereum_signature)
         if not claim_sign_verified:
             raise ValidationFailedException(f"Claim signature verification failed for event {self.event}")
 

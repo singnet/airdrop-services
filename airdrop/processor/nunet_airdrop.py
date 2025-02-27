@@ -43,9 +43,9 @@ class NunetAirdrop(DefaultAirdrop):
                                        f"window_id = {self.window_id}")
 
         total_eligible_amount = signature_parameters["total_eligible_amount"]
-        contract_address = Web3.toChecksumAddress(signature_parameters["contract_address"])
-        token_address = Web3.toChecksumAddress(signature_parameters["token_address"])
-        user_address = Web3.toChecksumAddress(signature_parameters["user_address"])
+        contract_address = Web3.to_checksum_address(signature_parameters["contract_address"])
+        token_address = Web3.to_checksum_address(signature_parameters["token_address"])
+        user_address = Web3.to_checksum_address(signature_parameters["user_address"])
         amount = signature_parameters["claimable_amount"]
         formatted_message = ["__airdropclaim", total_eligible_amount, amount, user_address, int(self.id),
                              int(self.window_id), contract_address, token_address]

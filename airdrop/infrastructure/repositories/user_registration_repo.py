@@ -7,6 +7,7 @@ from airdrop.constants import AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
+from airdrop.utils import datetime_in_utcnow
 
 
 class UserRegistrationRepository(BaseRepository):
@@ -77,7 +78,7 @@ class UserRegistrationRepository(BaseRepository):
         user = UserRegistration(
             airdrop_window_id=airdrop_window_id,
             address=address,
-            registered_at=datetime.utcnow(),
+            registered_at=datetime_in_utcnow(),
             receipt_generated=receipt,
             user_signature=signature,
             signature_details=signature_details,
