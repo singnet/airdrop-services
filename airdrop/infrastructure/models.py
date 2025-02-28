@@ -97,7 +97,7 @@ class UserBalanceSnapshot(Base, AuditClass):
         ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),
         nullable=False,
     )
-    address = Column("address", VARCHAR(50), nullable=False)
+    address = Column("address", VARCHAR(250), nullable=False)
     balance = Column("balance", DECIMAL(64, 0), nullable=False)
     staked = Column("staked", DECIMAL(64, 0), nullable=False)
     total = Column("total", DECIMAL(64, 0), nullable=False)
@@ -136,7 +136,7 @@ class UserReward(Base, AuditClass):
         ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),
         nullable=False,
     )
-    address = Column("address", VARCHAR(50), nullable=False, index=True)
+    address = Column("address", VARCHAR(250), nullable=False, index=True)
     condition = Column("condition", TEXT, nullable=True)
     rewards_awarded = Column("rewards_awarded", DECIMAL(64, 0), nullable=False)
     score = Column("score", DECIMAL(18, 8), nullable=False)
@@ -154,7 +154,7 @@ class UserRewardAudit(Base, AuditClass):
         BIGINT,
         nullable=False,
     )
-    address = Column("address", VARCHAR(50), nullable=False, index=True)
+    address = Column("address", VARCHAR(250), nullable=False, index=True)
     balance = Column("balance", BIGINT, nullable=False)
     staked = Column("staked", BIGINT, nullable=False)
     score = Column("score", DECIMAL(18, 8), nullable=False)
@@ -185,7 +185,7 @@ class UserPendingRewards(Base, AuditClass):
         ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),
         nullable=False,
     )
-    address = Column("address", VARCHAR(50), nullable=False, index=True)
+    address = Column("address", VARCHAR(250), nullable=False, index=True)
     pending_reward = Column("pending_reward", DECIMAL(64, 0), nullable=False)
 
 
@@ -201,7 +201,7 @@ class ClaimHistory(Base, AuditClass):
         ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),
         nullable=False,
     )
-    address = Column("address", VARCHAR(50), nullable=False, index=True)
+    address = Column("address", VARCHAR(250), nullable=False, index=True)
     blockchain_method = Column("blockchain_method", VARCHAR(50), nullable=True)
     claimable_amount = Column("claimable_amount", DECIMAL(64, 0), nullable=False)
     unclaimed_amount = Column("unclaimed_amount", DECIMAL(64, 0), nullable=False)

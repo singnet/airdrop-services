@@ -20,21 +20,24 @@ class UserRegistrationServices:
 
     @staticmethod
     def eligibility(inputs):
-        status = HTTPStatus.BAD_REQUEST
+        logger.info("Calling the user eligibility check function")
         try:
             validate(instance=inputs, schema=ELIGIBILITY_SCHEMA)
+
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
             address = inputs["address"].lower()
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if airdrop is None:
-                raise Exception("Airdrop id is not valid.")
+                logger.error("Airdrop id is not valid")
+                raise Exception("Airdrop id is not valid")
 
             airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id,
                                                                                 airdrop_id=airdrop_id)
             if airdrop_window is None:
-                raise Exception("Airdrop window id is not valid.")
+                logger.error("Airdrop window id is not valid")
+                raise Exception("Airdrop window id is not valid")
 
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
@@ -83,16 +86,13 @@ class UserRegistrationServices:
                 "is_claimable": is_claimable,
                 "registration_details": registration_details
             }
-            status = HTTPStatus.OK
-
-        except ValidationError as e:
-            response = e.message
-        except BaseException as e:
-            response = str(e)
-
-        return status, response
+        except (ValidationError, BaseException) as e:
+            logger.exception(f"Error: {e}")
+            return HTTPStatus.BAD_REQUEST, str(e)
+        return HTTPStatus.OK, response
 
     def register(self, inputs: dict):
+        logger.info("Calling the user registration function")
         try:
             validate(instance=inputs, schema=USER_REGISTRATION_SCHEMA)
 
@@ -101,24 +101,26 @@ class UserRegistrationServices:
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
-                raise Exception("Airdrop id is not valid.")
+                logger.error("Airdrop id is not valid")
+                raise Exception("Airdrop id is not valid")
 
             airdrop_window_repo = AirdropWindowRepository()
             airdrop_window = airdrop_window_repo.get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
-                raise Exception("Airdrop window id is not valid.")
+                logger.error("Airdrop window id is not valid")
+                raise Exception("Airdrop window id is not valid")
 
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             response: list | str = airdrop_object.register(inputs)
-        except ValidationError as e:
-            return HTTPStatus.BAD_REQUEST, repr(e)
-        except BaseException as e:
+        except (ValidationError, BaseException) as e:
+            logger.exception(f"Error: {e}")
             return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response
 
     def update_registration(self, inputs):
+        logger.info("Calling the user registration update function")
         try:
             validate(instance=inputs, schema=USER_REGISTRATION_SCHEMA)
 
@@ -127,17 +129,20 @@ class UserRegistrationServices:
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
-                raise Exception("Airdrop id is not valid.")
+                logger.error("Airdrop id is not valid")
+                raise Exception("Airdrop id is not valid")
 
             airdrop_window_repo = AirdropWindowRepository()
             airdrop_window = airdrop_window_repo.get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
-                raise Exception("Airdrop window id is not valid.")
+                logger.error("Airdrop window id is not valid")
+                raise Exception("Airdrop window id is not valid")
 
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             response: list | str = airdrop_object.update_registration(inputs)
         except (ValidationError, BaseException) as e:
-            return HTTPStatus.BAD_REQUEST, repr(e)
+            logger.exception(f"Error: {e}")
+            return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response

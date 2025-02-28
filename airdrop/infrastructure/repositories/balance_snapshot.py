@@ -16,6 +16,6 @@ class UserBalanceSnapshotRepository(BaseRepository):
                 UserBalanceSnapshot.airdrop_window_id == window_id).first()
             return user_balance
         except SQLAlchemyError as e:
-            logger.error(f"SQLAlchemyError: {e}")
+            logger.exception(f"SQLAlchemyError: {e}")
             self.session.rollback()
             raise e
