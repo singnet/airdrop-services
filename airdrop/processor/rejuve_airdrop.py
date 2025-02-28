@@ -5,6 +5,8 @@ from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnap
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils
 from common.logger import get_logger
+from common.utils import (get_registration_receipt_cardano,
+                          get_registration_receipt_ethereum)
 
 logger = get_logger(__name__)
 
@@ -70,3 +72,16 @@ class RejuveAirdrop(DefaultAirdrop):
             return "Cardano"
         else:
             return "Unknown"
+
+    def generate_user_registration_receipt(self, airdrop_id: int,
+                                           window_id: int, address: str) -> str:
+        # Get the unique receipt to be issued , users can use this receipt as evidence that
+        # registration was done
+        logger.info("Generate user registration receipt")
+        secret_key = self.get_secret_key_for_receipt()
+        network = self.recognize_blockchain_network(address)
+        if network == "Ethereum":
+            receipt = get_registration_receipt_ethereum(airdrop_id, window_id, address, secret_key)
+        elif network == "Cardano":
+            receipt = get_registration_receipt_cardano(airdrop_id, window_id, address, secret_key)
+        return receipt
