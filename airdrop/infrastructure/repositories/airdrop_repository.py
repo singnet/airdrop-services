@@ -308,8 +308,8 @@ class AirdropRepository(BaseRepository):
                     "tokens_claim_blockchain_methods": tokens_claim_blockchain_methods,
                     "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
                 })
-                full_rewards = int(result_rewards.fetchall()[0]["total_rewards"])
-                claimed_rewards = int(result_claimed.fetchall()[0]["total_claimed"])
+                full_rewards = int(result_rewards.fetchall()[0][0])
+                claimed_rewards = int(result_claimed.fetchall()[0][0])
                 total_rewards = full_rewards - claimed_rewards
             else:
                 query = text(
@@ -328,7 +328,7 @@ class AirdropRepository(BaseRepository):
                     "address": address, "airdrop_id": airdrop_id,
                     "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
                 })
-                total_rewards = int(result.fetchall()[0]["total_rewards"])
+                total_rewards = int(result.fetchall()[0][0])
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()

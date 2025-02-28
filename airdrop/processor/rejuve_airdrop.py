@@ -1,7 +1,11 @@
 import json
 from web3 import Web3
 
+from airdrop.constants import AirdropClaimStatus
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
+from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnapshotRepository
+from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils
 from common.logger import get_logger
@@ -85,3 +89,52 @@ class RejuveAirdrop(DefaultAirdrop):
         elif network == "Cardano":
             receipt = get_registration_receipt_cardano(airdrop_id, window_id, address, secret_key)
         return receipt
+
+    def eligibility(self, data: dict) -> dict:
+        logger.info(f"Starting Eligibility Checks for {self.__class__.__name__}")
+        address = data["address"].lower()
+
+        is_user_eligible = self.check_user_eligibility(address)
+
+        rewards_awarded = AirdropRepository().fetch_total_rewards_amount(self.id, address)
+
+        user_registered, user_registration = UserRegistrationRepository(). \
+            get_user_registration_details(address, self.window_id)
+
+        is_airdrop_window_claimed = False
+        is_claimable = False
+        airdrop_claim_status = AirdropWindowRepository().is_airdrop_window_claimed(self.window_id, address)
+
+        if airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
+            is_airdrop_window_claimed = True
+        else:
+            if rewards_awarded > 0:
+                is_claimable = True
+
+        registration_id, reject_reason, registration_details = "", None, dict()
+        if user_registered:
+            registration_id = user_registration.receipt_generated
+            reject_reason = user_registration.reject_reason
+            registration_details = {
+                "registration_id": user_registration.receipt_generated,
+                "reject_reason": user_registration.reject_reason,
+                "other_details": user_registration.signature_details,
+                "registered_at": str(user_registration.registered_at),
+            }
+
+        response = {
+            "is_eligible": is_user_eligible,
+            "is_already_registered": user_registered,
+            "is_airdrop_window_claimed": is_airdrop_window_claimed,
+            "airdrop_window_claim_status": airdrop_claim_status,
+            "user_address": address,
+            "airdrop_id": self.id,
+            "airdrop_window_id": self.window_id,
+            "reject_reason": reject_reason,
+            "airdrop_window_rewards": rewards_awarded,
+            "registration_id": registration_id,
+            "is_claimable": is_claimable,
+            "registration_details": registration_details
+        }
+
+        return response

@@ -5,11 +5,9 @@ from sqlalchemy import and_
 
 class AirdropWindowRepository(BaseRepository):
 
-    def get_airdrop_window_by_id(self, airdrop_window_id, airdrop_id=None):
-        query = self.session.query(AirdropWindow).filter(AirdropWindow.id == airdrop_window_id)
-        if airdrop_id:
-            query = query.filter(AirdropWindow.id == airdrop_window_id)
-        airdrop_window = query.first()
+    def get_airdrop_window_by_id(self, window_id: int):
+        airdrop_window = self.session.query(AirdropWindow).filter(
+            AirdropWindow.id == window_id).first()
         return airdrop_window
 
     def is_airdrop_window_claimed(self, airdrop_window_id, address):
