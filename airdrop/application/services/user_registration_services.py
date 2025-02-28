@@ -115,7 +115,7 @@ class UserRegistrationServices:
         except ValidationError as e:
             return HTTPStatus.BAD_REQUEST, repr(e)
         except BaseException as e:
-            return HTTPStatus.BAD_REQUEST, repr(e)
+            return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response
 
     def update_registration(self, inputs):

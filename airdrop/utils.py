@@ -21,7 +21,7 @@ class Utils:
         formatted_message: str,
         signature: str
     ) -> tuple[bool, str]:
-        logger.info(f"signature {signature}")
+        logger.info("Ethereum Signature Comparison EIP-191")
         signature_verified = False
         message_encoded = encode_defunct(text=formatted_message)
         extracted_address: str = Web3().eth.account.recover_message(
@@ -37,7 +37,7 @@ class Utils:
         formatted_message: dict,
         signature: str
     ) -> tuple[bool, str]:
-        logger.info(f"signature {signature}")
+        logger.info("Ethereum Signature Comparison EIP-712")
         signature_verified = False
         extracted_address: str = Web3().eth.account.recover_message(
             encode_typed_data(full_message = formatted_message),
@@ -54,7 +54,7 @@ class Utils:
         signature: str,
         key: str
     ) -> tuple[bool, str]:
-        logger.info(f"signature {signature}")
+        logger.info("Cardano Signature Comparison")
         signature_verified = False
         extracted_address = self.cardano_extract_address_from_signature(formatted_message, signature, key)
         if extracted_address and extracted_address.lower() == address.lower():

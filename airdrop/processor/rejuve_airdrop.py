@@ -4,6 +4,9 @@ from web3 import Web3
 from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnapshotRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class RejuveAirdrop(DefaultAirdrop):
@@ -17,7 +20,10 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def check_user_eligibility(self, address: str) -> bool:
         user_balance_snapshot_repository = UserBalanceSnapshotRepository()
-        user_balance = user_balance_snapshot_repository.get_data_by_address(address=address)
+        user_balance = user_balance_snapshot_repository.get_data_by_address(
+            address=address,
+            window_id=self.window_id
+        )
         if user_balance:
             return True
         return False
@@ -42,6 +48,7 @@ class RejuveAirdrop(DefaultAirdrop):
         signature = data["signature"]
         utils = Utils()
         network = self.recognize_blockchain_network(address)
+        logger.info(f"Start of the signature matching for {address = }, {signature = }, {network = }")
         if network == "Ethereum":
             checksum_address = Web3.to_checksum_address(address)
             formatted_message = self.format_user_registration_signature_message(checksum_address, data)
@@ -51,7 +58,9 @@ class RejuveAirdrop(DefaultAirdrop):
             formatted_message = self.format_user_registration_signature_message(address, data)
             sign_verified, _ = utils.match_cardano_signature(address, formatted_message, signature, key)
         if not sign_verified:
+            logger.error("Signature is not valid")
             raise Exception("Signature is not valid.")
+        logger.info("Signature validity confirmed")
         return formatted_message
 
     def recognize_blockchain_network(self, address: str) -> str:
