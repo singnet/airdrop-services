@@ -1,18 +1,14 @@
-import datetime
 import json
-import sys
-import traceback
 from base64 import b64encode
 
 import requests
 import web3
-from web3 import Web3
 from enum import Enum
 from eth_account.messages import defunct_hash_message, encode_defunct
-from airdrop.config import NETWORK
 from http import HTTPStatus
+from web3 import Web3
+from airdrop.config import NETWORK, SLACK_HOOK
 from common.logger import get_logger
-from airdrop.config import SLACK_HOOK
 
 logger = get_logger(__name__)
 
@@ -241,12 +237,31 @@ def recover_address(airdrop_id, airdrop_window_id, address, signature, block_num
     )
 
 
-def get_registration_receipt(airdrop_id, airdrop_window_id, user_address, private_key):
+def get_registration_receipt_ethereum(airdrop_id, airdrop_window_id, user_address, private_key):
     try:
         user_address = Web3.to_checksum_address(user_address)
 
         message = web3.Web3.solidity_keccak(
             ["string", "address", "uint256", "uint256"],
+            ["__receipt_ack_message", user_address, int(airdrop_id), int(airdrop_window_id)],
+        )
+
+        message_hash = encode_defunct(message)
+
+        web3_object = Web3(web3.providers.HTTPProvider(
+            NETWORK['http_provider']))
+        signed_message = web3_object.eth.account.sign_message(
+            message_hash, private_key=private_key)
+        return b64encode(signed_message.signature).decode()
+
+    except BaseException as e:
+        raise e
+
+
+def get_registration_receipt_cardano(airdrop_id, airdrop_window_id, user_address, private_key):
+    try:
+        message = web3.Web3.solidity_keccak(
+            ["string", "string", "uint256", "uint256"],
             ["__receipt_ack_message", user_address, int(airdrop_id), int(airdrop_window_id)],
         )
 
