@@ -1,10 +1,9 @@
 import inspect
 from web3 import Web3
 
-from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT, AirdropClaimStatus
+from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
 from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
 from airdrop.infrastructure.models import AirdropWindow
-from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.base_airdrop import BaseAirdrop
@@ -83,57 +82,6 @@ class DefaultAirdrop(BaseAirdrop):
             raise Exception("Signature is not valid")
         logger.info("Signature validity confirmed")
         return formatted_message
-
-    def eligibility(self, data: dict) -> dict:
-        logger.info(f"Starting Eligibility Checks for {self.__class__.__name__}")
-        address = data["address"].lower()
-
-        is_user_eligible = self.check_user_eligibility(address)
-
-        rewards_awarded = AirdropRepository().fetch_total_rewards_amount(self.id, address)
-
-        user_registered, user_registration = UserRegistrationRepository(). \
-            get_user_registration_details(address, self.window_id)
-
-        is_airdrop_window_claimed = False
-        is_claimable = False
-        airdrop_claim_status = AirdropWindowRepository().is_airdrop_window_claimed(self.window_id, address)
-
-        if airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
-            is_airdrop_window_claimed = True
-        else:
-            if rewards_awarded > 0:
-                is_claimable = True
-        # if the user has not claimed yet and there are rewards pending to be claimed , then let the user claim
-        # rewards awarded will have some value ONLY when the claim window opens and the user has unclaimed rewards
-        # a claim in progress ~ PENDING will also be considered as claimed ( we don't want the user to end up losing
-        # gas in trying to claim again)
-        registration_id, reject_reason, registration_details = "", None, dict()
-        if user_registered:
-            registration_id = user_registration.receipt_generated
-            reject_reason = user_registration.reject_reason
-            registration_details = {
-                "registration_id": user_registration.receipt_generated,
-                "reject_reason": user_registration.reject_reason,
-                "other_details": user_registration.signature_details.get("message", {}).get("Airdrop", {}),
-                "registered_at": str(user_registration.registered_at),
-            }
-        response = {
-            "is_eligible": is_user_eligible,
-            "is_already_registered": user_registered,
-            "is_airdrop_window_claimed": is_airdrop_window_claimed,
-            "airdrop_window_claim_status": airdrop_claim_status,
-            "user_address": address,
-            "airdrop_id": self.id,
-            "airdrop_window_id": self.window_id,
-            "reject_reason": reject_reason,
-            "airdrop_window_rewards": rewards_awarded,
-            "registration_id": registration_id,
-            "is_claimable": is_claimable,
-            "registration_details": registration_details
-        }
-
-        return response
 
     def register(self, data: dict) -> list | str:
         logger.info(f"Starting the registration process for {self.__class__.__name__}")
