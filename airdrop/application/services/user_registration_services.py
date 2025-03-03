@@ -3,9 +3,10 @@ from http import HTTPStatus
 from jsonschema import validate, ValidationError
 
 from airdrop.application.services.airdrop_services import AirdropServices
-from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA
+from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA, AirdropClaimStatus
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
+from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils
 from common.logger import get_logger
 
@@ -23,6 +24,7 @@ class UserRegistrationServices:
 
             airdrop_id = inputs["airdrop_id"]
             airdrop_window_id = inputs["airdrop_window_id"]
+            address = inputs["address"].lower()
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
@@ -37,9 +39,51 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            response: dict | str = airdrop_object.eligibility(inputs)
+            is_user_eligible = airdrop_object.check_user_eligibility(address)
+
+            rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
+
+            user_registered, user_registration = UserRegistrationRepository(). \
+                get_user_registration_details(address, airdrop_window_id)
+
+            is_airdrop_window_claimed = False
+            is_claimable = False
+            airdrop_claim_status = AirdropWindowRepository().is_airdrop_window_claimed(airdrop_window_id, address)
+
+            if airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
+                is_airdrop_window_claimed = True
+            else:
+                if rewards_awarded > 0:
+                    is_claimable = True
+            # if the user has not claimed yet and there are rewards pending to be claimed , then let the user claim
+            # rewards awarded will have some value ONLY when the claim window opens and the user has unclaimed rewards
+            # a claim in progress ~ PENDING will also be considered as claimed ( we don't want the user to end up losing
+            # gas in trying to claim again)
+            registration_id, reject_reason, registration_details = "", None, dict()
+            if user_registered:
+                registration_id = user_registration.receipt_generated
+                reject_reason = user_registration.reject_reason
+                registration_details = {
+                    "registration_id": user_registration.receipt_generated,
+                    "reject_reason": user_registration.reject_reason,
+                    "registered_at": str(user_registration.registered_at),
+                }
+            response = {
+                "is_eligible": is_user_eligible,
+                "is_already_registered": user_registered,
+                "is_airdrop_window_claimed": is_airdrop_window_claimed,
+                "airdrop_window_claim_status": airdrop_claim_status,
+                "user_address": address,
+                "airdrop_id": airdrop_id,
+                "airdrop_window_id": airdrop_window_id,
+                "reject_reason": reject_reason,
+                "airdrop_window_rewards": rewards_awarded,
+                "registration_id": registration_id,
+                "is_claimable": is_claimable,
+                "registration_details": registration_details
+            }
         except (ValidationError, BaseException) as e:
-            logger.exception(f"Error: {e}")
+            logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response
 
@@ -67,7 +111,7 @@ class UserRegistrationServices:
 
             response: list | str = airdrop_object.register(inputs)
         except (ValidationError, BaseException) as e:
-            logger.exception(f"Error: {e}")
+            logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response
 
@@ -95,6 +139,6 @@ class UserRegistrationServices:
 
             response: list | str = airdrop_object.update_registration(inputs)
         except (ValidationError, BaseException) as e:
-            logger.exception(f"Error: {e}")
+            logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response
