@@ -9,6 +9,7 @@ from airdrop.infrastructure.models import AirdropWindow, Airdrop
 from datetime import datetime, timedelta
 from airdrop.application.services.user_registration_services import \
     UserRegistrationServices
+from airdrop.utils import datetime_in_utcnow
 
 
 class AirdropClaims(TestCase):
@@ -23,10 +24,10 @@ class AirdropClaims(TestCase):
         documentation_link = 'https://ropsten-airdrop.singularitynet.io/'
         description = 'This is a test airdrop'
         github_link = 'https://github.com/singnet/airdrop-services'
-        registration_start_date = datetime.utcnow() - timedelta(days=2)
-        registration_end_date = datetime.utcnow() + timedelta(days=30)
-        claim_start_date = datetime.utcnow() - timedelta(days=2)
-        claim_end_date = datetime.utcnow() + timedelta(days=30)
+        registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+        registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=2)
+        claim_end_date = datetime_in_utcnow() + timedelta(days=30)
 
         contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'

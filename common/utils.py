@@ -1,18 +1,14 @@
-import datetime
 import json
-import sys
-import traceback
 from base64 import b64encode
 
 import requests
 import web3
-from web3 import Web3
 from enum import Enum
 from eth_account.messages import defunct_hash_message, encode_defunct
-from airdrop.config import NETWORK
 from http import HTTPStatus
+from web3 import Web3
+from airdrop.config import NETWORK, SLACK_HOOK
 from common.logger import get_logger
-from airdrop.config import SLACK_HOOK
 
 logger = get_logger(__name__)
 
@@ -42,7 +38,7 @@ class Utils:
         print(resp.status_code, resp.text)
 
 
-def request(event):
+def request(event) -> dict | None:
     try:
         inputs = event["body"] or None
         if inputs is not None:
@@ -113,15 +109,15 @@ def get_transaction_receipt_from_blockchain(transaction_hash):
 #TODO this will need to be deleted , after the nunet OCCAM claims windows expire
 def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key):
     try:
-        user_address = Web3.toChecksumAddress(user_address)
-        token_address = Web3.toChecksumAddress(token_address)
-        contract_address = Web3.toChecksumAddress(contract_address)
+        user_address = Web3.to_checksum_address(user_address)
+        token_address = Web3.to_checksum_address(token_address)
+        contract_address = Web3.to_checksum_address(contract_address)
 
         print("Generate claim signature user_address: ", user_address)
         print("Generate claim signature token_address: ", token_address)
         print("Generate claim signature contract_address: ", contract_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "uint256", "address", "uint256",
              "uint256", "address", "address"],
             ["__airdropclaim", int(amount), user_address, int(airdrop_id),
@@ -143,15 +139,15 @@ def generate_claim_signature_with_total_eligibile_amount(totalEligibleAmount,air
                                                          airdrop_window_id, user_address,
                                                          contract_address, token_address, private_key):
     try:
-        user_address = Web3.toChecksumAddress(user_address)
-        token_address = Web3.toChecksumAddress(token_address)
-        contract_address = Web3.toChecksumAddress(contract_address)
+        user_address = Web3.to_checksum_address(user_address)
+        token_address = Web3.to_checksum_address(token_address)
+        contract_address = Web3.to_checksum_address(contract_address)
 
         print("Generate secured claim signature user_address: ", user_address)
         print("Generate secured claim signature token_address: ", token_address)
         print("Generate secured claim signature contract_address: ", contract_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string","uint256","uint256", "address", "uint256",
                 "uint256", "address", "address"],
             ["__airdropclaim",int(totalEligibleAmount) ,int(airdropAmount), user_address, int(airdrop_id),
@@ -177,11 +173,11 @@ def load_contract(path):
 
 def read_contract_address(net_id, path, key):
     contract = load_contract(path)
-    return Web3.toChecksumAddress(contract[str(net_id)][key])
+    return Web3.to_checksum_address(contract[str(net_id)][key])
 
 
 def get_checksum_address(address):
-    return Web3.toChecksumAddress(address)
+    return Web3.to_checksum_address(address)
 
 
 def get_contract_file_paths(base_path, contract_name):
@@ -229,8 +225,8 @@ def verify_signature(airdrop_id, airdrop_window_id, address, signature, block_nu
 
 
 def recover_address(airdrop_id, airdrop_window_id, address, signature, block_number):
-    address = Web3.toChecksumAddress(address)
-    message = web3.Web3.soliditySha3(
+    address = Web3.to_checksum_address(address)
+    message = web3.Web3.solidity_keccak(
         ["uint256", "uint256", "uint256", "address"],
         [int(airdrop_id), int(airdrop_window_id), int(block_number), address],
     )
@@ -241,12 +237,31 @@ def recover_address(airdrop_id, airdrop_window_id, address, signature, block_num
     )
 
 
-def get_registration_receipt(airdrop_id, airdrop_window_id, user_address, private_key):
+def get_registration_receipt_ethereum(airdrop_id, airdrop_window_id, user_address, private_key):
     try:
-        user_address = Web3.toChecksumAddress(user_address)
+        user_address = Web3.to_checksum_address(user_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "address", "uint256", "uint256"],
+            ["__receipt_ack_message", user_address, int(airdrop_id), int(airdrop_window_id)],
+        )
+
+        message_hash = encode_defunct(message)
+
+        web3_object = Web3(web3.providers.HTTPProvider(
+            NETWORK['http_provider']))
+        signed_message = web3_object.eth.account.sign_message(
+            message_hash, private_key=private_key)
+        return b64encode(signed_message.signature).decode()
+
+    except BaseException as e:
+        raise e
+
+
+def get_registration_receipt_cardano(airdrop_id, airdrop_window_id, user_address, private_key):
+    try:
+        message = web3.Web3.solidity_keccak(
+            ["string", "string", "uint256", "uint256"],
             ["__receipt_ack_message", user_address, int(airdrop_id), int(airdrop_window_id)],
         )
 

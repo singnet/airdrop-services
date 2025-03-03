@@ -15,6 +15,7 @@ from airdrop.config import NETWORK
 from airdrop.config import NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY
 from airdrop.infrastructure.models import UserRegistration, Airdrop, AirdropWindow, UserReward, ClaimHistory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
+from airdrop.utils import datetime_in_utcnow
 
 
 class TestAirdropHandler(unittest.TestCase):
@@ -30,11 +31,11 @@ class TestAirdropHandler(unittest.TestCase):
         documentation_link = 'https://ropsten-airdrop.singularitynet.io/'
         description = 'This is a test airdrop'
         github_link = 'https://github.com/singnet/airdrop-services'
-        registration_start_date = datetime.utcnow() - timedelta(days=2)
-        registration_end_date = datetime.utcnow() + timedelta(days=30)
-        claim_start_date = datetime.utcnow() - timedelta(days=2)
-        claim_end_date = datetime.utcnow() + timedelta(days=30)
-        now = datetime.utcnow()
+        registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+        registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=2)
+        claim_end_date = datetime_in_utcnow() + timedelta(days=30)
+        now = datetime_in_utcnow()
 
         contract_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
         token_address = '0x5e94577b949a56279637ff74dfcff2c28408f049'
@@ -243,7 +244,7 @@ class TestAirdropHandler(unittest.TestCase):
         AirdropRepository().register_user_rewards(airdrop_id, airdrop_window_id, reward,
                                                   user_address, 1, 1)
         AirdropRepository().register_user_registration(airdrop_window_id, user_address)
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "uint256", "uint256", "address", "uint256",
              "uint256", "address", "address"],
             ["__airdropclaim", int(reward), int(reward), user_address, int(airdrop_id),
@@ -321,10 +322,10 @@ class TestAirdropHandler(unittest.TestCase):
         result = json.loads(result['body'])
         final_result = result['data']
         self.assertIsNotNone(final_result)
-        registration_start_date = datetime.utcnow() - timedelta(days=2)
-        registration_end_date = datetime.utcnow() + timedelta(days=30)
-        claim_start_date = datetime.utcnow() - timedelta(days=5)
-        claim_end_date = datetime.utcnow() + timedelta(days=30)
+        registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+        registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=5)
+        claim_end_date = datetime_in_utcnow() + timedelta(days=30)
         # now create an other airdrop_window
         airdrop_window1 = AirdropRepository().register_airdrop_window(airdrop_id=airdrop_id,
                                                                       airdrop_window_name='CLAIM_ORG-Airdrop Window 1',
@@ -359,10 +360,10 @@ class TestAirdropHandler(unittest.TestCase):
             contract_address, "portal_link",
             "documentation_link",
             "description", "github_link")
-        registration_start_date = datetime.utcnow() - timedelta(days=2)
-        registration_end_date = datetime.utcnow() + timedelta(days=30)
-        claim_start_date = datetime.utcnow() - timedelta(days=5)
-        claim_end_date = datetime.utcnow() + timedelta(days=30)
+        registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+        registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=5)
+        claim_end_date = datetime_in_utcnow() + timedelta(days=30)
 
         airdrop_window = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id,
                                                                     airdrop_window_name='TEST_ORG-Airdrop Window 1',
@@ -391,16 +392,16 @@ class TestAirdropHandler(unittest.TestCase):
         airdrop_repository.register_user_registration(airdrop_window.id, '0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10')
 
         # now generate the expected signature
-        user_address = Web3.toChecksumAddress(user_address)
-        token_address = Web3.toChecksumAddress(token_address)
-        contract_address = Web3.toChecksumAddress(contract_address)
+        user_address = Web3.to_checksum_address(user_address)
+        token_address = Web3.to_checksum_address(token_address)
+        contract_address = Web3.to_checksum_address(contract_address)
         big_reward = '1e+22'
         print("int of big_reward", str(reward))
         print("Generate claim signature user_address: ", user_address)
         print("Generate claim signature token_address: ", token_address)
         print("Generate claim signature contract_address: ", contract_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "uint256", "address", "uint256",
              "uint256", "address", "address"],
             ["__airdropclaim", int(reward), user_address, int(airdrop.id),
@@ -439,10 +440,10 @@ class TestAirdropHandler(unittest.TestCase):
             contract_address, "portal_link",
             "documentation_link",
             "description", "github_link")
-        registration_start_date = datetime.utcnow() - timedelta(days=2)
-        registration_end_date = datetime.utcnow() + timedelta(days=30)
-        claim_start_date = datetime.utcnow() - timedelta(days=5)
-        claim_end_date = datetime.utcnow() + timedelta(days=30)
+        registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+        registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=5)
+        claim_end_date = datetime_in_utcnow() + timedelta(days=30)
 
         airdrop_window = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id,
                                                                     airdrop_window_name='TEST_ORG-Airdrop Window 1',
@@ -470,15 +471,15 @@ class TestAirdropHandler(unittest.TestCase):
         airdrop_repository.register_user_registration(airdrop_window.id, '0x164096A3878DEd9C2A30c85D9c4b713d5305Ab10')
 
         # now generate the expected signature
-        user_address = Web3.toChecksumAddress(user_address)
-        token_address = Web3.toChecksumAddress(token_address)
-        contract_address = Web3.toChecksumAddress(contract_address)
+        user_address = Web3.to_checksum_address(user_address)
+        token_address = Web3.to_checksum_address(token_address)
+        contract_address = Web3.to_checksum_address(contract_address)
 
         print("Generate claim signature user_address: ", user_address)
         print("Generate claim signature token_address: ", token_address)
         print("Generate claim signature contract_address: ", contract_address)
 
-        message = web3.Web3.soliditySha3(
+        message = web3.Web3.solidity_keccak(
             ["string", "uint256", "uint256", "address", "uint256",
              "uint256", "address", "address"],
             ["__airdropclaim", int(150), int(150), user_address, int(airdrop.id),
@@ -527,10 +528,10 @@ class TestAirdropHandler(unittest.TestCase):
             "0x2fc8ae60108765056ff63a07843a5b7ec9ff88ef", "portal_link",
             "documentation_link",
             "description", "github_link")
-        registration_start_date = datetime.utcnow() - timedelta(days=2)
-        registration_end_date = datetime.utcnow() + timedelta(days=30)
-        claim_start_date = datetime.utcnow() - timedelta(days=5)
-        claim_end_date = datetime.utcnow() + timedelta(days=30)
+        registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+        registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=5)
+        claim_end_date = datetime_in_utcnow() + timedelta(days=30)
 
         airdrop1_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop1.id,
                                                                       airdrop_window_name='A1:Airdrop Window 1',
@@ -549,7 +550,7 @@ class TestAirdropHandler(unittest.TestCase):
                                                                       registration_start_period=registration_start_date,
                                                                       registration_end_period=registration_end_date,
                                                                       snapshot_required=True,
-                                                                      claim_start_period=datetime.utcnow() - timedelta(
+                                                                      claim_start_period=datetime_in_utcnow() - timedelta(
                                                                           days=2),
                                                                       claim_end_period=claim_end_date,
                                                                       total_airdrop_tokens=1000000)
@@ -561,9 +562,9 @@ class TestAirdropHandler(unittest.TestCase):
                                                                       registration_start_period=registration_start_date,
                                                                       registration_end_period=registration_end_date,
                                                                       snapshot_required=True,
-                                                                      claim_start_period=datetime.utcnow() + timedelta(
+                                                                      claim_start_period=datetime_in_utcnow() + timedelta(
                                                                           days=20),
-                                                                      claim_end_period=datetime.utcnow() + timedelta(
+                                                                      claim_end_period=datetime_in_utcnow() + timedelta(
                                                                           days=25),
                                                                       total_airdrop_tokens=1000000)
         airdrop2_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop2.id,
@@ -583,7 +584,7 @@ class TestAirdropHandler(unittest.TestCase):
                                                                       registration_start_period=registration_start_date,
                                                                       registration_end_period=registration_end_date,
                                                                       snapshot_required=True,
-                                                                      claim_start_period=datetime.utcnow() - timedelta(
+                                                                      claim_start_period=datetime_in_utcnow() - timedelta(
                                                                           days=2),
                                                                       claim_end_period=claim_end_date,
                                                                       total_airdrop_tokens=1000000)
@@ -595,9 +596,9 @@ class TestAirdropHandler(unittest.TestCase):
                                                                       registration_start_period=registration_start_date,
                                                                       registration_end_period=registration_end_date,
                                                                       snapshot_required=True,
-                                                                      claim_start_period=datetime.utcnow() + timedelta(
+                                                                      claim_start_period=datetime_in_utcnow() + timedelta(
                                                                           days=20),
-                                                                      claim_end_period=datetime.utcnow() + timedelta(
+                                                                      claim_end_period=datetime_in_utcnow() + timedelta(
                                                                           days=25),
                                                                       total_airdrop_tokens=1000000)
 
@@ -693,10 +694,10 @@ class TestAirdropHandler(unittest.TestCase):
             "0x2fc8ae60108765056ff63a07843a5b7ec9ff89ef", "portal_link",
             "documentation_link",
             "description", "github_link")
-        registration_start_date = datetime.utcnow() - timedelta(days=2)
-        registration_end_date = datetime.utcnow() + timedelta(days=30)
-        claim_start_date = datetime.utcnow() - timedelta(days=5)
-        claim_end_date = datetime.utcnow() + timedelta(days=30)
+        registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+        registration_end_date = datetime_in_utcnow() + timedelta(days=30)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=5)
+        claim_end_date = datetime_in_utcnow() + timedelta(days=30)
 
         airdrop_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id,
                                                                      airdrop_window_name='Airdrop Window 1',
@@ -715,7 +716,7 @@ class TestAirdropHandler(unittest.TestCase):
                                                                      registration_start_period=registration_start_date,
                                                                      registration_end_period=registration_end_date,
                                                                      snapshot_required=True,
-                                                                     claim_start_period=datetime.utcnow() - timedelta(
+                                                                     claim_start_period=datetime_in_utcnow() - timedelta(
                                                                          days=2),
                                                                      claim_end_period=claim_end_date,
                                                                      total_airdrop_tokens=1000000)
@@ -727,9 +728,9 @@ class TestAirdropHandler(unittest.TestCase):
                                                                      registration_start_period=registration_start_date,
                                                                      registration_end_period=registration_end_date,
                                                                      snapshot_required=True,
-                                                                     claim_start_period=datetime.utcnow() + timedelta(
+                                                                     claim_start_period=datetime_in_utcnow() + timedelta(
                                                                          days=20),
-                                                                     claim_end_period=datetime.utcnow() + timedelta(
+                                                                     claim_end_period=datetime_in_utcnow() + timedelta(
                                                                          days=25),
                                                                      total_airdrop_tokens=1000000)
 
@@ -793,10 +794,10 @@ class TestAirdropHandler(unittest.TestCase):
             "0x2fc8ae60108765056ff63a07843a5b7ec9ff89ef", "portal_link",
             "documentation_link",
             "description", "github_link")
-        registration_start_date = datetime.utcnow() - timedelta(days=8)
-        registration_end_date = datetime.utcnow() - timedelta(days=6)
-        claim_start_date = datetime.utcnow() - timedelta(days=4)
-        claim_end_date = datetime.utcnow() - timedelta(days=2)
+        registration_start_date = datetime_in_utcnow() - timedelta(days=8)
+        registration_end_date = datetime_in_utcnow() - timedelta(days=6)
+        claim_start_date = datetime_in_utcnow() - timedelta(days=4)
+        claim_end_date = datetime_in_utcnow() - timedelta(days=2)
         # this is in the past
         airdrop_window1 = airdrop_repository.register_airdrop_window(airdrop_id=airdrop.id,
                                                                      airdrop_window_name='Airdrop Window 1',
@@ -813,14 +814,14 @@ class TestAirdropHandler(unittest.TestCase):
                                                                      airdrop_window_name='Airdrop Window 2',
                                                                      description='Long description',
                                                                      registration_required=True,
-                                                                     registration_start_period=datetime.utcnow() - timedelta(
+                                                                     registration_start_period=datetime_in_utcnow() - timedelta(
                                                                          days=1),
-                                                                     registration_end_period=datetime.utcnow() - timedelta(
+                                                                     registration_end_period=datetime_in_utcnow() - timedelta(
                                                                          days=1.5),
                                                                      snapshot_required=True,
-                                                                     claim_start_period=datetime.utcnow() - timedelta(
+                                                                     claim_start_period=datetime_in_utcnow() - timedelta(
                                                                          hours=1),
-                                                                     claim_end_period=datetime.utcnow() + timedelta(
+                                                                     claim_end_period=datetime_in_utcnow() + timedelta(
                                                                          days=2),
                                                                      total_airdrop_tokens=1000000)
 

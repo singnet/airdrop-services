@@ -13,6 +13,7 @@ from pydoc import locate
 from airdrop.constants import PROCESSOR_PATH
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.processor.loyalty_airdrop import LoyaltyAirdrop
+from airdrop.utils import datetime_in_utcnow
 
 
 class AirdropRepository(BaseRepository):
@@ -23,7 +24,7 @@ class AirdropRepository(BaseRepository):
                 ClaimHistory.transaction_hash == txn_hash).first()
 
             if transaction is not None and txn_status == AirdropClaimStatus.SUCCESS.value:
-                transaction.claimed_on = datetime.utcnow()
+                transaction.claimed_on = datetime_in_utcnow()
 
             if transaction is not None:
                 transaction.transaction_status = txn_status
@@ -82,7 +83,7 @@ class AirdropRepository(BaseRepository):
                 if existing_txn_hash != txn_hash:
                     transaction.transaction_hash = txn_hash
                 if txn_status == AirdropClaimStatus.SUCCESS.value:
-                    transaction.claimed_on = datetime.utcnow()
+                    transaction.claimed_on = datetime_in_utcnow()
                 transaction.transaction_status = txn_status
                 return self.session.commit()
             else:
@@ -307,8 +308,8 @@ class AirdropRepository(BaseRepository):
                     "tokens_claim_blockchain_methods": tokens_claim_blockchain_methods,
                     "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
                 })
-                full_rewards = int(result_rewards.fetchall()[0]["total_rewards"])
-                claimed_rewards = int(result_claimed.fetchall()[0]["total_claimed"])
+                full_rewards = int(result_rewards.fetchall()[0][0])
+                claimed_rewards = int(result_claimed.fetchall()[0][0])
                 total_rewards = full_rewards - claimed_rewards
             else:
                 query = text(
@@ -327,7 +328,7 @@ class AirdropRepository(BaseRepository):
                     "address": address, "airdrop_id": airdrop_id,
                     "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
                 })
-                total_rewards = int(result.fetchall()[0]["total_rewards"])
+                total_rewards = int(result.fetchall()[0][0])
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
@@ -368,8 +369,13 @@ class AirdropRepository(BaseRepository):
                 .join(
                     AirdropWindow,
                     Airdrop.id == AirdropWindow.airdrop_id,
+                    isouter = True
                 )
-                .join(AirdropWindowTimelines, AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id)
+                .join(
+                    AirdropWindowTimelines,
+                    AirdropWindow.id == AirdropWindowTimelines.airdrop_window_id,
+                    isouter = True
+                )
                 .filter(Airdrop.id == airdrop_id)
                 .first()
             )

@@ -19,12 +19,15 @@ alembic upgrade head # Sync database tables
 ### Start the service
 
 ```sh
-sls offline start
+sls offline start -s <stage>
 ```
+
+## Note:
+When creating the last database migration to create a revision, I had to remove 'airdrop.' from the airdrop/alembic/env.py file in the lines 'from airdrop.infrastructure.models import Base' and 'from airdrop.config import NETWORK', otherwise it didn't work.
 
 ## Requirements
 
 | Language     | Download                          |
 | ------------ | --------------------------------- |
-| Python 3.8   | https://www.python.org/downloads/ |
-| Node JS 12.X | https://nodejs.org/en/            |
+| Python 3.12   | https://www.python.org/downloads/ |
+| Node JS 22.13 | https://nodejs.org/en/            |

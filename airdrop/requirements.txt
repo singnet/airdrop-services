@@ -1,1 +1,9 @@
-
+alembic==1.14.1
+boto3==1.36.21
+cryptography==44.0.1
+jsonschema==4.23.0
+pycardano==0.12.3
+PyMySQL==1.1.1
+requests==2.32.3
+sqlalchemy==2.0.38
+web3==7.8.0

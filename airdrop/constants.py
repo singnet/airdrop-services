@@ -119,7 +119,6 @@ USER_CLAIM_SIGNATURE_DEFAULT_FORMAT = {
     },
 }
 
-
 class AirdropClaimStatus(Enum):
     PENDING = "PENDING"
     SUCCESS = "SUCCESS"
