@@ -159,5 +159,6 @@ class UserRegistrationRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-        unclaimed_reward = int(result.fetchall()[0]["unclaimed_reward"])
+        row = result.mappings().first()
+        unclaimed_reward = int(row["unclaimed_reward"]) if row else 0
         return unclaimed_reward

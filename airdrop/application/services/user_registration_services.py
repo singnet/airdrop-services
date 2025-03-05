@@ -59,29 +59,18 @@ class UserRegistrationServices:
             # rewards awarded will have some value ONLY when the claim window opens and the user has unclaimed rewards
             # a claim in progress ~ PENDING will also be considered as claimed ( we don't want the user to end up losing
             # gas in trying to claim again)
-            registration_id, reject_reason, registration_details = "", None, dict()
-            if user_registered:
-                registration_id = user_registration.receipt_generated
-                reject_reason = user_registration.reject_reason
-                registration_details = {
-                    "registration_id": user_registration.receipt_generated,
-                    "reject_reason": user_registration.reject_reason,
-                    "registered_at": str(user_registration.registered_at),
-                }
-            response = {
-                "is_eligible": is_user_eligible,
-                "is_already_registered": user_registered,
-                "is_airdrop_window_claimed": is_airdrop_window_claimed,
-                "airdrop_window_claim_status": airdrop_claim_status,
-                "user_address": address,
-                "airdrop_id": airdrop_id,
-                "airdrop_window_id": airdrop_window_id,
-                "reject_reason": reject_reason,
-                "airdrop_window_rewards": rewards_awarded,
-                "registration_id": registration_id,
-                "is_claimable": is_claimable,
-                "registration_details": registration_details
-            }
+            response = airdrop_object.generate_eligibility_response(
+                airdrop_id=airdrop_id,
+                airdrop_window_id=airdrop_window_id,
+                address=address,
+                is_user_eligible=is_user_eligible,
+                user_registered=user_registered,
+                user_registration=user_registration,
+                is_airdrop_window_claimed=is_airdrop_window_claimed,
+                airdrop_claim_status=airdrop_claim_status,
+                rewards_awarded=rewards_awarded,
+                is_claimable=is_claimable
+            )
         except (ValidationError, BaseException) as e:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)

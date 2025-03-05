@@ -1,6 +1,8 @@
 import json
 from web3 import Web3
 
+from airdrop.constants import AirdropClaimStatus
+from airdrop.infrastructure.models import UserRegistration
 from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnapshotRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils
@@ -85,3 +87,42 @@ class RejuveAirdrop(DefaultAirdrop):
         elif network == "Cardano":
             receipt = get_registration_receipt_cardano(airdrop_id, window_id, address, secret_key)
         return receipt
+
+    def generate_eligibility_response(
+        self,
+        airdrop_id: int,
+        airdrop_window_id: int,
+        address: str,
+        is_user_eligible: bool,
+        user_registered: bool,
+        user_registration: UserRegistration,
+        is_airdrop_window_claimed: bool,
+        airdrop_claim_status: AirdropClaimStatus,
+        rewards_awarded: int,
+        is_claimable: bool
+    ) -> dict:
+        registration_id, reject_reason, registration_details = "", None, dict()
+
+        if user_registered:
+            registration_id = user_registration.receipt_generated
+            reject_reason = user_registration.reject_reason
+            registration_details = {
+                "registration_id": user_registration.receipt_generated,
+                "reject_reason": user_registration.reject_reason,
+                "registered_at": str(user_registration.registered_at),
+            }
+        response = {
+            "is_eligible": is_user_eligible,
+            "is_already_registered": user_registered,
+            "is_airdrop_window_claimed": is_airdrop_window_claimed,
+            "airdrop_window_claim_status": airdrop_claim_status,
+            "user_address": address,
+            "airdrop_id": airdrop_id,
+            "airdrop_window_id": airdrop_window_id,
+            "reject_reason": reject_reason,
+            "airdrop_window_rewards": rewards_awarded,
+            "registration_id": registration_id,
+            "is_claimable": is_claimable,
+            "registration_details": registration_details
+        }
+        return response
