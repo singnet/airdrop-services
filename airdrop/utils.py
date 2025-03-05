@@ -32,6 +32,7 @@ class Utils:
             signature_verified = True
         return signature_verified, extracted_address
 
+    @staticmethod
     def match_ethereum_signature_eip712(
         address: str,
         formatted_message: dict,
