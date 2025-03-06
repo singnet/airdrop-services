@@ -100,12 +100,12 @@ class AirdropRepository(BaseRepository):
     def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount, blockchain_method):
         try:
 
-            is_valid_address = self.session.query(UserRegistration).filter(
+            registered_address = self.session.query(UserRegistration).filter(
                 UserRegistration.address == address).filter(AirdropWindow.airdrop_id == airdrop_id).filter(
                 UserRegistration.airdrop_window_id == airdrop_window_id).first()
 
-            if is_valid_address is None:
-                raise Exception('Invalid address')
+            if registered_address is None:
+                raise Exception(f"Address {address} wasn't found in the list of registered addresses")
 
             transaction = self.session.query(ClaimHistory).filter(
                 ClaimHistory.transaction_hash == txn_hash).first()

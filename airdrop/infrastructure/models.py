@@ -214,5 +214,5 @@ class ClaimHistory(Base, AuditClass):
         backref="claim_history",
         primaryjoin="foreign(ClaimHistory.airdrop_window_id) == UserRegistration.airdrop_window_id",
         lazy="joined",
-        uselist=False
+        uselist=True
     )
