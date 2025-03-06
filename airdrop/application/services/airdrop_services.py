@@ -30,7 +30,7 @@ class AirdropServices:
     def airdrop_txn_watcher(self):
 
         pending_txns = AirdropRepository().get_pending_txns()
-        print(f"pending_txns {len(pending_txns)}")
+        logger.info(f"pending_txns {len(pending_txns)}")
 
         for txn in pending_txns:
             try:
@@ -48,12 +48,12 @@ class AirdropServices:
                     else:
                         airdrop_id = txn.airdrop_id
                         airdrop_window_id = txn.airdrop_window_id
-                        user_address = txn.user_address
-                        amount = txn.amount
+                        user_address = txn.address
+                        amount = txn.claimable_amount
                         AirdropRepository().airdrop_window_claim_txn(
                             airdrop_id, airdrop_window_id, user_address, txn_hash_from_receipt, amount)
-                        print(
-                            f"Transaction hash mismatch {txn_hash_from_receipt} {txn_hash}, creating new entry")
+                        logger.warning(f"Transaction hash mismatch {txn_hash_from_receipt} {txn_hash}, "
+                                       "creating new entry")
 
             except BaseException as e:
                 print(f"Exception on Airdrop Txn Watcher {e}")
@@ -97,6 +97,7 @@ class AirdropServices:
             return False
 
     def get_airdrop_window_stake_details(self, inputs):
+        logger.info("Calling the window stake details receiving function")
         status = HTTPStatus.BAD_REQUEST
         try:
             schema = {
@@ -328,8 +329,7 @@ class AirdropServices:
             if airdrop is None:
                 raise Exception("Airdrop id is not valid.")
 
-            airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id,
-                                                                                airdrop_id=airdrop_id)
+            airdrop_window = AirdropWindowRepository().get_airdrop_window_by_id(airdrop_window_id)
             if airdrop_window is None:
                 raise Exception("Airdrop window id is not valid.")
 

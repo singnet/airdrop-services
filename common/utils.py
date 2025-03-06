@@ -104,7 +104,7 @@ def json_to_file(payload, filename):
 def get_transaction_receipt_from_blockchain(transaction_hash):
     web3_object = Web3(web3.providers.HTTPProvider(
         NETWORK['http_provider']))
-    return web3_object.eth.getTransactionReceipt(transaction_hash)
+    return web3_object.eth.get_transaction_receipt(transaction_hash)
 
 #TODO this will need to be deleted , after the nunet OCCAM claims windows expire
 def generate_claim_signature(amount, airdrop_id, airdrop_window_id, user_address, contract_address, token_address, private_key):

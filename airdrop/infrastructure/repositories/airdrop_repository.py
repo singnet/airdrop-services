@@ -100,12 +100,12 @@ class AirdropRepository(BaseRepository):
     def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount, blockchain_method):
         try:
 
-            is_valid_address = self.session.query(UserRegistration).filter(
+            registered_address = self.session.query(UserRegistration).filter(
                 UserRegistration.address == address).filter(AirdropWindow.airdrop_id == airdrop_id).filter(
                 UserRegistration.airdrop_window_id == airdrop_window_id).first()
 
-            if is_valid_address is None:
-                raise Exception('Invalid address')
+            if registered_address is None:
+                raise Exception(f"Address {address} wasn't found in the list of registered addresses")
 
             transaction = self.session.query(ClaimHistory).filter(
                 ClaimHistory.transaction_hash == txn_hash).first()
@@ -308,8 +308,10 @@ class AirdropRepository(BaseRepository):
                     "tokens_claim_blockchain_methods": tokens_claim_blockchain_methods,
                     "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
                 })
-                full_rewards = int(result_rewards.fetchall()[0][0])
-                claimed_rewards = int(result_claimed.fetchall()[0][0])
+                row_rewards = result_rewards.mappings().first()
+                full_rewards = int(row_rewards["total_rewards"]) if row_rewards else 0
+                row_claimed = result_claimed.mappings().first()
+                claimed_rewards = int(row_claimed["total_claimed"]) if row_claimed else 0
                 total_rewards = full_rewards - claimed_rewards
             else:
                 query = text(
@@ -328,7 +330,8 @@ class AirdropRepository(BaseRepository):
                     "address": address, "airdrop_id": airdrop_id,
                     "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
                 })
-                total_rewards = int(result.fetchall()[0][0])
+                row = result.mappings().first()
+                total_rewards = int(row["total_rewards"]) if row else 0
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
@@ -359,7 +362,7 @@ class AirdropRepository(BaseRepository):
             self.session.rollback()
             raise e
         value_retrieved = result.fetchall()[0]
-        total_eligible_rewards = value_retrieved['total_eligibility_rewards']
+        total_eligible_rewards = value_retrieved[0]
         return int(total_eligible_rewards)
 
     def get_airdrops_schedule(self, airdrop_id):

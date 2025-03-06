@@ -33,7 +33,7 @@ class NunetAirdrop(DefaultAirdrop):
         formatted_message["domain"]["name"] = self.domain_name
         return formatted_message
 
-    def format_and_get_claim_signature_details(self, **kwargs):
+    def format_and_get_claim_signature_details(self, **kwargs) -> tuple[list, list]:
         signature_parameters = kwargs.get("signature_parameters")
         if not signature_parameters:
             raise RequiredDataNotFound("signature_parameters parameter "
