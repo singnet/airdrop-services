@@ -100,7 +100,8 @@ class AirdropRepository(BaseRepository):
     def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount, blockchain_method):
         try:
 
-            registered_address = self.session.query(UserRegistration).filter(
+            registered_address = self.session.query(UserRegistration).join(
+                AirdropWindow, UserRegistration.airdrop_window_id == AirdropWindow.id).filter(
                 UserRegistration.address == address).filter(AirdropWindow.airdrop_id == airdrop_id).filter(
                 UserRegistration.airdrop_window_id == airdrop_window_id).first()
 
@@ -361,8 +362,10 @@ class AirdropRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-        value_retrieved = result.fetchall()[0]
-        total_eligible_rewards = value_retrieved[0]
+        # value_retrieved = result.fetchall()[0]
+        # total_eligible_rewards = value_retrieved[0]
+        value_retrieved = result.mappings().first()
+        total_eligible_rewards = int(value_retrieved["total_eligibility_rewards"]) if value_retrieved else 0
         return int(total_eligible_rewards)
 
     def get_airdrops_schedule(self, airdrop_id):
