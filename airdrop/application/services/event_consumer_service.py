@@ -1,5 +1,4 @@
 import json
-from datetime import datetime as dt
 from http import HTTPStatus
 
 import requests
@@ -12,7 +11,7 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
-from airdrop.utils import Utils
+from airdrop.utils import Utils, datetime_in_utcnow
 from common.exceptions import ValidationFailedException
 from common.logger import get_logger
 
@@ -209,6 +208,6 @@ class DepositEventConsumerService(EventConsumerService):
             "claimable_amount": claimable_amount,
             "unclaimed_amount": 0,
             "transaction_status": AirdropClaimStatus.PENDING.value,
-            "claimed_on": dt.utcnow()
+            "claimed_on": datetime_in_utcnow()
         }
         ClaimHistoryRepository().add_claim(claim_payload)

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import timezone
 
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY, AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION
+from airdrop.utils import datetime_in_utcnow
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import get_registration_receipt_ethereum
@@ -31,7 +32,7 @@ class BaseAirdrop(ABC):
 
     @staticmethod
     def is_registration_window_open(start_period, end_period) -> bool:
-        now = datetime.now(timezone.utc)
+        now = datetime_in_utcnow()
 
         if start_period.tzinfo is None:
             start_period = start_period.replace(tzinfo=timezone.utc)
@@ -67,4 +68,8 @@ class BaseAirdrop(ABC):
 
     @abstractmethod
     def update_registration(self, **kwargs) -> list:
+        pass
+
+    @abstractmethod
+    def generate_eligibility_response(self, **kwargs):
         pass

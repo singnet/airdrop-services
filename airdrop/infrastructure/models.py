@@ -2,7 +2,6 @@ from sqlalchemy import BIGINT, VARCHAR, Column, DECIMAL, TEXT, text, UniqueConst
 from sqlalchemy.dialects.mysql import TIMESTAMP, BIT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm.relationships import foreign
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -215,5 +214,5 @@ class ClaimHistory(Base, AuditClass):
         backref="claim_history",
         primaryjoin="foreign(ClaimHistory.airdrop_window_id) == UserRegistration.airdrop_window_id",
         lazy="joined",
-        uselist=False
+        uselist=True
     )

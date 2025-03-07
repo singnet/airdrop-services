@@ -1,9 +1,9 @@
-from datetime import datetime as dt
 from datetime import timedelta
 
 from web3 import Web3
 
 from airdrop.processor.loyalty_airdrop import LoyaltyAirdrop
+from airdrop.utils import datetime_in_utcnow
 
 SECRETS_MANAGER_MOCK_VALUE = "c4162244e5ec8f53a51ab6bb0a29c50432d82afd0a168e6e5c5c55c43b0a9c9"
 
@@ -25,11 +25,11 @@ class LoyaltyAirdropWindow1Data:
     airdrop_window_name = "Loyalty Airdrop Window 1"
     description = "Loyalty Airdrop Window 1"
     registration_required = False
-    registration_start_date = dt.utcnow() - timedelta(days=2)
-    registration_end_date = dt.utcnow() + timedelta(days=30)
+    registration_start_date = datetime_in_utcnow() - timedelta(days=2)
+    registration_end_date = datetime_in_utcnow() + timedelta(days=30)
     snapshot_required = False
-    claim_start_date = dt.utcnow() - timedelta(days=2)
-    claim_end_date = dt.utcnow() + timedelta(days=30)
+    claim_start_date = datetime_in_utcnow() - timedelta(days=2)
+    claim_end_date = datetime_in_utcnow() + timedelta(days=30)
     total_airdrop_tokens = 1000000
 
 
@@ -37,11 +37,11 @@ class LoyaltyAirdropWindow2Data:
     airdrop_window_name = "Loyalty Airdrop Window 2"
     description = 'Loyalty Airdrop Window 2'
     registration_required = False
-    registration_start_date = dt.utcnow() + timedelta(days=25)
-    registration_end_date = dt.utcnow() + timedelta(days=30)
+    registration_start_date = datetime_in_utcnow() + timedelta(days=25)
+    registration_end_date = datetime_in_utcnow() + timedelta(days=30)
     snapshot_required = False
-    claim_start_date = dt.utcnow() + timedelta(days=45)
-    claim_end_date = dt.utcnow() + timedelta(days=60)
+    claim_start_date = datetime_in_utcnow() + timedelta(days=45)
+    claim_end_date = datetime_in_utcnow() + timedelta(days=60)
     total_airdrop_tokens = 2000000
 
 
@@ -49,11 +49,11 @@ class LoyaltyAirdropWindow3Data:
     airdrop_window_name = "Loyalty Airdrop Window 3"
     description = 'Loyalty Airdrop Window 3'
     registration_required = False
-    registration_start_date = dt.utcnow() - timedelta(days=25)
-    registration_end_date = dt.utcnow() - timedelta(days=30)
+    registration_start_date = datetime_in_utcnow() - timedelta(days=25)
+    registration_end_date = datetime_in_utcnow() - timedelta(days=30)
     snapshot_required = False
-    claim_start_date = dt.utcnow() + timedelta(days=45)
-    claim_end_date = dt.utcnow() + timedelta(days=60)
+    claim_start_date = datetime_in_utcnow() + timedelta(days=45)
+    claim_end_date = datetime_in_utcnow() + timedelta(days=60)
     total_airdrop_tokens = 2000000
 
 

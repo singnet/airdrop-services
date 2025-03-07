@@ -1,10 +1,8 @@
-import inspect
-
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
-from airdrop.constants import USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT, USER_CLAIM_SIGNATURE_DEFAULT_FORMAT
+from airdrop.constants import (USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT,
+                               USER_CLAIM_SIGNATURE_DEFAULT_FORMAT)
 from airdrop.config import LoyaltyAirdropConfig
-from common.exceptions import RequiredDataNotFound
 
 
 class LoyaltyAirdrop(DefaultAirdrop):
@@ -55,15 +53,10 @@ class LoyaltyAirdrop(DefaultAirdrop):
         formatted_message["domain"]["name"] = self.domain_name
         return formatted_message
 
-    def format_and_get_claim_signature_details(self, **kwargs) -> dict:
-        receipt = kwargs.get("receipt")
-        if receipt is None:
-            raise RequiredDataNotFound("receipt parameter "
-                                       "not passed to function "
-                                       f"{inspect.currentframe().f_code.co_name} "
-                                       f"for airdrop_id = {self.id}, " 
-                                       f"window_id = {self.window_id}")
+    def format_and_get_claim_signature_details(self, **kwargs) -> None:
+        pass
 
+    def format_user_claim_signature_message(self, receipt: str) -> dict:
         formatted_message = USER_CLAIM_SIGNATURE_DEFAULT_FORMAT
         formatted_message["message"] = {
             "Airdrop": {
