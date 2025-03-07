@@ -46,12 +46,13 @@ class AirdropServices:
                     if txn_hash_from_receipt.lower() == txn_hash.lower():
                         AirdropRepository().update_txn_status(txn_hash_from_receipt, txn_receipt_status)
                     else:
-                        airdrop_id = txn.airdrop_id
-                        airdrop_window_id = txn.airdrop_window_id
-                        user_address = txn.address
-                        amount = txn.claimable_amount
                         AirdropRepository().airdrop_window_claim_txn(
-                            airdrop_id, airdrop_window_id, user_address, txn_hash_from_receipt, amount)
+                            airdrop_id=txn.airdrop_id,
+                            airdrop_window_id=txn.airdrop_window_id,
+                            address=txn.address,
+                            txn_hash=txn_hash_from_receipt,
+                            amount=txn.claimable_amount
+                        )
                         logger.warning(f"Transaction hash mismatch {txn_hash_from_receipt} {txn_hash}, "
                                        "creating new entry")
 
