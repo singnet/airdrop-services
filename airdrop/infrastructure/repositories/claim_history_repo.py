@@ -34,7 +34,7 @@ class ClaimHistoryRepository(BaseRepository):
             result = self.session.execute(query, {"airdrop_id": airdrop_id, "blockchain_method": blockchain_method,
                                                   "transaction_status": AirdropClaimStatus.PENDING.value}
                                           )
-            for record in result.fetchall():
+            for record in result.mappings().all():
                 cardano_address = record["cardano_address"].strip('\"')
                 response.append({
                     "address": record["address"],

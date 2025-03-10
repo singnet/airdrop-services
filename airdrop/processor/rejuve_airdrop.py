@@ -32,7 +32,11 @@ class RejuveAirdrop(DefaultAirdrop):
             return True
         return False
 
-    def format_user_registration_signature_message(self, address: str, signature_parameters: dict) -> dict:
+    def format_user_registration_signature_message(
+        self,
+        address: str,
+        signature_parameters: dict
+    ) -> dict:
         block_number = signature_parameters["block_number"]
         wallet_name = signature_parameters["wallet_name"]
         formatted_message = {
@@ -42,7 +46,7 @@ class RejuveAirdrop(DefaultAirdrop):
             "walletAddress": address.lower(),
             "walletName": wallet_name
         }
-        return json.dumps(formatted_message, separators=(',', ':'))
+        return formatted_message
 
     def format_and_get_claim_signature_details(self, **kwargs) -> tuple[list, list]:
         pass
@@ -56,16 +60,18 @@ class RejuveAirdrop(DefaultAirdrop):
         if network == "Ethereum":
             checksum_address = Web3.to_checksum_address(address)
             formatted_message = self.format_user_registration_signature_message(checksum_address, data)
-            sign_verified, _ = utils.match_ethereum_signature_eip191(address, formatted_message, signature)
+            message = json.dumps(formatted_message, separators=(',', ':'))
+            sign_verified = utils.match_ethereum_signature_eip191(address, message, signature)
         elif network == "Cardano":
             key = data["key"]
             formatted_message = self.format_user_registration_signature_message(address, data)
-            sign_verified, _ = utils.match_cardano_signature(address, formatted_message, signature, key)
+            message = json.dumps(formatted_message, separators=(',', ':'))
+            sign_verified = utils.match_cardano_signature(message, signature, key)
         if not sign_verified:
             logger.error("Signature is not valid")
             raise Exception("Signature is not valid.")
         logger.info("Signature validity confirmed")
-        return formatted_message
+        return message
 
     def recognize_blockchain_network(self, address: str) -> str:
         if address[:2] == "0x":
