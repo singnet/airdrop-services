@@ -1,11 +1,10 @@
-from datetime import datetime as dt
-
 from airdrop.infrastructure.models import Airdrop, AirdropWindow, UserRegistration, UserReward, ClaimHistory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.infrastructure.repositories.user_reward_repository import UserRewardRepository
+from airdrop.utils import datetime_in_utcnow
 
 airdrop_repository = AirdropRepository()
 airdrop_window_repository = AirdropWindowRepository()
@@ -88,7 +87,7 @@ def load_airdrop_user_registration(airdrop_window_id, airdrop_user, airdrop_name
         UserRegistration(
             address=airdrop_user.address,
             airdrop_window_id=airdrop_window_id,
-            registered_at=dt.utcnow(),
+            registered_at=datetime_in_utcnow(),
             receipt_generated=airdrop_user.receipt_generated,
             user_signature="",
             signature_details=signature_details,

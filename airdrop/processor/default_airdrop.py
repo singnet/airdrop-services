@@ -1,9 +1,10 @@
+from datetime import timezone
 import inspect
 from web3 import Web3
 
-from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
+from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT, AirdropClaimStatus
 from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
-from airdrop.infrastructure.models import AirdropWindow
+from airdrop.infrastructure.models import AirdropWindow, UserRegistration
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.base_airdrop import BaseAirdrop
@@ -83,6 +84,46 @@ class DefaultAirdrop(BaseAirdrop):
         logger.info("Signature validity confirmed")
         return formatted_message
 
+    def generate_eligibility_response(
+        self,
+        airdrop_id: int,
+        airdrop_window_id: int,
+        address: str,
+        is_user_eligible: bool,
+        user_registered: bool,
+        user_registration: UserRegistration,
+        is_airdrop_window_claimed: bool,
+        airdrop_claim_status: AirdropClaimStatus,
+        rewards_awarded: int,
+        is_claimable: bool
+    ) -> dict:
+        registration_id, reject_reason, registration_details = "", None, dict()
+
+        if user_registered:
+            registration_id = user_registration.receipt_generated
+            reject_reason = user_registration.reject_reason
+            registration_details = {
+                "registration_id": user_registration.receipt_generated,
+                "reject_reason": user_registration.reject_reason,
+                "other_details": user_registration.signature_details.get("message", {}).get("Airdrop", {}),
+                "registered_at": str(user_registration.registered_at),
+            }
+        response = {
+            "is_eligible": is_user_eligible,
+            "is_already_registered": user_registered,
+            "is_airdrop_window_claimed": is_airdrop_window_claimed,
+            "airdrop_window_claim_status": airdrop_claim_status,
+            "user_address": address,
+            "airdrop_id": airdrop_id,
+            "airdrop_window_id": airdrop_window_id,
+            "reject_reason": reject_reason,
+            "airdrop_window_rewards": rewards_awarded,
+            "registration_id": registration_id,
+            "is_claimable": is_claimable,
+            "registration_details": registration_details
+        }
+        return response
+
     def register(self, data: dict) -> list | str:
         logger.info(f"Starting the registration process for {self.__class__.__name__}")
         address = data["address"].lower()
@@ -156,7 +197,10 @@ class DefaultAirdrop(BaseAirdrop):
                 is_claimed = airdrop_window_repo.is_airdrop_window_claimed(window.id, address)
                 assert is_registered, "not registered"
                 assert not is_claimed, "already claimed"
-                assert window.claim_end_period > utc_now, "claim period is over"
+                claim_end_period = window.claim_end_period
+                if claim_end_period.tzinfo is None:
+                    claim_end_period = claim_end_period.replace(tzinfo=timezone.utc)
+                assert claim_end_period > utc_now, "claim period is over"
                 registration_repo.update_registration(window.id, address,
                                                       signature=signature,
                                                       signature_details=formatted_message,
