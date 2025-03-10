@@ -19,7 +19,7 @@ class RejuveAirdrop(DefaultAirdrop):
         super().__init__(airdrop_id, airdrop_window_id)
         self.domain_name = "Rejuve Airdrop"
         self.register_all_window_at_once = False
-        self.allow_update_registration = False
+        self.allow_update_registration = True
         self.is_claim_signature_required = True
 
     def check_user_eligibility(self, address: str) -> bool:
@@ -71,7 +71,7 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Signature is not valid")
             raise Exception("Signature is not valid.")
         logger.info("Signature validity confirmed")
-        return message
+        return formatted_message
 
     def recognize_blockchain_network(self, address: str) -> str:
         if address[:2] == "0x":
