@@ -39,9 +39,13 @@ class UserClaimService:
 
     @staticmethod
     def invoke_token_transfer_cardano_service(payload):
+        logger.info("Invoking the cardano token transfer service")
         response = requests.post(TokenTransferCardanoService.url, json=payload,
                                  headers=TokenTransferCardanoService.headers)
         response_body = json.loads(response.text)
+        logger.info("Response from transfer service:\n"
+                    f"Response status code: {response.status_code}\n"
+                    f"Response body: {response_body}")
         if response.status_code != HTTPStatus.OK.value:
             error_message = f'Unable to call token transfer cardano service\nMessage ' \
                             f'{response_body.get("error", {}).get("message", "")}\nDetails  ' \

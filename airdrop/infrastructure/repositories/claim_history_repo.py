@@ -4,6 +4,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.models import ClaimHistory
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ClaimHistoryRepository(BaseRepository):
@@ -34,7 +37,7 @@ class ClaimHistoryRepository(BaseRepository):
             result = self.session.execute(query, {"airdrop_id": airdrop_id, "blockchain_method": blockchain_method,
                                                   "transaction_status": AirdropClaimStatus.PENDING.value}
                                           )
-            for record in result.fetchall():
+            for record in result.mappings().all():
                 cardano_address = record["cardano_address"].strip('\"')
                 response.append({
                     "address": record["address"],
@@ -44,12 +47,15 @@ class ClaimHistoryRepository(BaseRepository):
                 })
             self.session.commit()
         except SQLAlchemyError as e:
+            logger.exception(f"SQLAlchemyError: {str(e)}")
             self.session.rollback()
             raise e
         return response
 
     def update_claim_status(self, address, airdrop_window_id, blockchain_method, transaction_status,
                             transaction_hash=None, transaction_details=None):
+        logger.info(f"Updating claim status for {address = }, {airdrop_window_id = }, "
+                    f"{blockchain_method = } to '{transaction_status}'")
         try:
             claim = self.session.query(ClaimHistory) \
                 .filter(ClaimHistory.address == address, ClaimHistory.airdrop_window_id == airdrop_window_id,
@@ -62,6 +68,7 @@ class ClaimHistoryRepository(BaseRepository):
                     claim.transaction_details = transaction_details
             self.session.commit()
         except SQLAlchemyError as e:
+            logger.exception(f"SQLAlchemyError: {str(e)}")
             self.session.rollback()
             raise e
 
@@ -83,5 +90,6 @@ class ClaimHistoryRepository(BaseRepository):
                 claim.transaction_status = transaction_status
             self.session.commit()
         except SQLAlchemyError as e:
+            logger.exception(f"SQLAlchemyError: {str(e)}")
             self.session.rollback()
             raise e
