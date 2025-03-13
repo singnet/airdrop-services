@@ -1,3 +1,4 @@
+from typing import List
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
 from airdrop.infrastructure.models import AirdropWindow, ClaimHistory
 from sqlalchemy import and_
@@ -36,5 +37,5 @@ class AirdropWindowRepository(BaseRepository):
             .first()
         )
 
-    def get_airdrop_windows(self, airdrop_id):
+    def get_airdrop_windows(self, airdrop_id: int) -> List[AirdropWindow]:
         return self.session.query(AirdropWindow).filter(AirdropWindow.airdrop_id == airdrop_id).all()

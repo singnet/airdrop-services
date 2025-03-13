@@ -1,8 +1,10 @@
 import json
+from typing import Dict, List, Union
 from web3 import Web3
 
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.models import UserRegistration
+from airdrop.application.types.windows import WindowRegistrationData
 from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnapshotRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils
@@ -93,6 +95,50 @@ class RejuveAirdrop(DefaultAirdrop):
         elif network == "Cardano":
             receipt = get_registration_receipt_cardano(airdrop_id, window_id, address, secret_key)
         return receipt
+
+    def generate_multiple_windows_eligibility_response(
+        self,
+        is_user_eligible: bool,
+        airdrop_id: int,
+        address: str,
+        windows_registration_data: List[WindowRegistrationData],
+        rewards_awarded: int,
+        with_signature: bool,
+    ):
+        response = {
+            "is_eligible": is_user_eligible,
+            "windows": {}
+        }
+
+        if with_signature:
+            response.update({
+                "airdrop_window_rewards": rewards_awarded,
+                "user_address": address,
+                "airdrop_id": airdrop_id,
+            })
+
+        for window_data in windows_registration_data:
+            window_info: Dict[str, Union[str, dict, None]] = {
+                "claim_status": window_data.claim_status.value
+            }
+
+            if with_signature:
+                registration_details = {}
+                if window_data.registration_details:
+                    rd = window_data.registration_details
+                    registration_details = {
+                        "registration_id": rd.registration_id,
+                        "reject_reason": rd.reject_reason,
+                        "registered_at": str(rd.registered_at),
+                    }
+
+                window_info["airdrop_window_claim_status"] = window_data.airdrop_window_claim_status.value \
+                    if window_data.airdrop_window_claim_status else None
+                window_info["registration_details"] = registration_details
+
+            response["windows"][window_data.window_id] = window_info
+
+        return response
 
     def generate_eligibility_response(
         self,

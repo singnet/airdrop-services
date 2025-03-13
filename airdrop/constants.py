@@ -16,6 +16,16 @@ ELIGIBILITY_SCHEMA = {
     },
     "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
+
+ADDRESS_ELIGIBILITY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "address": {"type": "string"},
+        "signature": {"type": "string"}
+    },
+    "required": ["address", "airdrop_id"],
+}
+
 USER_REGISTRATION_SCHEMA = {
     "type": "object",
     "properties": {
@@ -118,6 +128,15 @@ USER_CLAIM_SIGNATURE_DEFAULT_FORMAT = {
 
     },
 }
+
+
+class UserClaimStatus(Enum):
+    RECEIVED = "RECEIVED"
+    READY_TO_CLAIM = "READY_TO_CLAIM"
+    NOT_REGISTERED = "NOT_REGISTERED"
+    NOT_STARTED = "NOT_STARTED"
+    PENDING = "PENDING"
+
 
 class AirdropClaimStatus(Enum):
     PENDING = "PENDING"

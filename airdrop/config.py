@@ -7,9 +7,9 @@ NETWORK = {
     "db": {
         "DB_DRIVER": "mysql+pymysql",
         "DB_HOST": "localhost",
-        "DB_USER": "unittest_root",
-        "DB_PASSWORD": "unittest_pwd",
-        "DB_NAME": "airdrop_unittest_db",
+        "DB_USER": "root",
+        "DB_PASSWORD": "",
+        "DB_NAME": "airdrop_dev_rejuve",
         "DB_PORT": 3306,
         "DB_LOGGING": True,
     },

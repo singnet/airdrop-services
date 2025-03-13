@@ -191,6 +191,23 @@ functions:
               - X-Amz-User-Agent
               - x-requested-with
 
+  address_eligibility:
+    handler: airdrop/application/handlers/airdrop_handlers.address_eligibility
+    events:
+      - http:
+          path: /airdrop/address-eligibility
+          method: post
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
   user_eligibility:
     handler: airdrop/application/handlers/airdrop_handlers.user_eligibility
     events:
