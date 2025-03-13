@@ -65,6 +65,18 @@ def airdrop_window_stake_details(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def address_eligibility(event, context):
+    logger.info(f"Got Airdrops Event {event}")
+    status, response = UserRegistrationServices().eligibility_v2(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def user_eligibility(event, context):
     logger.info(f"Got Airdrops Event {event}")
     status, response = UserRegistrationServices().eligibility(request(event))

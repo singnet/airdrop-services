@@ -1,9 +1,17 @@
 from http import HTTPStatus
+from typing import List, Optional
 
 from jsonschema import validate, ValidationError
 
 from airdrop.application.services.airdrop_services import AirdropServices
-from airdrop.constants import ELIGIBILITY_SCHEMA, USER_REGISTRATION_SCHEMA, AirdropClaimStatus
+from airdrop.constants import (
+    ELIGIBILITY_SCHEMA,
+    ADDRESS_ELIGIBILITY_SCHEMA,
+    USER_REGISTRATION_SCHEMA,
+    AirdropClaimStatus,
+    UserClaimStatus
+)
+from airdrop.application.types.windows import WindowRegistrationData, RegistrationDetails
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
@@ -15,6 +23,102 @@ utils = Utils()
 
 
 class UserRegistrationServices:
+
+    @staticmethod
+    def __generate_user_claim_status(
+        user_registered: bool,
+        airdrop_claim_status: Optional[AirdropClaimStatus],
+    ) -> UserClaimStatus:
+        if not user_registered:
+            return UserClaimStatus.NOT_REGISTERED
+        elif airdrop_claim_status == AirdropClaimStatus.SUCCESS:
+            return UserClaimStatus.RECEIVED
+        elif airdrop_claim_status == AirdropClaimStatus.ADA_RECEIVED:
+            return UserClaimStatus.PENDING
+        elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED:
+            return UserClaimStatus.NOT_STARTED
+        else:
+            return UserClaimStatus.READY_TO_CLAIM
+
+    @staticmethod
+    def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
+        user_registered, user_registration = UserRegistrationRepository().get_user_registration_details(address, airdrop_window_id)
+
+        airdrop_claim_status = AirdropWindowRepository().is_airdrop_window_claimed(airdrop_window_id, address)
+
+        user_claim_status = UserRegistrationServices.__generate_user_claim_status(user_registered, airdrop_claim_status)
+
+        registration_details = RegistrationDetails(
+            registration_id=user_registration.receipt_generated,
+            reject_reason=user_registration.reject_reason,
+            other_details=user_registration.signature_details,
+            registered_at=str(user_registered.registered_at)
+        ) if user_registered and user_registration is not None else None
+
+        window_registration_data = WindowRegistrationData(
+            window_id=airdrop_window_id,
+            airdrop_window_claim_status=airdrop_claim_status,
+            claim_status=user_claim_status,
+            registration_details=registration_details
+        )
+
+        return window_registration_data
+
+    @staticmethod
+    def eligibility_v2(inputs: dict) -> tuple:
+        logger.info("Calling the user eligibility v2 check function")
+        try:
+            validate(instance=inputs, schema=ADDRESS_ELIGIBILITY_SCHEMA)
+
+            airdrop_id = inputs["airdrop_id"]
+            address = inputs["address"].lower()
+            signature = inputs.get("signature")
+
+            airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
+            if not airdrop:
+                logger.error("Airdrop id is not valid")
+                raise Exception("Airdrop id is not valid")
+
+            airdrop_windows = AirdropWindowRepository().get_airdrop_windows(airdrop_id)
+            if airdrop_windows is None:
+                logger.error(f"No windows for aidrop: {airdrop_id}")
+                raise Exception(f"No windows for aidrop: {airdrop_id}")
+
+            airdrop_class = AirdropServices.load_airdrop_class(airdrop)
+            airdrop_object = airdrop_class(airdrop_id)
+
+            is_user_eligible = airdrop_object.check_user_eligibility(address)
+
+            with_signature = False
+            if signature is not None:
+                airdrop_object.match_signature(input)
+                with_signature = True
+
+            rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
+
+            windows_registration_data: List[WindowRegistrationData] = []
+
+            for window in airdrop_windows:
+                windows_registration_data.append(
+                    UserRegistrationServices.__get_registration_data(
+                        address=address,
+                        airdrop_window_id=window.id,
+                    )
+                )
+
+            response = airdrop_object.generate_multiple_windows_eligibility_response(
+                is_user_eligible=is_user_eligible,
+                airdrop_id=airdrop_id,
+                address=address,
+                windows_registration_data = windows_registration_data,
+                rewards_awarded=rewards_awarded,
+                with_signature=with_signature
+            )
+        except (ValidationError, BaseException) as e:
+            logger.exception(f"Error: {str(e)}")
+            return HTTPStatus.BAD_REQUEST, str(e)
+        return HTTPStatus.OK, response
+
 
     @staticmethod
     def eligibility(inputs: dict) -> tuple:

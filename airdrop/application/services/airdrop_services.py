@@ -2,6 +2,7 @@ import ast
 from datetime import datetime
 from http import HTTPStatus
 from pydoc import locate
+from typing import Type
 
 import web3
 from eth_account.messages import encode_defunct
@@ -9,18 +10,34 @@ from jsonschema import validate, ValidationError
 from web3 import Web3
 
 from airdrop.config import NETWORK, DEFAULT_REGION
-from airdrop.config import SIGNER_PRIVATE_KEY, SIGNER_PRIVATE_KEY_STORAGE_REGION, \
-    NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION, NUNET_SIGNER_PRIVATE_KEY, SLACK_HOOK
-from airdrop.constants import STAKING_CONTRACT_PATH, CLAIM_SCHEMA, AirdropEvents, AirdropClaimStatus, \
+from airdrop.config import (
+    SIGNER_PRIVATE_KEY,
+    SIGNER_PRIVATE_KEY_STORAGE_REGION,
+    NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION,
+    NUNET_SIGNER_PRIVATE_KEY,
+    SLACK_HOOK
+)
+from airdrop.constants import (
+    STAKING_CONTRACT_PATH,
+    CLAIM_SCHEMA,
+    AirdropEvents,
+    AirdropClaimStatus,
     PROCESSOR_PATH
+)
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
-from airdrop.processor.default_airdrop import DefaultAirdrop
+from airdrop.processor.default_airdrop import DefaultAirdrop, BaseAirdrop
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
-from common.utils import generate_claim_signature, generate_claim_signature_with_total_eligibile_amount, \
-    get_contract_instance, get_transaction_receipt_from_blockchain, get_checksum_address, Utils
+from common.utils import (
+    generate_claim_signature,
+    generate_claim_signature_with_total_eligibile_amount,
+    get_contract_instance,
+    get_transaction_receipt_from_blockchain,
+    get_checksum_address,
+    Utils
+)
 
 logger = get_logger(__name__)
 
@@ -485,9 +502,13 @@ class AirdropServices:
             raise Exception("Unable to fetch private key for generating claim signature.")
 
     @staticmethod
-    def load_airdrop_class(airdrop):
+    def load_airdrop_class(airdrop) -> Type[BaseAirdrop]:
         if airdrop.airdrop_processor:
             airdrop_class = locate(f"{PROCESSOR_PATH}.{airdrop.airdrop_processor}")
+            if not isinstance(airdrop_class, type):
+                raise TypeError(f"Located object {airdrop_class} is not a class.")
+            if not issubclass(airdrop_class, BaseAirdrop):
+                raise TypeError(f"{airdrop_class} is not a subclass of BaseAirdrop")
         else:
             airdrop_class = DefaultAirdrop
         return airdrop_class

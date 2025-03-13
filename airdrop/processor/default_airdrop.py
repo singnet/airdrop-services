@@ -84,6 +84,9 @@ class DefaultAirdrop(BaseAirdrop):
         logger.info("Signature validity confirmed")
         return formatted_message
 
+    def generate_multiple_windows_eligibility_response(self, **kwargs):
+        pass
+
     def generate_eligibility_response(
         self,
         airdrop_id: int,

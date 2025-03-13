@@ -71,5 +71,17 @@ class BaseAirdrop(ABC):
         pass
 
     @abstractmethod
+    def generate_multiple_windows_eligibility_response(self, **kwargs) -> list:
+        pass
+
+    @abstractmethod
+    def check_user_eligibility(self, *args, **kwargs) -> bool:
+        pass
+
+    @abstractmethod
+    def match_signature(self, *args, **kwargs) -> dict:
+        pass
+
+    @abstractmethod
     def generate_eligibility_response(self, **kwargs):
         pass

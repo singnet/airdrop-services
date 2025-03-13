@@ -1,4 +1,4 @@
-from datetime import datetime
+from typing import Optional, Tuple
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -121,7 +121,12 @@ class UserRegistrationRepository(BaseRepository):
         else:
             return False
 
-    def get_user_registration_details(self, address=None, airdrop_window_id=None, registration_id=None):
+    def get_user_registration_details(
+        self,
+        address: Optional[str] = None,
+        airdrop_window_id: Optional[int] = None,
+        registration_id: Optional[str] = None
+    ) -> Tuple[bool, Optional[UserRegistration]]:
         query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
         if address:
             query = query.filter(UserRegistration.address == address)
