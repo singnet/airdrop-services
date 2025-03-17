@@ -41,8 +41,8 @@ class RejuveAirdrop(DefaultAirdrop):
     def format_user_registration_signature_message(
         self,
         address: str,
-        block_number: int | None,
-        wallet_name: str | None,
+        block_number: int,
+        wallet_name: str,
     ) -> dict:
         formatted_message = {
             "airdropId": self.id,
@@ -60,8 +60,8 @@ class RejuveAirdrop(DefaultAirdrop):
         self,
         address: str,
         signature: str,
-        block_number: int | None,
-        wallet_name: str | None,
+        block_number: int,
+        wallet_name: str,
         key: str | None,
     ) -> dict:
         utils = Utils()
@@ -93,7 +93,6 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Invalid signature")
             raise ValueError("Signature is not valid.")
 
-        logger.info("Signature validity confirmed")
         return formatted_message
 
 
