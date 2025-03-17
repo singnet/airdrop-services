@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import List, Optional
+from typing import List
 
 from jsonschema import validate, ValidationError
 
@@ -27,7 +27,7 @@ class UserRegistrationServices:
     @staticmethod
     def __generate_user_claim_status(
         user_registered: bool,
-        airdrop_claim_status: Optional[AirdropClaimStatus],
+        airdrop_claim_status: AirdropClaimStatus | None,
     ) -> UserClaimStatus:
         if not user_registered:
             return UserClaimStatus.NOT_REGISTERED
@@ -73,6 +73,9 @@ class UserRegistrationServices:
             airdrop_id = inputs["airdrop_id"]
             address = inputs["address"].lower()
             signature = inputs.get("signature")
+            block_number = inputs.get("block_number")
+            wallet_name = inputs.get("wallet_name")
+            key = inputs.get("key")
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
@@ -91,13 +94,17 @@ class UserRegistrationServices:
 
             with_signature = False
             if signature is not None:
-                airdrop_object.match_signature(input)
+                airdrop_object.match_signature(
+                    address=address,
+                    signature=signature,
+                    block_number=block_number,
+                    wallet_name=wallet_name,
+                    key=key
+                )
                 with_signature = True
 
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
-
             windows_registration_data: List[WindowRegistrationData] = []
-
             for window in airdrop_windows:
                 windows_registration_data.append(
                     UserRegistrationServices.__get_registration_data(
@@ -118,7 +125,6 @@ class UserRegistrationServices:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response
-
 
     @staticmethod
     def eligibility(inputs: dict) -> tuple:

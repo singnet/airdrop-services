@@ -37,8 +37,7 @@ class DefaultAirdrop(BaseAirdrop):
 
         return user_eligible_for_given_window
 
-    def format_user_registration_signature_message(self, address: str, signature_parameters: dict) -> dict:
-        block_number = signature_parameters["block_number"]
+    def format_user_registration_signature_message(self, address: str, block_number: str) -> dict:
         formatted_message = USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
         formatted_message["message"] = {
             "Airdrop": {
@@ -69,13 +68,12 @@ class DefaultAirdrop(BaseAirdrop):
                              int(self.window_id), contract_address, token_address]
         return self.claim_signature_data_format, formatted_message
 
-    def match_signature(self, data: dict) -> dict:
-        address = data["address"].lower()
+    def match_signature(self, address: str, signature: str, block_number: str) -> dict:
+        address = address.lower()
         checksum_address = Web3.to_checksum_address(address)
-        signature = data["signature"]
         logger.info(f"Start of the signature matching for {address = }, {signature = }")
         utils = Utils()
-        formatted_message = self.format_user_registration_signature_message(checksum_address, data)
+        formatted_message = self.format_user_registration_signature_message(checksum_address, block_number)
         formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
         sign_verified, _ = utils.match_ethereum_signature_eip712(address, formatted_message, formatted_signature)
         if not sign_verified:

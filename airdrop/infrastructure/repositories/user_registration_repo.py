@@ -14,7 +14,6 @@ class UserRegistrationRepository(BaseRepository):
 
     def subscribe_to_notifications(self, email, airdrop_id):
         try:
-
             is_existing_email = self.session.query(UserNotifications.id).filter(
                 UserNotifications.email == email).filter(UserNotifications.airdrop_id == airdrop_id).first()
 
@@ -27,7 +26,6 @@ class UserRegistrationRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-
 
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (
