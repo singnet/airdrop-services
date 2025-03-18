@@ -68,12 +68,12 @@ class DefaultAirdrop(BaseAirdrop):
                              int(self.window_id), contract_address, token_address]
         return self.claim_signature_data_format, formatted_message
 
-    def match_signature(self, address: str, signature: str, block_number: str) -> dict:
+    def match_signature(self, address: str, signature: str, block_number: int, **kwargs) -> dict:
         address = address.lower()
         checksum_address = Web3.to_checksum_address(address)
         logger.info(f"Start of the signature matching for {address = }, {signature = }")
         utils = Utils()
-        formatted_message = self.format_user_registration_signature_message(checksum_address, block_number)
+        formatted_message = self.format_user_registration_signature_message(checksum_address, block_number, **kwargs)
         formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
         sign_verified, _ = utils.match_ethereum_signature_eip712(address, formatted_message, formatted_signature)
         if not sign_verified:
@@ -135,10 +135,16 @@ class DefaultAirdrop(BaseAirdrop):
         airdrop_window_repo = AirdropWindowRepository()
         airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
 
-        formatted_message = self.match_signature(data)
+        formatted_message = self.match_signature(
+            address=address,
+            signature=signature,
+            block_number=block_number
+        )
 
-        is_registration_open = self.is_registration_window_open(airdrop_window.registration_start_period,
-                                                                airdrop_window.registration_end_period)
+        is_registration_open = self.is_registration_window_open(
+            airdrop_window.registration_start_period,
+            airdrop_window.registration_end_period
+        )
         if airdrop_window.registration_required and not is_registration_open:
             logger.error("Airdrop window is not accepting registration at this moment")
             raise Exception("Airdrop window is not accepting registration at this moment")
@@ -180,7 +186,11 @@ class DefaultAirdrop(BaseAirdrop):
         airdrop_window_repo = AirdropWindowRepository()
         airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
 
-        formatted_message = self.match_signature(data)
+        formatted_message = self.match_signature(
+            address=address,
+            signature=signature,
+            block_number=block_number
+        )
 
         if not self.allow_update_registration:
             raise Exception("Registration update not allowed.")
