@@ -137,7 +137,7 @@ class RejuveAirdrop(DefaultAirdrop):
             key=key,
         )
 
-        is_registration_open = self.is_registration_window_open(
+        is_registration_open = self.is_phase_window_open(
             airdrop_window.registration_start_period,
             airdrop_window.registration_end_period
         )
@@ -174,10 +174,12 @@ class RejuveAirdrop(DefaultAirdrop):
 
         Steps:
         1. Validate the airdrop window exists.
-        2. Check if the user is eligible for the airdrop.
-        3. Match the provided signature to confirm identity.
-        4. Ensure the user is already registered.
-        5. Update the registration with new signature details.
+        2. Check if claim phase is open.
+        3. Check if the user is eligible for the airdrop.
+        4. Match the provided signature to confirm identity.
+        5. Ensure the user is already registered.
+        6. Generate new receipt.
+        7. Update the registration with new signature details.
         """
         logger.info(f"Starting registration update process for {self.__class__.__name__}")
 
@@ -194,6 +196,12 @@ class RejuveAirdrop(DefaultAirdrop):
         airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
         if not airdrop_window:
             raise Exception(f"Airdrop window does not exist: {self.window_id}")
+
+        if not self.is_phase_window_open(
+            airdrop_window.claim_start_period,
+            airdrop_window.claim_end_period
+        ):
+            raise Exception("Airdrop window is not accepting claim at this moment")
 
         if not self.check_user_eligibility(address=address):
             logger.error(f"Address {address} is not eligible for airdrop in window {self.window_id}")
@@ -212,10 +220,13 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error(f"Address {address} is not registered for window {self.window_id}")
             raise Exception("Address is not registered for this airdrop window.")
 
+        receipt = self.generate_user_registration_receipt(self.id, self.window_id, reward_address)
+
         registration_repo.update_registration(
             airdrop_window_id=self.window_id,
             address=address,
             signature_details=signature_details,
+            receipt=receipt
         )
 
     def generate_multiple_windows_eligibility_response(

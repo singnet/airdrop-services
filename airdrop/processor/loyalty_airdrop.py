@@ -95,8 +95,10 @@ class LoyaltyAirdrop(DefaultAirdrop):
             cardano_wallet_name=cardano_wallet_name
         )
 
-        is_registration_open = self.is_registration_window_open(airdrop_window.registration_start_period,
-                                                                airdrop_window.registration_end_period)
+        is_registration_open = self.is_phase_window_open(
+            airdrop_window.registration_start_period,
+            airdrop_window.registration_end_period
+        )
         if airdrop_window.registration_required and not is_registration_open:
             logger.error("Airdrop window is not accepting registration at this moment")
             raise Exception("Airdrop window is not accepting registration at this moment")

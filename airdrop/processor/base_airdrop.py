@@ -31,7 +31,7 @@ class BaseAirdrop(ABC):
         pass
 
     @staticmethod
-    def is_registration_window_open(start_period, end_period) -> bool:
+    def is_phase_window_open(start_period, end_period) -> bool:
         now = datetime_in_utcnow()
 
         if start_period.tzinfo is None:

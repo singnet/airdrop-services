@@ -141,7 +141,7 @@ class DefaultAirdrop(BaseAirdrop):
             block_number=block_number
         )
 
-        is_registration_open = self.is_registration_window_open(
+        is_registration_open = self.is_phase_window_open(
             airdrop_window.registration_start_period,
             airdrop_window.registration_end_period
         )
