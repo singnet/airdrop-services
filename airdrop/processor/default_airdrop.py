@@ -37,7 +37,7 @@ class DefaultAirdrop(BaseAirdrop):
 
         return user_eligible_for_given_window
 
-    def format_user_registration_signature_message(self, address: str, block_number: str) -> dict:
+    def format_user_registration_signature_message(self, address: str, block_number: int) -> dict:
         formatted_message = USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT
         formatted_message["message"] = {
             "Airdrop": {

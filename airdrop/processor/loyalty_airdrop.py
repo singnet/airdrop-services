@@ -43,7 +43,7 @@ class LoyaltyAirdrop(DefaultAirdrop):
     def format_user_registration_signature_message(
         self,
         address: str,
-        block_number: str,
+        block_number: int,
         cardano_address: str,
         cardano_wallet_name: str
     ) -> dict:
