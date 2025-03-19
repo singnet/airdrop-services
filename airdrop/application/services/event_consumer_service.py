@@ -191,8 +191,12 @@ class DepositEventConsumerService(EventConsumerService):
 
         # Update transaction status for ADA deposited
         blockchain_method = "ada_transfer"
-        ClaimHistoryRepository().update_claim_status(ethereum_address, airdrop_window_id, blockchain_method,
-                                                     AirdropClaimStatus.ADA_RECEIVED.value)
+        ClaimHistoryRepository().update_claim_status(
+            ethereum_address,
+            airdrop_window_id,
+            blockchain_method,
+            AirdropClaimStatus.ADA_RECEIVED.value
+        )
 
         # Get claimable amount
         claimable_amount = AirdropRepository().fetch_total_rewards_amount(airdrop_id, ethereum_address)

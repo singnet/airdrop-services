@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -9,10 +7,6 @@ from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow,
     ClaimHistory, UserReward
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
 
-from pydoc import locate
-from airdrop.constants import PROCESSOR_PATH
-from airdrop.processor.default_airdrop import DefaultAirdrop
-from airdrop.processor.loyalty_airdrop import LoyaltyAirdrop
 from airdrop.utils import datetime_in_utcnow
 
 
@@ -268,7 +262,7 @@ class AirdropRepository(BaseRepository):
 
         return total_rewards, user_wallet_address, contract_address, token_address, staking_contract_address, total_eligibility_amount
 
-    def fetch_total_rewards_amount(self, airdrop_id, address):
+    def fetch_total_rewards_amount(self, airdrop_id, address, airdrop_class: str | None = None):
         in_progress_or_completed_tx_statuses = (
             AirdropClaimStatus.SUCCESS.value, AirdropClaimStatus.PENDING.value,
             AirdropClaimStatus.CLAIM_INITIATED.value, AirdropClaimStatus.CLAIM_SUBMITTED.value,
@@ -282,11 +276,8 @@ class AirdropRepository(BaseRepository):
             # Fix for the Loyalty Airdrop rewards (sum all unclaimed windows, not just those after the last one claimed)
             # Original query is in the else block
             # TODO: make more universal query for fetching total rewards amount
-            airdrop = self.get_airdrop_details(airdrop_id)
-            airdrop_class_path = f"{PROCESSOR_PATH}.{airdrop.airdrop_processor}"
-            airdrop_class = locate(airdrop_class_path) if airdrop.airdrop_processor else DefaultAirdrop
 
-            if airdrop_class is LoyaltyAirdrop:
+            if airdrop_class in ("LoyaltyAirdrop", "RejuveAirdrop"):
                 query_rewards = text(
                     "SELECT IFNULL( SUM(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw "
                     "WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address AND aw.airdrop_id = :airdrop_id "

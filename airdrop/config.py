@@ -70,6 +70,13 @@ class LoyaltyAirdropConfig(Enum):
     chain = "Cardano"
 
 
+class RejuveAirdropConfig(Enum):
+    deposit_address = "addr"
+    claim_address = "addr"
+    pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
+    chain = "Cardano"
+
+
 class BlockFrostAccountDetails:
     project_id = ""
 

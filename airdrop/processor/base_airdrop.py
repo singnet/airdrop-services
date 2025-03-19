@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import timezone
-from typing import Optional
+from typing import Tuple, Optional
 
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY, AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION
 from airdrop.utils import datetime_in_utcnow
@@ -32,7 +32,7 @@ class BaseAirdrop(ABC):
         pass
 
     @staticmethod
-    def is_registration_window_open(start_period, end_period) -> bool:
+    def is_phase_window_open(start_period, end_period) -> bool:
         now = datetime_in_utcnow()
 
         if start_period.tzinfo is None:
@@ -85,4 +85,8 @@ class BaseAirdrop(ABC):
 
     @abstractmethod
     def generate_eligibility_response(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_claimable_amount(self, **kwargs) -> Tuple[int, int]:
         pass
