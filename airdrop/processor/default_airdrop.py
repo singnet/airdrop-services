@@ -1,5 +1,6 @@
 from datetime import timezone
 import inspect
+from typing import Tuple
 from web3 import Web3
 
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT, AirdropClaimStatus
@@ -11,6 +12,7 @@ from airdrop.processor.base_airdrop import BaseAirdrop
 from airdrop.utils import Utils, datetime_in_utcnow
 from common.exceptions import RequiredDataNotFound
 from common.logger import get_logger
+from infrastructure.repositories.airdrop_repository import AirdropRepository
 
 logger = get_logger(__name__)
 
@@ -225,3 +227,13 @@ class DefaultAirdrop(BaseAirdrop):
                 response.append({"airdrop_window_id": window.id, "warning": warning})
 
         return response
+
+    def get_claimable_amount(self, user_address: str) -> Tuple[int, int]:
+        airdrop_window_repo = AirdropRepository()
+        claimable_amount = airdrop_window_repo.fetch_total_rewards_amount(self.id, user_address, "LoyaltyAirDrop")
+        total_eligible_amount = airdrop_window_repo.fetch_total_eligibility_amount(self.id, user_address)
+        
+        if claimable_amount == 0:
+            raise Exception("Airdrop Already claimed / pending")
+
+        return claimable_amount, total_eligible_amount

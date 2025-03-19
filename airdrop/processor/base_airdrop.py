@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import timezone
+from typing import Tuple
 
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY, AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION
 from airdrop.utils import datetime_in_utcnow
@@ -84,4 +85,8 @@ class BaseAirdrop(ABC):
 
     @abstractmethod
     def generate_eligibility_response(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_claimable_amount(self, **kwargs) -> Tuple[int, int]:
         pass

@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 from web3 import Web3
 
 from airdrop.constants import AirdropClaimStatus
@@ -10,11 +10,13 @@ from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnap
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils
+from airdrop.config import RejuveAirdropConfig
 from common.logger import get_logger
 from common.utils import (
     get_registration_receipt_cardano,
     get_registration_receipt_ethereum
 )
+from infrastructure.repositories.airdrop_repository import AirdropRepository
 
 logger = get_logger(__name__)
 
@@ -27,6 +29,11 @@ class RejuveAirdrop(DefaultAirdrop):
         self.register_all_window_at_once = False
         self.allow_update_registration = True
         self.is_claim_signature_required = True
+        self.chain_context = {
+            "deposit_address": RejuveAirdropConfig.deposit_address.value,
+            "amount": RejuveAirdropConfig.pre_claim_transfer_amount.value["amount"],
+            "chain": RejuveAirdropConfig.chain.value
+        }
 
     def check_user_eligibility(self, address: str) -> bool:
         user_balance_snapshot_repository = UserBalanceSnapshotRepository()
@@ -311,3 +318,13 @@ class RejuveAirdrop(DefaultAirdrop):
             "registration_details": registration_details
         }
         return response
+
+    def get_claimable_amount(self, user_address: str) -> Tuple[int, int]:
+        airdrop_window_repo = AirdropRepository()
+        claimable_amount = airdrop_window_repo.fetch_total_rewards_amount(self.id, user_address, airdrop_class="RejuveAirdrop")
+        total_eligible_amount = airdrop_window_repo.fetch_total_eligibility_amount(self.id, user_address)
+
+        if claimable_amount == 0:
+            raise Exception("Airdrop Already claimed / pending")
+
+        return claimable_amount, total_eligible_amount

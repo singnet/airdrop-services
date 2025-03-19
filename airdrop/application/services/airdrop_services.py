@@ -7,7 +7,7 @@ from typing import Type
 import web3
 from eth_account.messages import encode_defunct
 from jsonschema import validate, ValidationError
-from web3 import Web3
+from web3 import Web3, types
 
 from airdrop.config import NETWORK, DEFAULT_REGION
 from airdrop.config import (
@@ -76,7 +76,7 @@ class AirdropServices:
             except BaseException as e:
                 print(f"Exception on Airdrop Txn Watcher {e}")
 
-    def get_txn_receipt(self, txn_hash):
+    def get_txn_receipt(self, txn_hash: str) -> types.TxReceipt:
         try:
             return get_transaction_receipt_from_blockchain(txn_hash)
         except BaseException as e:
@@ -351,14 +351,10 @@ class AirdropServices:
             if airdrop_window is None:
                 raise Exception("Airdrop window id is not valid.")
 
-            claimable_amount = AirdropRepository().fetch_total_rewards_amount(airdrop_id, user_address)
-            total_eligible_amount = AirdropRepository().fetch_total_eligibility_amount(airdrop_id, user_address)
-
-            if claimable_amount == 0:
-                raise Exception("Airdrop Already claimed / pending")
-
             airdrop_class = self.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
+
+            claimable_amount, total_eligible_amount = airdrop_object.get_claimable_amount(user_address=user_address)
 
             if airdrop_object.is_claim_signature_required:
                 claim_signature_private_key = self.get_private_key_for_generating_claim_signature(
