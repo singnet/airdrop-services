@@ -29,16 +29,30 @@ class UserRegistrationServices:
         user_registered: bool,
         airdrop_claim_status: AirdropClaimStatus | None,
     ) -> UserClaimStatus:
+        logger.debug(
+            f"Generate user claim status. \
+            user_registerd: {user_registered}, \
+            airdrop_claim_status: {airdrop_claim_status}")
         if not user_registered:
             return UserClaimStatus.NOT_REGISTERED
         elif airdrop_claim_status == AirdropClaimStatus.SUCCESS:
             return UserClaimStatus.RECEIVED
-        elif airdrop_claim_status == AirdropClaimStatus.ADA_RECEIVED:
+        elif airdrop_claim_status in (
+            AirdropClaimStatus.ADA_RECEIVED,
+            AirdropClaimStatus.CLAIM_INITIATED,
+            AirdropClaimStatus.CLAIM_SUBMITTED
+        ):
             return UserClaimStatus.PENDING
         elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED:
             return UserClaimStatus.NOT_STARTED
-        else:
+        elif airdrop_claim_status in (
+            AirdropClaimStatus.FAILED,
+            None
+        ):
             return UserClaimStatus.READY_TO_CLAIM
+        else:
+            logger.error(f"Unexpected aidrop_claim_status: {airdrop_claim_status}")
+            raise Exception(f"Unexpected aidrop_claim_status: {airdrop_claim_status}")
 
     @staticmethod
     def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
@@ -90,7 +104,10 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id)
 
-            is_user_eligible = airdrop_object.check_user_eligibility(address)
+            is_user_eligible = airdrop_object.check_user_eligibility(
+                address,
+                [window.id for window in airdrop_windows]
+            )
 
             with_signature = False
             if signature is not None:

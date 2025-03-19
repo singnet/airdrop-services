@@ -35,15 +35,13 @@ class RejuveAirdrop(DefaultAirdrop):
             "chain": RejuveAirdropConfig.chain.value
         }
 
-    def check_user_eligibility(self, address: str) -> bool:
-        user_balance_snapshot_repository = UserBalanceSnapshotRepository()
-        user_balance = user_balance_snapshot_repository.get_data_by_address(
+    def check_user_eligibility(self, address: str, window_ids: List[int]) -> bool:
+        user_balances = UserBalanceSnapshotRepository().get_balances_by_address(
             address=address,
-            window_id=self.window_id
+            window_ids=window_ids
         )
-        if user_balance:
-            return True
-        return False
+
+        return True if user_balances else False
 
     def format_user_registration_signature_message(
         self,
