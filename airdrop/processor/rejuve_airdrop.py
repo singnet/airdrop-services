@@ -5,6 +5,7 @@ from web3 import Web3
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration
 from airdrop.application.types.windows import WindowRegistrationData
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnapshotRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
@@ -16,7 +17,6 @@ from common.utils import (
     get_registration_receipt_cardano,
     get_registration_receipt_ethereum
 )
-from infrastructure.repositories.airdrop_repository import AirdropRepository
 
 logger = get_logger(__name__)
 

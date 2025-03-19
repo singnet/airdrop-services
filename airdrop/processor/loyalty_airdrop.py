@@ -1,3 +1,4 @@
+from datetime import timezone
 from airdrop.infrastructure.models import AirdropWindow
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
@@ -5,6 +6,7 @@ from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.constants import (USER_REGISTRATION_SIGNATURE_LOYALTY_AIRDROP_FORMAT,
                                USER_CLAIM_SIGNATURE_DEFAULT_FORMAT)
 from airdrop.config import LoyaltyAirdropConfig
+from airdrop.utils import datetime_in_utcnow
 from common.logger import get_logger
 
 logger = get_logger(__name__)

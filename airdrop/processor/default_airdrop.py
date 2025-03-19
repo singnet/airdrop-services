@@ -6,13 +6,13 @@ from web3 import Web3
 from airdrop.constants import USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT, AirdropClaimStatus
 from airdrop.config import NUNET_SIGNER_PRIVATE_KEY
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.base_airdrop import BaseAirdrop
 from airdrop.utils import Utils, datetime_in_utcnow
 from common.exceptions import RequiredDataNotFound
 from common.logger import get_logger
-from infrastructure.repositories.airdrop_repository import AirdropRepository
 
 logger = get_logger(__name__)
 
