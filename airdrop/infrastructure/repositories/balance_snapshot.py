@@ -1,7 +1,7 @@
 from typing import List
 from sqlalchemy.exc import SQLAlchemyError
 
-from airdrop.infrastructure.models import UserBalanceSnapshot
+from airdrop.infrastructure.models import UserBalanceSnapshot, AirdropWindow
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
 from common.logger import get_logger
 
@@ -27,15 +27,21 @@ class UserBalanceSnapshotRepository(BaseRepository):
             self.session.rollback()
             raise e
 
-    def get_balances_by_address(
-        self, address: str, window_ids: List[int]
+    def get_balances_by_address_for_airdrop(
+        self,
+        address: str,
+        airdrop_id: int
     ) -> List[UserBalanceSnapshot] | None:
         try:
             user_balances = (
                 self.session.query(UserBalanceSnapshot)
+                .join(
+                    AirdropWindow,
+                    UserBalanceSnapshot.airdrop_window_id == AirdropWindow.id
+                )
                 .filter(
+                    AirdropWindow.airdrop_id == airdrop_id,
                     UserBalanceSnapshot.address == address,
-                    UserBalanceSnapshot.airdrop_window_id.in_(window_ids),
                 )
                 .all()
             )

@@ -204,13 +204,13 @@ class UserRegistrationServices:
         return HTTPStatus.OK, response
 
     @staticmethod
-    def register(inputs: dict) -> tuple:
+    def register(data: dict) -> tuple:
         logger.info("Calling the user registration function")
         try:
-            validate(instance=inputs, schema=USER_REGISTRATION_SCHEMA)
+            validate(instance=data, schema=USER_REGISTRATION_SCHEMA)
 
-            airdrop_id = inputs["airdrop_id"]
-            airdrop_window_id = inputs["airdrop_window_id"]
+            airdrop_id = data["airdrop_id"]
+            airdrop_window_id = data["airdrop_window_id"]
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
@@ -225,20 +225,20 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            response: list | str = airdrop_object.register(inputs)
+            response: list | str = airdrop_object.register(data=data)
         except (ValidationError, BaseException) as e:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response
 
     @staticmethod
-    def update_registration(inputs) -> tuple:
+    def update_registration(data) -> tuple:
         logger.info("Calling the user registration update function")
         try:
-            validate(instance=inputs, schema=USER_REGISTRATION_SCHEMA)
+            validate(instance=data, schema=USER_REGISTRATION_SCHEMA)
 
-            airdrop_id = inputs["airdrop_id"]
-            airdrop_window_id = inputs["airdrop_window_id"]
+            airdrop_id = data["airdrop_id"]
+            airdrop_window_id = data["airdrop_window_id"]
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
@@ -253,7 +253,7 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            response: list | str = airdrop_object.update_registration(inputs)
+            response: list | str = airdrop_object.update_registration(data=data)
         except (ValidationError, BaseException) as e:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)

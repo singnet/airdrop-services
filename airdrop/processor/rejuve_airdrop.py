@@ -35,10 +35,10 @@ class RejuveAirdrop(DefaultAirdrop):
             "chain": RejuveAirdropConfig.chain.value
         }
 
-    def check_user_eligibility(self, address: str, window_ids: List[int]) -> bool:
-        user_balances = UserBalanceSnapshotRepository().get_balances_by_address(
+    def check_user_eligibility(self, address: str) -> bool:
+        user_balances = UserBalanceSnapshotRepository().get_balances_by_address_for_airdrop(
             address=address,
-            window_ids=window_ids
+            airdrop_id=self.id
         )
 
         return True if user_balances else False
@@ -99,7 +99,6 @@ class RejuveAirdrop(DefaultAirdrop):
             raise ValueError("Signature is not valid.")
 
         return formatted_message
-
 
     def recognize_blockchain_network(self, address: str) -> str:
         if address[:2] == "0x":
