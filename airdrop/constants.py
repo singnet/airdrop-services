@@ -21,7 +21,6 @@ ADDRESS_ELIGIBILITY_SCHEMA = {
     "type": "object",
     "properties": {
         "address": {"type": "string"},
-        "signature": {"type": "string"}
     },
     "required": ["address", "airdrop_id"],
 }

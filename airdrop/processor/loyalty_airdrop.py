@@ -82,7 +82,7 @@ class LoyaltyAirdrop(DefaultAirdrop):
         address = data["address"].lower()
         signature = data["signature"]
         block_number = data["block_number"]
-        cardano_address = data["cardano_addres"]
+        cardano_address = data["cardano_address"]
         cardano_wallet_name = data["cardano_wallet_name"]
 
         registration_repo = UserRegistrationRepository()

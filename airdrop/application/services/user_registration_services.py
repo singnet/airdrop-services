@@ -66,7 +66,7 @@ class UserRegistrationServices:
             registration_id=user_registration.receipt_generated,
             reject_reason=user_registration.reject_reason,
             other_details=user_registration.signature_details,
-            registered_at=str(user_registered.registered_at)
+            registered_at=str(user_registration.registered_at)
         ) if user_registered and user_registration is not None else None
 
         window_registration_data = WindowRegistrationData(
