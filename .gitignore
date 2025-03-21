@@ -145,7 +145,7 @@ package-lock.json
 .idea/**
 external_packages/**
 
-config.py
+*/config.py
 config.local.json
 /package.json
 /requirements.txt
