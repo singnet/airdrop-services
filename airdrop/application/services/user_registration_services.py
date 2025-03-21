@@ -15,11 +15,9 @@ from airdrop.application.types.windows import WindowRegistrationData, Registrati
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
-from airdrop.utils import Utils
 from common.logger import get_logger
 
 logger = get_logger(__name__)
-utils = Utils()
 
 
 class UserRegistrationServices:
@@ -253,7 +251,7 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            response: list | str = airdrop_object.update_registration(data=data)
+            response: dict | list | str = airdrop_object.update_registration(data=data)
         except (ValidationError, BaseException) as e:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)

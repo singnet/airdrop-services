@@ -35,7 +35,7 @@ TOKEN_SNAPSHOT_DB_CONFIG = {
     "DB_LOGGING": True,
 }
 
-NETWORK_ID = 5
+NETWORK_ID = 11155111
 DEFAULT_REGION = "us-east-1"
 SLACK_HOOK = {
     "hostname": "https://hooks.slack.com",
