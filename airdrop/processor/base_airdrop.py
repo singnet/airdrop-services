@@ -68,11 +68,11 @@ class BaseAirdrop(ABC):
         pass
 
     @abstractmethod
-    def update_registration(self, **kwargs) -> list:
+    def update_registration(self, **kwargs) -> list | dict:
         pass
 
     @abstractmethod
-    def generate_multiple_windows_eligibility_response(self, **kwargs) -> list:
+    def generate_multiple_windows_eligibility_response(self, **kwargs) -> dict:
         pass
 
     @abstractmethod
@@ -84,9 +84,13 @@ class BaseAirdrop(ABC):
         pass
 
     @abstractmethod
-    def generate_eligibility_response(self, **kwargs):
+    def generate_eligibility_response(self, **kwargs) -> dict:
         pass
 
     @abstractmethod
     def get_claimable_amount(self, **kwargs) -> Tuple[int, int]:
+        pass
+
+    @abstractmethod
+    def validate_deposit_event(self, **kwargs) -> None:
         pass

@@ -1,10 +1,15 @@
 from datetime import datetime, timezone
+from http import HTTPStatus
+import json
 
 import cbor2
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from eth_account.messages import encode_defunct, encode_typed_data
+import requests
 from web3 import Web3
 
+from airdrop.config import BlockFrostAccountDetails
+from airdrop.constants import BlockFrostAPI
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -14,8 +19,27 @@ def datetime_in_utcnow():
     return datetime.now(timezone.utc)
 
 
-
 class Utils:
+    @staticmethod
+    def recognize_blockchain_network(address: str) -> str:
+        if address[:2] == "0x":
+            return "Ethereum"
+        elif address[:4] == "addr":
+            return "Cardano"
+        else:
+            return "Unknown"
+
+    @staticmethod
+    def get_stake_key_address(address):
+        logger.info(f"Getting stake key for the address={address}")
+        url = BlockFrostAPI.get_stake_address.format(address=address)
+        response = requests.get(url, headers={"project_id": BlockFrostAccountDetails.project_id})
+        if response.status_code == HTTPStatus.OK:
+            return json.loads(response.text)["stake_address"]
+        raise Exception(f"Error in fetching stake key address\n"
+                        f"Response from blockfrost API:\n"
+                        f"Status: {response}"
+                        f"Details: {response.text}")
 
     @staticmethod
     def match_ethereum_signature_eip191(
@@ -50,8 +74,8 @@ class Utils:
             signature_verified = True
         return signature_verified, extracted_address
 
+    @staticmethod
     def match_cardano_signature(
-        self,
         message_hex: str,
         signature_hex: str,
         key_hex: str
@@ -84,7 +108,7 @@ class Utils:
 
             sig_structure_cbor = cbor2.dumps(sig_structure)
             public_key.verify(signature, sig_structure_cbor)
-            logger.info(f"Cardano signature verified successfully")
+            logger.info("Cardano signature verified successfully")
             return True
         except Exception as e:
             logger.exception(f"Exception: {str(e)}")
