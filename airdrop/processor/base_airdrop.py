@@ -92,5 +92,5 @@ class BaseAirdrop(ABC):
         pass
 
     @abstractmethod
-    def validate_deposit_event(self, **kwargs) -> dict:
+    def validate_deposit_event(self, **kwargs):
         pass
