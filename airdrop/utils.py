@@ -19,7 +19,6 @@ def datetime_in_utcnow():
     return datetime.now(timezone.utc)
 
 
-
 class Utils:
     @staticmethod
     def recognize_blockchain_network(address: str) -> str:
@@ -75,8 +74,8 @@ class Utils:
             signature_verified = True
         return signature_verified, extracted_address
 
+    @staticmethod
     def match_cardano_signature(
-        self,
         message_hex: str,
         signature_hex: str,
         key_hex: str
@@ -109,7 +108,7 @@ class Utils:
 
             sig_structure_cbor = cbor2.dumps(sig_structure)
             public_key.verify(signature, sig_structure_cbor)
-            logger.info(f"Cardano signature verified successfully")
+            logger.info("Cardano signature verified successfully")
             return True
         except Exception as e:
             logger.exception(f"Exception: {str(e)}")

@@ -75,10 +75,9 @@ class DefaultAirdrop(BaseAirdrop):
         address = address.lower()
         checksum_address = Web3.to_checksum_address(address)
         logger.info(f"Start of the signature matching for {address = }, {signature = }")
-        utils = Utils()
         formatted_message = self.format_user_registration_signature_message(checksum_address, block_number, **kwargs)
-        formatted_signature = utils.trim_prefix_from_string_message(prefix="0x", message=signature)
-        sign_verified, _ = utils.match_ethereum_signature_eip712(address, formatted_message, formatted_signature)
+        formatted_signature = Utils.trim_prefix_from_string_message(prefix="0x", message=signature)
+        sign_verified, _ = Utils.match_ethereum_signature_eip712(address, formatted_message, formatted_signature)
         if not sign_verified:
             logger.error("Signature is not valid")
             raise Exception("Signature is not valid")

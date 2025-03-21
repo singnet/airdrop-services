@@ -6,17 +6,15 @@ from jsonschema import validate
 
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import BlockFrostAccountDetails, DepositDetails, MIN_BLOCK_CONFIRMATION_REQUIRED
-from airdrop.constants import AirdropClaimStatus, BlockFrostAPI, DEPOSIT_EVENT_TX_METADATA
+from airdrop.constants import BlockFrostAPI, DEPOSIT_EVENT_TX_METADATA
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
-from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
-from airdrop.utils import Utils, datetime_in_utcnow
 from common.exceptions import ValidationFailedException
 from common.logger import get_logger
 
 user_registration_repo = UserRegistrationRepository()
-utils = Utils()
+
 
 logger = get_logger(__name__)
 
@@ -27,7 +25,7 @@ class EventConsumerService:
 
     @staticmethod
     def get_current_block_no():
-        logger.info(f"Getting current block no")
+        logger.info("Getting current block no")
         response = requests.get(BlockFrostAPI.get_last_block,
                                 headers={"project_id": BlockFrostAccountDetails.project_id})
         if response.status_code == HTTPStatus.OK:

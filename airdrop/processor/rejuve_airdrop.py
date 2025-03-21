@@ -71,8 +71,7 @@ class RejuveAirdrop(DefaultAirdrop):
         wallet_name: str,
         key: str | None,
     ) -> dict:
-        utils = Utils()
-        network = self.recognize_blockchain_network(address)
+        network = Utils.recognize_blockchain_network(address)
         logger.info(f"Start of signature matching | address={address}, signature={signature}, network={network}")
 
         if network not in {"Ethereum", "Cardano"}:
@@ -91,9 +90,9 @@ class RejuveAirdrop(DefaultAirdrop):
         message = json.dumps(formatted_message, separators=(',', ':'))
 
         sign_verified = (
-            utils.match_ethereum_signature_eip191(address, message, signature)
+            Utils.match_ethereum_signature_eip191(address, message, signature)
             if network == "Ethereum"
-            else utils.match_cardano_signature(message, signature, key)
+            else Utils.match_cardano_signature(message, signature, key)
         )
 
         if not sign_verified:
@@ -101,14 +100,6 @@ class RejuveAirdrop(DefaultAirdrop):
             raise ValueError("Signature is not valid.")
 
         return formatted_message
-
-    def recognize_blockchain_network(self, address: str) -> str:
-        if address[:2] == "0x":
-            return "Ethereum"
-        elif address[:4] == "addr":
-            return "Cardano"
-        else:
-            return "Unknown"
 
     def generate_user_registration_receipt(
             self, airdrop_id: int,
@@ -119,7 +110,7 @@ class RejuveAirdrop(DefaultAirdrop):
         # registration was done
         logger.info("Generate user registration receipt")
         secret_key = self.get_secret_key_for_receipt()
-        network = self.recognize_blockchain_network(address)
+        network = Utils.recognize_blockchain_network(address)
         if network == "Ethereum":
             receipt = get_registration_receipt_ethereum(airdrop_id, window_id, address, secret_key)
         elif network == "Cardano":
@@ -352,16 +343,14 @@ class RejuveAirdrop(DefaultAirdrop):
                     f" registration_id: {registration_id}"
                     f" transaction_details: {transaction_details}")
 
-        utils = Utils()
-
         input_addresses = transaction_details["input_addresses"]
         first_input_address = input_addresses[0]
-        stake_address_from_event = utils.get_stake_key_address(first_input_address)
+        stake_address_from_event = Utils.get_stake_key_address(first_input_address)
 
         reward_address = user_registration.signature_details.get(
             "message", {}).get("Airdrop", {}).get(
             "cardanoAddress", None)
-        reward_stake_address = utils.get_stake_key_address(reward_address)
+        reward_stake_address = Utils.get_stake_key_address(reward_address)
 
         # Validate cardano address.
         if reward_stake_address != stake_address_from_event:

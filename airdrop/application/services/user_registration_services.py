@@ -15,11 +15,9 @@ from airdrop.application.types.windows import WindowRegistrationData, Registrati
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
-from airdrop.utils import Utils
 from common.logger import get_logger
 
 logger = get_logger(__name__)
-utils = Utils()
 
 
 class UserRegistrationServices:
