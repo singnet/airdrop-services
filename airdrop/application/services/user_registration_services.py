@@ -170,7 +170,7 @@ class UserRegistrationServices:
 
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
-            user_registered, user_registration = UserRegistrationRepository(). \
+            is_registered, user_registration = UserRegistrationRepository(). \
                 get_user_registration_details(address, airdrop_window_id)
 
             is_airdrop_window_claimed = False
@@ -191,7 +191,7 @@ class UserRegistrationServices:
                 airdrop_window_id=airdrop_window_id,
                 address=address,
                 is_user_eligible=is_user_eligible,
-                user_registered=user_registered,
+                is_registered=is_registered,
                 user_registration=user_registration,
                 is_airdrop_window_claimed=is_airdrop_window_claimed,
                 airdrop_claim_status=airdrop_claim_status,

@@ -93,7 +93,7 @@ class DefaultAirdrop(BaseAirdrop):
         airdrop_window_id: int,
         address: str,
         is_user_eligible: bool,
-        user_registered: bool,
+        is_registered: bool,
         user_registration: UserRegistration,
         is_airdrop_window_claimed: bool,
         airdrop_claim_status: AirdropClaimStatus,
@@ -102,7 +102,7 @@ class DefaultAirdrop(BaseAirdrop):
     ) -> dict:
         registration_id, reject_reason, registration_details = "", None, dict()
 
-        if user_registered:
+        if is_registered:
             registration_id = user_registration.receipt_generated
             reject_reason = user_registration.reject_reason
             registration_details = {
@@ -113,7 +113,7 @@ class DefaultAirdrop(BaseAirdrop):
             }
         response = {
             "is_eligible": is_user_eligible,
-            "is_already_registered": user_registered,
+            "is_already_registered": is_registered,
             "is_airdrop_window_claimed": is_airdrop_window_claimed,
             "airdrop_window_claim_status": airdrop_claim_status,
             "user_address": address,

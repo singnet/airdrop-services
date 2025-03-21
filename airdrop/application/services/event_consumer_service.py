@@ -189,8 +189,20 @@ class DepositEventConsumerService(EventConsumerService):
         if not claim_sign_verified:
             raise ValidationFailedException(f"Claim signature verification failed for event {self.event}")
 
-        # Update transaction status for ADA deposited
+        # Check for a transaction with the PENDING status, if not, create it
         blockchain_method = "ada_transfer"
+        tx_amount = transaction_details["tx_amount"]
+        amount = float(tx_amount) / (10 ** int(tx_amount.split('E')[1]))
+        ClaimHistoryRepository().create_transaction_if_not_found(
+            address=ethereum_address,
+            airdrop_id=airdrop_id,
+            window_id=airdrop_window_id,
+            tx_hash=message["tx_hash"],
+            amount=amount,
+            blockchain_method=blockchain_method
+        )
+
+        # Update transaction status for ADA deposited
         ClaimHistoryRepository().update_claim_status(
             ethereum_address,
             airdrop_window_id,
