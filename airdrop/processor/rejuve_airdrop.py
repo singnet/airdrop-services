@@ -247,8 +247,11 @@ class RejuveAirdrop(DefaultAirdrop):
         rewards_awarded: int,
         with_signature: bool,
     ) -> dict:
+        claimable_amount, _ = self.get_claimable_amount(address)
+
         response = {
             "is_eligible": is_user_eligible,
+            "is_claimable": claimable_amount > 0,
             "windows": {}
         }
 
@@ -325,9 +328,6 @@ class RejuveAirdrop(DefaultAirdrop):
         airdrop_window_repo = AirdropRepository()
         claimable_amount = airdrop_window_repo.fetch_total_rewards_amount(self.id, user_address, airdrop_class="RejuveAirdrop")
         total_eligible_amount = airdrop_window_repo.fetch_total_eligibility_amount(self.id, user_address)
-
-        if claimable_amount == 0:
-            raise Exception("Airdrop Already claimed / pending")
 
         return claimable_amount, total_eligible_amount
 
