@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.models import ClaimHistory
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
+from airdrop.utils import datetime_in_utcnow
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -89,6 +90,43 @@ class ClaimHistoryRepository(BaseRepository):
             for claim in claims:
                 claim.transaction_status = transaction_status
             self.session.commit()
+        except SQLAlchemyError as e:
+            logger.exception(f"SQLAlchemyError: {str(e)}")
+            self.session.rollback()
+            raise e
+
+    def create_transaction_if_not_found(
+        self,
+        address: str,
+        airdrop_id: int,
+        window_id: int,
+        tx_hash: str,
+        amount: int,
+        blockchain_method: str
+    ) -> None:
+        logger.info("Start searching for a transaction and creating it in case of a mismatch")
+        try:
+            query = (self.session.query(ClaimHistory)
+                     .filter(ClaimHistory.address == address)
+                     .filter(ClaimHistory.airdrop_window_id == window_id)
+                     .filter(ClaimHistory.blockchain_method == blockchain_method)
+                     .filter(ClaimHistory.transaction_status == AirdropClaimStatus.PENDING.value)
+                     .first())
+            if not query:
+                logger.info("Transaction is missing in db, create transaction")
+                claim_payload = {
+                    "airdrop_id": airdrop_id,
+                    "airdrop_window_id": window_id,
+                    "address": address,
+                    "claimable_amount": amount,
+                    "unclaimed_amount": 0,
+                    "transaction_hash": tx_hash,
+                    "blockchain_method": blockchain_method,
+                    "transaction_status": AirdropClaimStatus.PENDING.value,
+                    "claimed_on": datetime_in_utcnow()
+                }
+                self.add_claim(claim_payload)
+                logger.info("Transaction created in db")
         except SQLAlchemyError as e:
             logger.exception(f"SQLAlchemyError: {str(e)}")
             self.session.rollback()

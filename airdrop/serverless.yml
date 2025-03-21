@@ -366,6 +366,7 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_transfer_claim_cron_status}
           input:
             airdrop_id: ${file(./config.${self:provider.stage}.json):LoyaltyAirdropId}
+    timeout: 300
 
   cardano-airdrop-update-claim-tx-status:
     handler: airdrop/application/handlers/airdrop_handlers.update_user_claim_transaction_status_post_block_confirmation

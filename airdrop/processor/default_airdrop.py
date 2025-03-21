@@ -93,7 +93,7 @@ class DefaultAirdrop(BaseAirdrop):
         airdrop_window_id: int,
         address: str,
         is_user_eligible: bool,
-        user_registered: bool,
+        is_registered: bool,
         user_registration: UserRegistration,
         is_airdrop_window_claimed: bool,
         airdrop_claim_status: AirdropClaimStatus,
@@ -102,7 +102,7 @@ class DefaultAirdrop(BaseAirdrop):
     ) -> dict:
         registration_id, reject_reason, registration_details = "", None, dict()
 
-        if user_registered:
+        if is_registered:
             registration_id = user_registration.receipt_generated
             reject_reason = user_registration.reject_reason
             registration_details = {
@@ -113,7 +113,7 @@ class DefaultAirdrop(BaseAirdrop):
             }
         response = {
             "is_eligible": is_user_eligible,
-            "is_already_registered": user_registered,
+            "is_already_registered": is_registered,
             "is_airdrop_window_claimed": is_airdrop_window_claimed,
             "airdrop_window_claim_status": airdrop_claim_status,
             "user_address": address,
@@ -240,6 +240,7 @@ class DefaultAirdrop(BaseAirdrop):
 
     def validate_deposit_event(
             self,
+            message: dict,
             signature: str,
             transaction_details: dict,
             registration_id: str,
@@ -271,6 +272,19 @@ class DefaultAirdrop(BaseAirdrop):
         )
         if not claim_sign_verified:
             raise ValidationFailedException(f"Claim signature verification failed for event {self.event}")
+
+        # Check for a transaction with the PENDING status, if not, create it
+        blockchain_method = "ada_transfer"
+        tx_amount = transaction_details["tx_amount"]
+        amount = float(tx_amount) / (10 ** int(tx_amount.split('E')[1]))
+        ClaimHistoryRepository().create_transaction_if_not_found(
+            address=ethereum_address,
+            airdrop_id=self.id,
+            window_id=self.window_id,
+            tx_hash=message["tx_hash"],
+            amount=amount,
+            blockchain_method=blockchain_method
+        )
 
         # Update transaction status for ADA deposited
         blockchain_method = "ada_transfer"
