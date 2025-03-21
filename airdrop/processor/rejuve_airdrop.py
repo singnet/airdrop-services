@@ -8,10 +8,12 @@ from airdrop.application.types.windows import WindowRegistrationData
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnapshotRepository
+from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
-from airdrop.utils import Utils
+from airdrop.utils import Utils, datetime_in_utcnow
 from airdrop.config import RejuveAirdropConfig
+from common.exceptions import ValidationFailedException
 from common.logger import get_logger
 from common.utils import (
     get_registration_receipt_cardano,
@@ -108,8 +110,11 @@ class RejuveAirdrop(DefaultAirdrop):
         else:
             return "Unknown"
 
-    def generate_user_registration_receipt(self, airdrop_id: int,
-                                           window_id: int, address: str) -> str:
+    def generate_user_registration_receipt(
+            self, airdrop_id: int,
+            window_id: int,
+            address: str
+        ) -> str:
         # Get the unique receipt to be issued , users can use this receipt as evidence that
         # registration was done
         logger.info("Generate user registration receipt")
@@ -154,8 +159,7 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Address is not eligible for this airdrop")
             raise Exception("Address is not eligible for this airdrop")
 
-        user_registered, _ = registration_repo. \
-            get_user_registration_details(address, self.window_id)
+        user_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
         if user_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
@@ -242,7 +246,7 @@ class RejuveAirdrop(DefaultAirdrop):
             "total_eligibility_amount": str(total_eligible_amount),
             "chain_context": self.chain_context
         }
-        
+
     def generate_multiple_windows_eligibility_response(
         self,
         is_user_eligible: bool,
@@ -335,3 +339,81 @@ class RejuveAirdrop(DefaultAirdrop):
             raise Exception("Airdrop Already claimed / pending")
 
         return claimable_amount, total_eligible_amount
+
+    def validate_deposit_event(
+        self,
+        transaction_details: dict,
+        signature: str,
+        registration_id: str,
+        user_registration: UserRegistration,
+    ):
+        logger.info("Validating deposit event for Rejuve Airdrop"
+                    f" {self.id} and window {self.window_id}"
+                    f" registration_id: {registration_id}"
+                    f" transaction_details: {transaction_details}")
+
+        utils = Utils()
+
+        input_addresses = transaction_details["input_addresses"]
+        first_input_address = input_addresses[0]
+        stake_address_from_event = utils.get_stake_key_address(first_input_address)
+
+        reward_address = user_registration.signature_details.get(
+            "message", {}).get("Airdrop", {}).get(
+            "cardanoAddress", None)
+        reward_stake_address = utils.get_stake_key_address(reward_address)
+
+        # Validate cardano address.
+        if reward_stake_address != stake_address_from_event:
+            raise ValidationFailedException(
+                f"Stake address mismatch.\nReward stake address {reward_stake_address}."
+                f"\nEvent stake address {stake_address_from_event}"
+            )
+
+        if signature is not None:
+            signature = Utils.trim_prefix_from_string_message(prefix="0x", message=signature)
+
+            formatted_message = self.format_user_claim_signature_message(registration_id)
+            message = json.dumps(formatted_message, separators=(',', ':'))
+
+            if not utils.match_ethereum_signature_eip191(
+                user_registration.address,
+                message,
+                signature
+            ):
+                raise ValidationFailedException(f"Claim signature verification failed for event {self.event}")
+
+        # Update transaction status for ADA deposited
+        blockchain_method = "ada_transfer"
+        ClaimHistoryRepository().update_claim_status(
+            user_registration.address,
+            self.window_id,
+            blockchain_method,
+            AirdropClaimStatus.ADA_RECEIVED.value
+        )
+
+        # Get claimable amount
+        claimable_amount = AirdropRepository().fetch_total_rewards_amount(self.id, user_registration.address)
+        if claimable_amount == 0:
+            raise Exception(f"Claimable amount is {claimable_amount} for event")
+
+        # Update claim history table
+        claim_payload = {
+            "airdrop_id": self.id,
+            "airdrop_window_id": self.window_id,
+            "address": user_registration.address,
+            "blockchain_method": "token_transfer",
+            "claimable_amount": claimable_amount,
+            "unclaimed_amount": 0,
+            "transaction_status": AirdropClaimStatus.PENDING.value,
+            "claimed_on": datetime_in_utcnow()
+        }
+        ClaimHistoryRepository().add_claim(claim_payload)
+
+    def format_user_claim_signature_message(self, registration_id: str) -> dict:
+        formatted_message = {
+            "airdropWindowId": self.window_id,
+            "registrationId": registration_id,
+        }
+
+        return formatted_message

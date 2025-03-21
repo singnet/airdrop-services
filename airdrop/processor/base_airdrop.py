@@ -90,3 +90,7 @@ class BaseAirdrop(ABC):
     @abstractmethod
     def get_claimable_amount(self, **kwargs) -> Tuple[int, int]:
         pass
+
+    @abstractmethod
+    def validate_deposit_event(self, **kwargs) -> dict:
+        pass

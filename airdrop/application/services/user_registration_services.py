@@ -253,7 +253,7 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
-            response: list | str = airdrop_object.update_registration(data=data)
+            response: dict | list | str = airdrop_object.update_registration(data=data)
         except (ValidationError, BaseException) as e:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)
