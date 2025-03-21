@@ -102,10 +102,7 @@ class UserRegistrationServices:
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id)
 
-            is_user_eligible = airdrop_object.check_user_eligibility(
-                address,
-                [window.id for window in airdrop_windows]
-            )
+            is_user_eligible = airdrop_object.check_user_eligibility(address)
 
             with_signature = False
             if signature is not None:
