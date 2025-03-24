@@ -348,7 +348,6 @@ class RejuveAirdrop(DefaultAirdrop):
         first_input_address = input_addresses[0]
         stake_address_from_event = Utils.get_stake_key_address(first_input_address)
 
-        address = user_registration.address
         reward_address = user_registration.signature_details.get(
             "message", {}).get("Airdrop", {}).get(
             "cardanoAddress", None)
@@ -379,7 +378,7 @@ class RejuveAirdrop(DefaultAirdrop):
         tx_amount = transaction_details["tx_amount"]
         amount = float(tx_amount) / (10 ** int(tx_amount.split('E')[1]))
         ClaimHistoryRepository().create_transaction_if_not_found(
-            address=address,
+            address=user_registration.address,
             airdrop_id=self.id,
             window_id=self.window_id,
             tx_hash=request_message["tx_hash"],
@@ -389,7 +388,7 @@ class RejuveAirdrop(DefaultAirdrop):
 
         # Update transaction status for ADA deposited
         ClaimHistoryRepository().update_claim_status(
-            address,
+            user_registration.address,
             self.window_id,
             blockchain_method,
             AirdropClaimStatus.ADA_RECEIVED.value
