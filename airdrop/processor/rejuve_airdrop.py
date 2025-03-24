@@ -150,8 +150,8 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Address is not eligible for this airdrop")
             raise Exception("Address is not eligible for this airdrop")
 
-        user_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
-        if user_registered:
+        is_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
+        if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
 
@@ -214,8 +214,8 @@ class RejuveAirdrop(DefaultAirdrop):
             key=key
         )
 
-        user_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
-        if not user_registered:
+        is_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
+        if not is_registered:
             logger.error(f"Address {address} is not registered for window {self.window_id}")
             raise Exception("Address is not registered for this airdrop window.")
 
@@ -333,8 +333,9 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def validate_deposit_event(
         self,
-        transaction_details: dict,
+        request_message: dict,
         signature: str,
+        transaction_details: dict,
         registration_id: str,
         user_registration: UserRegistration,
     ):
@@ -365,15 +366,27 @@ class RejuveAirdrop(DefaultAirdrop):
             formatted_message = self.format_user_claim_signature_message(registration_id)
             message = json.dumps(formatted_message, separators=(',', ':'))
 
-            if not utils.match_ethereum_signature_eip191(
+            if not Utils.match_ethereum_signature_eip191(
                 user_registration.address,
                 message,
                 signature
             ):
                 raise ValidationFailedException(f"Claim signature verification failed for event {self.event}")
 
-        # Update transaction status for ADA deposited
+        # Check for a transaction with the PENDING status, if not, create it
         blockchain_method = "ada_transfer"
+        tx_amount = transaction_details["tx_amount"]
+        amount = float(tx_amount) / (10 ** int(tx_amount.split('E')[1]))
+        ClaimHistoryRepository().create_transaction_if_not_found(
+            address=user_registration.address,
+            airdrop_id=self.id,
+            window_id=self.window_id,
+            tx_hash=request_message["tx_hash"],
+            amount=amount,
+            blockchain_method=blockchain_method
+        )
+
+        # Update transaction status for ADA deposited
         ClaimHistoryRepository().update_claim_status(
             user_registration.address,
             self.window_id,

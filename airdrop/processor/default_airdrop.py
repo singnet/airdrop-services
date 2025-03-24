@@ -156,9 +156,9 @@ class DefaultAirdrop(BaseAirdrop):
             logger.error("Address is not eligible for this airdrop")
             raise Exception("Address is not eligible for this airdrop")
 
-        user_registered, _ = registration_repo. \
+        is_registered, _ = registration_repo. \
             get_user_registration_details(address, self.window_id)
-        if user_registered:
+        if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
 
@@ -240,7 +240,7 @@ class DefaultAirdrop(BaseAirdrop):
 
     def validate_deposit_event(
             self,
-            message: dict,
+            request_message: dict,
             signature: str,
             transaction_details: dict,
             registration_id: str,
@@ -281,13 +281,12 @@ class DefaultAirdrop(BaseAirdrop):
             address=ethereum_address,
             airdrop_id=self.id,
             window_id=self.window_id,
-            tx_hash=message["tx_hash"],
+            tx_hash=request_message["tx_hash"],
             amount=amount,
             blockchain_method=blockchain_method
         )
 
         # Update transaction status for ADA deposited
-        blockchain_method = "ada_transfer"
         ClaimHistoryRepository().update_claim_status(
             ethereum_address,
             self.window_id,

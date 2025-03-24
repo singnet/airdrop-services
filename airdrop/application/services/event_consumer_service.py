@@ -163,13 +163,13 @@ class DepositEventConsumerService(EventConsumerService):
             self.validate_user_input_addresses_for_unique_stake_address(input_addresses, stake_address_from_event)
 
         #  Fetch user ethereum address for given registration id
-        user_registered, user_registration = user_registration_repo. \
+        is_registered, user_registration = user_registration_repo. \
             get_user_registration_details(registration_id=registration_id)
-        if not user_registered:
+        if not is_registered:
             raise ValidationFailedException(f"Unable to find user for given registration_id in the event {self.event}")
 
         airdrop_class(airdrop.id, airdrop_window_id).validate_deposit_event(
-            message=message,
+            request_message=message,
             transaction_details=transaction_details,
             signature=signature,
             registration_id=registration_id,

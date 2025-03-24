@@ -24,14 +24,12 @@ class UserRegistrationServices:
 
     @staticmethod
     def __generate_user_claim_status(
-        user_registered: bool,
+        is_registered: bool,
         airdrop_claim_status: AirdropClaimStatus | None,
     ) -> UserClaimStatus:
-        logger.debug(
-            f"Generate user claim status. \
-            user_registerd: {user_registered}, \
-            airdrop_claim_status: {airdrop_claim_status}")
-        if not user_registered:
+        logger.debug(f"Generate user claim status. "
+                     f"{is_registered = }, {airdrop_claim_status = }")
+        if not is_registered:
             return UserClaimStatus.NOT_REGISTERED
         elif airdrop_claim_status == AirdropClaimStatus.SUCCESS:
             return UserClaimStatus.RECEIVED
@@ -54,18 +52,18 @@ class UserRegistrationServices:
 
     @staticmethod
     def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
-        user_registered, user_registration = UserRegistrationRepository().get_user_registration_details(address, airdrop_window_id)
+        is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(address, airdrop_window_id)
 
         airdrop_claim_status = AirdropWindowRepository().is_airdrop_window_claimed(airdrop_window_id, address)
 
-        user_claim_status = UserRegistrationServices.__generate_user_claim_status(user_registered, airdrop_claim_status)
+        user_claim_status = UserRegistrationServices.__generate_user_claim_status(is_registered, airdrop_claim_status)
 
         registration_details = RegistrationDetails(
             registration_id=user_registration.receipt_generated,
             reject_reason=user_registration.reject_reason,
             other_details=user_registration.signature_details,
             registered_at=str(user_registration.registered_at)
-        ) if user_registered and user_registration is not None else None
+        ) if is_registered and user_registration is not None else None
 
         window_registration_data = WindowRegistrationData(
             window_id=airdrop_window_id,
