@@ -334,8 +334,8 @@ class RejuveAirdrop(DefaultAirdrop):
     def validate_deposit_event(
         self,
         request_message: dict,
-        transaction_details: dict,
         signature: str,
+        transaction_details: dict,
         registration_id: str,
         user_registration: UserRegistration,
     ):
