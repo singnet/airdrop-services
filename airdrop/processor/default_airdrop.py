@@ -239,13 +239,15 @@ class DefaultAirdrop(BaseAirdrop):
         return claimable_amount, total_eligible_amount
 
     def validate_deposit_event(
-            self,
-            request_message: dict,
-            signature: str,
-            transaction_details: dict,
-            registration_id: str,
-            user_registration: UserRegistration,
-        ):
+        self,
+        request_message: dict,
+        signature: str,
+        transaction_details: dict,
+        registration_id: str,
+        user_registration: UserRegistration,
+    ):
+        if signature is None:
+            raise Exception("Signature is not provided")
 
         input_addresses = transaction_details["input_addresses"]
         first_input_address = input_addresses[0]

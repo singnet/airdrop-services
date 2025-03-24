@@ -120,7 +120,7 @@ class DepositEventConsumerService(EventConsumerService):
         5. Fetch user ethereum address for given registration id.
         6. Validate user ethereum signature.
         7. Get claimable amount.
-        7. Update claim history table.
+        8. Update claim history table.
         """
         message = json.loads(json.loads(self.event["Records"][0]["body"])["Message"])
         transaction_details = message["transaction_detail"]
