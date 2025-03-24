@@ -110,9 +110,9 @@ class LoyaltyAirdrop(DefaultAirdrop):
             logger.error("Address is not eligible for this airdrop")
             raise Exception("Address is not eligible for this airdrop")
 
-        user_registered, _ = registration_repo. \
+        is_registered, _ = registration_repo. \
             get_user_registration_details(address, self.window_id)
-        if user_registered:
+        if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
 

@@ -18,6 +18,8 @@ alembic upgrade head # Sync database tables
 
 ### Start the service
 
+1) Create airdrop/config.py file by example airdrop/config.example.py file
+2) Start the service:
 ```sh
 sls offline start -s <stage>
 ```
