@@ -139,6 +139,11 @@ functions:
           name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-eligibility-processor
           enabled: true
 
+  process_convert_str_to_json:
+    timeout: 600
+    handler: airdrop/job/eligibility.process_convert_str_to_json
+    events: []
+
   get_airdrop_schedules:
     handler: airdrop/application/handlers/airdrop_handlers.get_airdrop_schedules
     events:
