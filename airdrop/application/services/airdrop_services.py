@@ -320,6 +320,8 @@ class AirdropServices:
             amount = inputs["amount"]
             blockchain_method = inputs["blockchain_method"]
 
+            user_address = Web3.to_checksum_address(user_address)
+
             AirdropRepository().airdrop_window_claim_txn(
                 airdrop_id, airdrop_window_id, user_address, txn_hash, amount, blockchain_method)
 
