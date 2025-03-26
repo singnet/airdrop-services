@@ -237,7 +237,8 @@ class RejuveAirdrop(DefaultAirdrop):
             "airdrop_window_id": str(airdrop_window.id),
             "claimable_amount": str(claimable_amount),
             "total_eligibility_amount": str(total_eligible_amount),
-            "chain_context": self.chain_context
+            "chain_context": self.chain_context,
+            "registration_id": receipt
         }
 
     def generate_multiple_windows_eligibility_response(
