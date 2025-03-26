@@ -253,7 +253,7 @@ class DefaultAirdrop(BaseAirdrop):
         first_input_address = input_addresses[0]
         stake_address_from_event = Utils.get_stake_key_address(first_input_address)
 
-        ethereum_address = user_registration.address
+        ethereum_address = Web3.to_checksum_address(user_registration.address)
         cardano_address = user_registration.signature_details.get("message", {}).get("Airdrop", {}).get(
             "cardanoAddress", None)
         user_stake_address = Utils.get_stake_key_address(cardano_address)
