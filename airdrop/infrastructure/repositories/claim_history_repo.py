@@ -33,14 +33,7 @@ class ClaimHistoryRepository(BaseRepository):
                 SELECT ur.address, 
                     COALESCE(
                         JSON_UNQUOTE(JSON_EXTRACT(ur.signature_details, '$.message.Airdrop.cardanoAddress')), 
-                        CASE 
-                            WHEN LEFT(TRIM(ur.signature_details), 1) = '"' 
-                            THEN JSON_UNQUOTE(JSON_EXTRACT(
-                                    CAST(JSON_UNQUOTE(ur.signature_details) AS JSON), 
-                                    '$.walletAddress'
-                                ))
-                            ELSE JSON_UNQUOTE(JSON_EXTRACT(ur.signature_details, '$.walletAddress'))
-                        END
+                        JSON_UNQUOTE(JSON_EXTRACT(ur.signature_details, '$.walletAddress'))
                     ) AS cardano_address, 
                     ch.airdrop_window_id, 
                     ch.claimable_amount 
