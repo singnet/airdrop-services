@@ -70,6 +70,7 @@ class RejuveAirdrop(DefaultAirdrop):
         block_number: int,
         wallet_name: str,
         key: str | None,
+        reward_address: str | None = None,
     ) -> dict:
         network = Utils.recognize_blockchain_network(address)
         logger.info(f"Start of signature matching | address={address}, signature={signature}, network={network}")
@@ -83,7 +84,7 @@ class RejuveAirdrop(DefaultAirdrop):
             raise ValueError("Key must be provided for Cardano signatures.")
 
         formatted_message = self.format_user_registration_signature_message(
-            address,
+            reward_address if reward_address else address,
             block_number=block_number,
             wallet_name=wallet_name
         )
@@ -207,11 +208,12 @@ class RejuveAirdrop(DefaultAirdrop):
             raise Exception("Address is not eligible for this airdrop.")
 
         signature_details = self.match_signature(
-            address=reward_address,
+            address=address,
             signature=signature,
             block_number=block_number,
             wallet_name=wallet_name,
-            key=key
+            key=key,
+            reward_address=reward_address
         )
 
         is_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
