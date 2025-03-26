@@ -188,7 +188,7 @@ class RejuveAirdrop(DefaultAirdrop):
         reward_address = data["reward_address"]
         block_number = data["block_number"]
         wallet_name = data["wallet_name"]
-        key = data["key"]
+        key = data.get("key")
 
         registration_repo = UserRegistrationRepository()
         airdrop_window_repo = AirdropWindowRepository()
