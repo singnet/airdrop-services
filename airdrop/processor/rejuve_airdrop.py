@@ -350,7 +350,6 @@ class RejuveAirdrop(DefaultAirdrop):
         stake_address_from_event = Utils.get_stake_key_address(first_input_address)
 
         reward_address = user_registration.signature_details.get("walletAddress")
-        reward_address = Web3.to_checksum_address(reward_address)
 
         if reward_address is None:
             raise Exception("Error in parsing signature details:", user_registration.signature_details)
