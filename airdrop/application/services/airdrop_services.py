@@ -372,7 +372,8 @@ class AirdropServices:
                     "token_address": airdrop.token_address
                 }
                 signature_format, formatted_message = airdrop_object.format_and_get_claim_signature_details(
-                    signature_parameters)
+                    signature_parameters=signature_parameters
+                )
                 signature = self.generate_signature(claim_signature_private_key, signature_format, formatted_message)
             else:
                 signature = "Not Applicable."
