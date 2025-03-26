@@ -134,7 +134,7 @@ class DepositEventConsumerService(EventConsumerService):
         signature = None
         if tx_metadata.get("s1") and tx_metadata.get("s2") and tx_metadata.get("s3"):
             v = tx_metadata["s3"]
-            if v != '1c' and v != '1b':
+            if v != '1c' and v != '1b' and v != '1d':
                 v = hex(int(v) + 27).replace('0x', '')
             signature = tx_metadata["s1"] + tx_metadata["s2"] + v
 

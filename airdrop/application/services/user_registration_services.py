@@ -34,6 +34,7 @@ class UserRegistrationServices:
         elif airdrop_claim_status == AirdropClaimStatus.SUCCESS:
             return UserClaimStatus.RECEIVED
         elif airdrop_claim_status in (
+            AirdropClaimStatus.PENDING,
             AirdropClaimStatus.ADA_RECEIVED,
             AirdropClaimStatus.CLAIM_INITIATED,
             AirdropClaimStatus.CLAIM_SUBMITTED

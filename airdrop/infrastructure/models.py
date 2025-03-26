@@ -97,11 +97,15 @@ class UserBalanceSnapshot(Base, AuditClass):
         nullable=False,
     )
     address = Column("address", VARCHAR(250), nullable=False)
+    payment_part = Column("payment_part", VARCHAR(250), nullable=True)
+    staking_part = Column("staking_part", VARCHAR(250), nullable=True)
     balance = Column("balance", DECIMAL(64, 0), nullable=False)
     staked = Column("staked", DECIMAL(64, 0), nullable=False)
     total = Column("total", DECIMAL(64, 0), nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
     Index("window_snapshotguid_addr_idx", airdrop_window_id, snapshot_guid, address)
+    Index("payment_part_staking_part_idx", payment_part, staking_part)
+    Index("snapshot_guid_idx", snapshot_guid)
 
 
 class UserRegistration(Base, AuditClass):
