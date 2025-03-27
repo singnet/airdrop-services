@@ -358,7 +358,7 @@ class RejuveAirdrop(DefaultAirdrop):
         stake_address_from_event = Utils.get_stake_key_address(first_input_address)
 
         reward_address = user_registration.signature_details.get("walletAddress")
-        registration_address = Web3.to_checksum_address(str(user_registration.address))
+        registration_address = str(user_registration.address)
 
         if reward_address is None:
             raise Exception("Error in parsing signature details:", user_registration.signature_details)
@@ -373,6 +373,7 @@ class RejuveAirdrop(DefaultAirdrop):
             )
 
         if signature is not None:
+            registration_address = Web3.to_checksum_address(registration_address)
             signature = Utils.trim_prefix_from_string_message(prefix="0x", message=signature)
 
             formatted_message = self.format_user_claim_signature_message(registration_id)
@@ -384,9 +385,9 @@ class RejuveAirdrop(DefaultAirdrop):
                 signature
             ):
                 logger.error(
-                    "Claim signature verification failed",
-                    f"address = {registration_address}",
-                    f"message = {message}",
+                    "Claim signature verification failed"
+                    f"address = {registration_address}"
+                    f"message = {message}"
                     f"signature = {signature}"
                 )
                 raise ValidationFailedException(f"Claim signature verification failed for {registration_id}")
