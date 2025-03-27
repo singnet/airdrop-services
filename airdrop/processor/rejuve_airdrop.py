@@ -38,6 +38,7 @@ class RejuveAirdrop(DefaultAirdrop):
             "amount": RejuveAirdropConfig.pre_claim_transfer_amount.value["amount"],
             "chain": RejuveAirdropConfig.chain.value
         }
+        self.claim_address = RejuveAirdropConfig.claim_address.value
 
     def check_user_eligibility(self, address: str) -> bool:
         user_balances = UserBalanceSnapshotRepository().get_balances_by_address_for_airdrop(
