@@ -1,6 +1,8 @@
 import json
 from typing import Dict, List, Tuple, Union
+
 from web3 import Web3
+from pycardano import Address
 
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration
@@ -120,7 +122,7 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def register(self, data: dict) -> list | str:
         logger.info(f"Starting the registration process for {self.__class__.__name__}")
-        address = data["address"].lower()
+        address = Web3.to_checksum_address(data["address"])
         signature = data["signature"]
         block_number = data["block_number"]
         wallet_name = data["wallet_name"]
@@ -343,16 +345,20 @@ class RejuveAirdrop(DefaultAirdrop):
         registration_id: str,
         user_registration: UserRegistration,
     ):
-        logger.info("Validating deposit event for Rejuve Airdrop"
-                    f" {self.id} and window {self.window_id}"
-                    f" registration_id: {registration_id}"
-                    f" transaction_details: {transaction_details}")
+        logger.info(
+            "Validating deposit event for Rejuve Airdrop"
+            f" {self.id} and window {self.window_id}"
+            f" registration_id: {registration_id}"
+            f" transaction_details: {transaction_details}"
+            f" user_registration: {user_registration}"
+        )
 
         input_addresses = transaction_details["input_addresses"]
         first_input_address = input_addresses[0]
         stake_address_from_event = Utils.get_stake_key_address(first_input_address)
 
         reward_address = user_registration.signature_details.get("walletAddress")
+        registration_address = Web3.to_checksum_address(str(user_registration.address))
 
         if reward_address is None:
             raise Exception("Error in parsing signature details:", user_registration.signature_details)
@@ -373,18 +379,24 @@ class RejuveAirdrop(DefaultAirdrop):
             message = json.dumps(formatted_message, separators=(',', ':'))
 
             if not Utils.match_ethereum_signature_eip191(
-                user_registration.address,
+                registration_address,
                 message,
                 signature
             ):
-                raise ValidationFailedException(f"Claim signature verification failed for event {self.event}")
+                logger.error(
+                    "Claim signature verification failed",
+                    f"address = {registration_address}",
+                    f"message = {message}",
+                    f"signature = {signature}"
+                )
+                raise ValidationFailedException(f"Claim signature verification failed for {registration_id}")
 
         # Check for a transaction with the PENDING status, if not, create it
         blockchain_method = "ada_transfer"
         tx_amount = transaction_details["tx_amount"]
         amount = float(tx_amount) / (10 ** int(tx_amount.split('E')[1]))
         ClaimHistoryRepository().create_transaction_if_not_found(
-            address=user_registration.address,
+            address=registration_address,
             airdrop_id=self.id,
             window_id=self.window_id,
             tx_hash=request_message["tx_hash"],
