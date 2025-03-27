@@ -3,11 +3,15 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.constants import AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
-from airdrop.infrastructure.models import AirdropWindowTimelines, AirdropWindow, Airdrop, UserRegistration, \
-    ClaimHistory, UserReward
+from airdrop.infrastructure.models import (
+    AirdropWindowTimelines, AirdropWindow, Airdrop,
+    UserRegistration, ClaimHistory, UserReward
+)
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-
 from airdrop.utils import datetime_in_utcnow
+from common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class AirdropRepository(BaseRepository):
@@ -92,6 +96,7 @@ class AirdropRepository(BaseRepository):
             raise e
 
     def airdrop_window_claim_txn(self, airdrop_id, airdrop_window_id, address, txn_hash, amount, blockchain_method):
+        logger.info("Starting add transaction by user with ADA to claim_history table")
         try:
 
             registered_address = self.session.query(UserRegistration).join(
@@ -106,7 +111,7 @@ class AirdropRepository(BaseRepository):
                 ClaimHistory.transaction_hash == txn_hash).first()
 
             if transaction is not None and transaction.transaction_hash == txn_hash:
-                raise Exception('Transaction has been saved already')
+                raise Exception("Transaction has been saved already")
 
             has_pending_or_success_txn = self.session.query(ClaimHistory).filter(
                 ClaimHistory.address == address).filter(
@@ -117,9 +122,9 @@ class AirdropRepository(BaseRepository):
             if has_pending_or_success_txn is not None:
                 status_of_txn = has_pending_or_success_txn.transaction_status
                 if status_of_txn == AirdropClaimStatus.SUCCESS.value:
-                    raise Exception('Airdrop claimed for this window')
+                    raise Exception("Airdrop claimed for this window")
                 else:
-                    raise Exception('There is already a pending transaction')
+                    raise Exception("There is already a pending transaction")
 
             txn_status = AirdropClaimStatus.PENDING.value
             claim_history = ClaimHistory(
@@ -279,12 +284,12 @@ class AirdropRepository(BaseRepository):
 
             if airdrop_class in ("LoyaltyAirdrop", "RejuveAirdrop"):
                 query_rewards = text(
-                    "SELECT IFNULL( SUM(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw "
+                    "SELECT IFNULL(SUM(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw "
                     "WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address AND aw.airdrop_id = :airdrop_id "
-                    "AND aw.claim_start_period <= current_timestamp  AND exists (SELECT 1 FROM airdrop_window WHERE "
-                    "current_timestamp <= claim_end_period  AND airdrop_id = :airdrop_id AND "
-                    "claim_start_period <= current_timestamp) AND ur.airdrop_window_id IN "
-                    "( SELECT airdrop_window_id FROM user_registrations WHERE address = :address AND "
+                    "AND aw.claim_start_period <= current_timestamp AND exists (SELECT 1 FROM airdrop_window WHERE "
+                    "claim_start_period <= current_timestamp AND current_timestamp <= claim_end_period AND "
+                    "airdrop_id = :airdrop_id) AND ur.airdrop_window_id IN "
+                    "(SELECT airdrop_window_id FROM user_registrations WHERE address = :address AND "
                     "airdrop_window_id IN (SELECT row_id FROM airdrop_window WHERE airdrop_id = :airdrop_id));"
                 )
                 result_rewards = self.session.execute(query_rewards, {
@@ -301,9 +306,9 @@ class AirdropRepository(BaseRepository):
                     "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
                 })
                 row_rewards = result_rewards.mappings().first()
-                full_rewards = int(row_rewards["total_rewards"]) if row_rewards else 0
+                full_rewards = int(row_rewards["total_rewards"])
                 row_claimed = result_claimed.mappings().first()
-                claimed_rewards = int(row_claimed["total_claimed"]) if row_claimed else 0
+                claimed_rewards = int(row_claimed["total_claimed"])
                 total_rewards = full_rewards - claimed_rewards
             else:
                 query = text(
@@ -323,7 +328,7 @@ class AirdropRepository(BaseRepository):
                     "in_progress_or_completed_tx_statuses": in_progress_or_completed_tx_statuses
                 })
                 row = result.mappings().first()
-                total_rewards = int(row["total_rewards"]) if row else 0
+                total_rewards = int(row["total_rewards"])
             self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
@@ -338,14 +343,13 @@ class AirdropRepository(BaseRepository):
             # return zero if there are no rewards, please note that MYSQL smartly sums up varchar columns and returns
             # it as a bigint if you have a very big number stored as a varchar in the rewards table.
             query = text(
-                "SELECT IFNULL( sum(ur.rewards_awarded),0) AS 'total_eligibility_rewards' FROM user_rewards ur, "
-                "airdrop_window aw WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address "
-                "AND aw.airdrop_id = :airdrop_id AND aw.claim_start_period <= current_timestamp "
-                "AND exists (SELECT 1 FROM airdrop_window WHERE current_timestamp <= claim_end_period "
-                "AND airdrop_id = :airdrop_id AND claim_start_period <= current_timestamp )  "
-                "AND ur.airdrop_window_id IN ( SELECT airdrop_window_id FROM user_registrations "
-                "WHERE address = :address AND airdrop_window_id IN (SELECT row_id FROM airdrop_window "
-                "WHERE airdrop_id = :airdrop_id));"
+                "SELECT IFNULL(SUM(ur.rewards_awarded),0) AS 'total_rewards' FROM user_rewards ur, airdrop_window aw "
+                "WHERE ur.airdrop_window_id = aw.row_id AND ur.address = :address AND aw.airdrop_id = :airdrop_id "
+                "AND aw.claim_start_period <= current_timestamp AND exists (SELECT 1 FROM airdrop_window WHERE "
+                "claim_start_period <= current_timestamp AND current_timestamp <= claim_end_period AND "
+                "airdrop_id = :airdrop_id) AND ur.airdrop_window_id IN "
+                "(SELECT airdrop_window_id FROM user_registrations WHERE address = :address AND "
+                "airdrop_window_id IN (SELECT row_id FROM airdrop_window WHERE airdrop_id = :airdrop_id));"
             )
             result = self.session.execute(
                 query, {'address': address, 'airdrop_id': airdrop_id})
@@ -353,10 +357,8 @@ class AirdropRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-        # value_retrieved = result.fetchall()[0]
-        # total_eligible_rewards = value_retrieved[0]
         value_retrieved = result.mappings().first()
-        total_eligible_rewards = int(value_retrieved["total_eligibility_rewards"]) if value_retrieved else 0
+        total_eligible_rewards = int(value_retrieved["total_rewards"])
         return int(total_eligible_rewards)
 
     def get_airdrops_schedule(self, airdrop_id):

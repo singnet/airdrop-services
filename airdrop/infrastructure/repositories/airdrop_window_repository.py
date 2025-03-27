@@ -11,7 +11,7 @@ class AirdropWindowRepository(BaseRepository):
             AirdropWindow.id == window_id).first()
         return airdrop_window
 
-    def is_airdrop_window_claimed(self, airdrop_window_id, address):
+    def is_airdrop_window_claimed(self, airdrop_window_id, address) -> str | None:
         claim_history = self.session.query(ClaimHistory.id, ClaimHistory.transaction_status) \
             .filter(ClaimHistory.address == address) \
             .filter(ClaimHistory.airdrop_window_id == airdrop_window_id) \

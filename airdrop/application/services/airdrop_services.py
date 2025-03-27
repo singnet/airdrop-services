@@ -320,16 +320,23 @@ class AirdropServices:
             amount = inputs["amount"]
             blockchain_method = inputs["blockchain_method"]
 
+            user_address = Web3.to_checksum_address(user_address)
+
             AirdropRepository().airdrop_window_claim_txn(
                 airdrop_id, airdrop_window_id, user_address, txn_hash, amount, blockchain_method)
+
+            logger.info(f"Transaction with {blockchain_method = }, {user_address = }, "
+                        f"{airdrop_id = }, {airdrop_window_id = }, {txn_hash = } "
+                        f"added to claim_history table")
 
             response = HTTPStatus.OK.phrase
             status = HTTPStatus.OK
 
         except ValidationError as e:
             response = e.message
+            logger.exception(f"ValidationError on Airdrop Window Claim {str(e)}")
         except BaseException as e:
-            print(f"Exception on Airdrop Window Claim {e}")
+            logger.exception(f"BaseException on Airdrop Window Claim {str(e)}")
             response = str(e)
 
         return status, response
@@ -340,8 +347,8 @@ class AirdropServices:
             validate(instance=inputs, schema=CLAIM_SCHEMA)
 
             user_address = inputs["address"]
-            airdrop_id = inputs["airdrop_id"]
-            airdrop_window_id = inputs["airdrop_window_id"]
+            airdrop_id = int(inputs["airdrop_id"])
+            airdrop_window_id = int(inputs["airdrop_window_id"])
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if airdrop is None:
@@ -367,7 +374,8 @@ class AirdropServices:
                     "token_address": airdrop.token_address
                 }
                 signature_format, formatted_message = airdrop_object.format_and_get_claim_signature_details(
-                    signature_parameters)
+                    signature_parameters=signature_parameters
+                )
                 signature = self.generate_signature(claim_signature_private_key, signature_format, formatted_message)
             else:
                 signature = "Not Applicable."

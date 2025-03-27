@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -124,7 +124,7 @@ class UserRegistrationRepository(BaseRepository):
         address: Optional[str] = None,
         airdrop_window_id: Optional[int] = None,
         registration_id: Optional[str] = None
-    ) -> Tuple[bool, Optional[UserRegistration]]:
+    ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
         query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
         if address:
             query = query.filter(UserRegistration.address == address)
