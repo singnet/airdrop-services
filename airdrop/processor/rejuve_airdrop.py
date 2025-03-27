@@ -383,6 +383,12 @@ class RejuveAirdrop(DefaultAirdrop):
                 message,
                 signature
             ):
+                logger.error(
+                    "Claim signature verification failed",
+                    f"address = {registration_address}",
+                    f"message = {message}",
+                    f"signature = {signature}"
+                )
                 raise ValidationFailedException(f"Claim signature verification failed for {registration_id}")
 
         # Check for a transaction with the PENDING status, if not, create it
