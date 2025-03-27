@@ -385,10 +385,10 @@ class RejuveAirdrop(DefaultAirdrop):
                 signature
             ):
                 logger.error(
-                    "Claim signature verification failed"
-                    f"address = {registration_address}"
-                    f"message = {message}"
-                    f"signature = {signature}"
+                    "Claim signature verification failed \n"
+                    f"address = {registration_address} \n"
+                    f"message = {message} \n"
+                    f"signature = {signature} \n"
                 )
                 raise ValidationFailedException(f"Claim signature verification failed for {registration_id}")
 
@@ -407,14 +407,14 @@ class RejuveAirdrop(DefaultAirdrop):
 
         # Update transaction status for ADA deposited
         ClaimHistoryRepository().update_claim_status(
-            user_registration.address,
+            registration_address,
             self.window_id,
             blockchain_method,
             AirdropClaimStatus.ADA_RECEIVED.value
         )
 
         # Get claimable amount
-        claimable_amount = AirdropRepository().fetch_total_rewards_amount(self.id, user_registration.address)
+        claimable_amount = AirdropRepository().fetch_total_rewards_amount(self.id, registration_address, "RejuveAirdrop")
         if claimable_amount == 0:
             raise Exception(f"Claimable amount is {claimable_amount} for event")
 
@@ -433,7 +433,7 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def format_user_claim_signature_message(self, registration_id: str) -> dict:
         formatted_message = {
-            "airdropWindowId": self.window_id,
+            "airdropWindowId": int(self.window_id),
             "registrationId": registration_id,
         }
 
