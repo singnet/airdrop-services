@@ -143,6 +143,9 @@ class ClaimHistoryRepository(BaseRepository):
                 }
                 self.add_claim(claim_payload)
                 logger.info("Transaction created in db")
+            else:
+                logger.info(f"Transaction for {address = }, {window_id = } "
+                            f"and {blockchain_method = } already exists in the table")
         except SQLAlchemyError as e:
             logger.exception(f"SQLAlchemyError: {str(e)}")
             self.session.rollback()
