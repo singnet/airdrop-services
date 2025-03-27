@@ -27,23 +27,25 @@ class UserRegistrationServices:
         is_registered: bool,
         airdrop_claim_status: AirdropClaimStatus | None,
     ) -> UserClaimStatus:
-        logger.debug(f"Generate user claim status. "
-                     f"{is_registered = }, {airdrop_claim_status = }")
+        logger.debug(
+            f"Generate user claim status"
+            f"is_registered = {is_registered}, status = {airdrop_claim_status}"
+        )
         if not is_registered:
             return UserClaimStatus.NOT_REGISTERED
-        elif airdrop_claim_status == AirdropClaimStatus.SUCCESS:
+        elif airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
             return UserClaimStatus.RECEIVED
         elif airdrop_claim_status in (
-            AirdropClaimStatus.PENDING,
-            AirdropClaimStatus.ADA_RECEIVED,
-            AirdropClaimStatus.CLAIM_INITIATED,
-            AirdropClaimStatus.CLAIM_SUBMITTED
+            AirdropClaimStatus.PENDING.value,
+            AirdropClaimStatus.ADA_RECEIVED.value,
+            AirdropClaimStatus.CLAIM_INITIATED.value,
+            AirdropClaimStatus.CLAIM_SUBMITTED.value
         ):
             return UserClaimStatus.PENDING
-        elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED:
+        elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED.value:
             return UserClaimStatus.NOT_STARTED
         elif airdrop_claim_status in (
-            AirdropClaimStatus.FAILED,
+            AirdropClaimStatus.FAILED.value,
             None
         ):
             return UserClaimStatus.READY_TO_CLAIM
