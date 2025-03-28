@@ -21,7 +21,7 @@ from common.utils import (
     get_registration_receipt_cardano,
     get_registration_receipt_ethereum
 )
-from constants import CARDANO_ADDRESS_PREFIXES, CardanoEra
+from airdrop.constants import CARDANO_ADDRESS_PREFIXES, CardanoEra
 
 logger = get_logger(__name__)
 
