@@ -126,9 +126,6 @@ class Utils:
         metadata: list
     ) -> tuple[bool, None | dict]:
         tx_value = metadata[0].json_metadata.to_dict()
-        if len(tx_value) != len(registration_message):
-            return False, None
-        short_message = dict((tuple(item.values()) for item in registration_message))
-        if short_message == tx_value:
+        if registration_message == tx_value:
             return True, tx_value
         return False, None
