@@ -41,7 +41,7 @@ class UserClaimService:
     def invoke_token_transfer_cardano_service(payload):
         logger.info("Invoking the cardano token transfer service")
         response = requests.post(
-            TokenTransferCardanoService.get_url(payload["token"]),
+            TokenTransferCardanoService.url.format(token=payload["token"]),
             json=payload,
             headers=TokenTransferCardanoService.headers
         )
