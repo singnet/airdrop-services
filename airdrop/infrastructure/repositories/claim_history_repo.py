@@ -150,3 +150,17 @@ class ClaimHistoryRepository(BaseRepository):
             logger.exception(f"SQLAlchemyError: {str(e)}")
             self.session.rollback()
             raise e
+
+    def get_last_claim_history(self, airdrop_window_id: int, address: str, blockchain_method: str) -> ClaimHistory:
+        claim_history = (
+            self.session.query(ClaimHistory)
+            .filter(
+                ClaimHistory.airdrop_window_id == airdrop_window_id,
+                ClaimHistory.address == address,
+                ClaimHistory.blockchain_method == blockchain_method
+            )
+            .order_by(ClaimHistory.row_created.desc())
+            .first()
+        )
+
+        return claim_history
