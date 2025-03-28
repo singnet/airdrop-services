@@ -21,6 +21,7 @@ from common.utils import (
     get_registration_receipt_cardano,
     get_registration_receipt_ethereum
 )
+from airdrop.constants import CARDANO_ADDRESS_PREFIXES, CardanoEra
 
 logger = get_logger(__name__)
 
@@ -41,12 +42,28 @@ class RejuveAirdrop(DefaultAirdrop):
         self.claim_address = RejuveAirdropConfig.claim_address.value
 
     def check_user_eligibility(self, address: str) -> bool:
-        user_balances = UserBalanceSnapshotRepository().get_balances_by_address_for_airdrop(
-            address=address,
-            airdrop_id=self.id
-        )
+        if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+            formatted_address = Address.from_primitive(address)
 
-        return True if user_balances else False
+            if formatted_address.payment_part is not None and formatted_address.staking_part is not None:
+                balances = UserBalanceSnapshotRepository().get_balances_by_staking_payment_parts_for_airdrop(
+                    payment_part=str(formatted_address.payment_part),
+                    staking_part=str(formatted_address.staking_part),
+                    airdrop_id=self.id
+                )
+
+                return bool(balances and len(balances) > 0)
+
+            logger.error(f"Staking and payment part not found for address: {address}")
+            return False
+
+        else:
+            balances = UserBalanceSnapshotRepository().get_data_by_address(
+                address=address,
+                airdrop_id=self.id
+            )
+
+            return bool(balances and len(balances) > 0)
 
     def format_user_registration_signature_message(
         self,

@@ -1,4 +1,5 @@
 from typing import List
+from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.infrastructure.models import UserBalanceSnapshot, AirdropWindow
@@ -10,24 +11,6 @@ logger = get_logger(__name__)
 
 class UserBalanceSnapshotRepository(BaseRepository):
     def get_data_by_address(
-        self, address: str, window_id: int
-    ) -> UserBalanceSnapshot | None:
-        try:
-            user_balance = (
-                self.session.query(UserBalanceSnapshot)
-                .filter(
-                    UserBalanceSnapshot.address == address,
-                    UserBalanceSnapshot.airdrop_window_id == window_id,
-                )
-                .first()
-            )
-            return user_balance
-        except SQLAlchemyError as e:
-            logger.exception(f"SQLAlchemyError: {e}")
-            self.session.rollback()
-            raise e
-
-    def get_balances_by_address_for_airdrop(
         self,
         address: str,
         airdrop_id: int
@@ -41,7 +24,7 @@ class UserBalanceSnapshotRepository(BaseRepository):
                 )
                 .filter(
                     AirdropWindow.airdrop_id == airdrop_id,
-                    UserBalanceSnapshot.address == address,
+                    UserBalanceSnapshot.address == address
                 )
                 .all()
             )
@@ -50,3 +33,32 @@ class UserBalanceSnapshotRepository(BaseRepository):
             logger.exception(f"SQLAlchemyError: {e}")
             self.session.rollback()
             raise e
+
+    def get_balances_by_staking_payment_parts_for_airdrop(
+        self,
+        airdrop_id: int,
+        payment_part: str,
+        staking_part: str,
+    ) -> List[UserBalanceSnapshot] | None:
+        try:
+            balances = (
+                self.session.query(UserBalanceSnapshot)
+                .join(
+                    AirdropWindow,
+                    UserBalanceSnapshot.airdrop_window_id == AirdropWindow.id
+                )
+                .filter(
+                    AirdropWindow.airdrop_id == airdrop_id,
+                    or_(
+                        UserBalanceSnapshot.payment_part == payment_part,
+                        UserBalanceSnapshot.staking_part == staking_part
+                    )
+                )
+            ).all()
+
+            return balances
+        except SQLAlchemyError as e:
+            logger.exception(f"SQLAlchemyError: {e}")
+            self.session.rollback()
+            raise e
+
