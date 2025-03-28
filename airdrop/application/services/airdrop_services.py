@@ -28,6 +28,7 @@ from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop, BaseAirdrop
+from airdrop.utils import Utils as ut
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import (
@@ -320,7 +321,8 @@ class AirdropServices:
             amount = inputs["amount"]
             blockchain_method = inputs["blockchain_method"]
 
-            user_address = Web3.to_checksum_address(user_address)
+            if ut.recognize_blockchain_network(user_address) == "Ethereum":
+                user_address = Web3.to_checksum_address(user_address)
 
             AirdropRepository().airdrop_window_claim_txn(
                 airdrop_id, airdrop_window_id, user_address, txn_hash, amount, blockchain_method)
