@@ -29,11 +29,12 @@ class UserBalanceSnapshotRepository(BaseRepository):
 
     def get_balances_by_address_for_airdrop(
         self,
-        address: str,
-        airdrop_id: int
+        airdrop_id: int,
+        payment_part: str | None = None,
+        staking_part: str | None = None,
     ) -> List[UserBalanceSnapshot] | None:
         try:
-            user_balances = (
+            query = (
                 self.session.query(UserBalanceSnapshot)
                 .join(
                     AirdropWindow,
@@ -41,11 +42,16 @@ class UserBalanceSnapshotRepository(BaseRepository):
                 )
                 .filter(
                     AirdropWindow.airdrop_id == airdrop_id,
-                    UserBalanceSnapshot.address == address,
                 )
-                .all()
             )
-            return user_balances
+
+            if payment_part:
+                query = query.filter(UserBalanceSnapshot.payment_part == payment_part)
+            
+            if staking_part:
+                query = query.filter(UserBalanceSnapshot.staking_part == staking_part)
+
+            return query.all()
         except SQLAlchemyError as e:
             logger.exception(f"SQLAlchemyError: {e}")
             self.session.rollback()

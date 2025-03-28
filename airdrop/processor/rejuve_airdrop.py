@@ -41,12 +41,20 @@ class RejuveAirdrop(DefaultAirdrop):
         self.claim_address = RejuveAirdropConfig.claim_address.value
 
     def check_user_eligibility(self, address: str) -> bool:
-        user_balances = UserBalanceSnapshotRepository().get_balances_by_address_for_airdrop(
-            address=address,
-            airdrop_id=self.id
-        )
+        formatted_address = Address.from_primitive(address)
 
-        return True if user_balances else False
+        if formatted_address.payment_part is not None and \
+            formatted_address.staking_part is not None:
+            balances = UserBalanceSnapshotRepository().get_balances_by_address_for_airdrop(
+                staking_part=str(formatted_address.staking_part),
+                airdrop_id=self.id
+            )
+
+            return True if balances and len(balances) > 0 else False
+        
+        logger.error(f"Staking and payment part not found for address: {address}")
+
+        return False
 
     def format_user_registration_signature_message(
         self,
