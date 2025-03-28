@@ -1,3 +1,4 @@
+import pycardano
 from decimal import Decimal, ROUND_DOWN
 from airdrop.constants import CardanoEra
 from airdrop.application.services.airdrop_services import AirdropServices
@@ -68,21 +69,62 @@ class RejuveRewardProcessor:
             airdrop_window_id=self.airdrop_window_id,
             snapshot_window_id=self.airdrop_first_window_id,
             snapshot_guid=self.snapshot_guid)
-        for row in ethereum_addresses:
+        amount = len(ethereum_addresses)
+        for index, row in enumerate(ethereum_addresses):
             score, normalized_score = self.calculate_score(row.balance, row.staked)
             address_score[row.address] = (score, normalized_score)
             total_score += normalized_score
-            logger.info(f"For address {row.address} with balance={row.balance} and stake={row.staked} "
-                        f"calculated normalized score={normalized_score}")
+            logger.info(f"[{index+1}/{amount}] Ethereum address {row.address} with balance={row.balance} and "
+                        f"stake={row.staked}, calculated normalized score = {normalized_score}")
 
         cardano_byron_addresses = self.user_reward_repository.get_cardano_registrations(
             airdrop_window_id=self.airdrop_window_id,
-            era=CardanoEra.BYRON
+            address_era=CardanoEra.BYRON
         )
+        amount = len(cardano_byron_addresses)
+        for index, row in enumerate(cardano_byron_addresses):
+            total_balance = Decimal(0)
+            total_stake = Decimal(0)
+            snapshot_balances = self.user_reward_repository.get_cardano_balances(
+                address=row.address,
+                snapshot_window_id=self.airdrop_first_window_id,
+                snapshot_guid=self.snapshot_guid)
+            for balance in snapshot_balances:
+                total_balance += balance.balance
+                total_stake += balance.staked
+            score, normalized_score = self.calculate_score(total_balance, total_stake)
+            address_score[row.address] = (score, normalized_score)
+            total_score += normalized_score
+            logger.info(f"[{index+1}/{amount}] Cardano Byron address {row.address} and {len(snapshot_balances)} "
+                        f"related addresses with total balance={total_balance} and stake={total_stake}, "
+                        f"calculated normalized score = {normalized_score}")
+
         cardano_shelley_addresses = self.user_reward_repository.get_cardano_registrations(
             airdrop_window_id=self.airdrop_window_id,
-            era=CardanoEra.SHELLEY
+            address_era=CardanoEra.SHELLEY
         )
+        amount = len(cardano_shelley_addresses)
+        for index, row in enumerate(cardano_shelley_addresses):
+            total_balance = Decimal(0)
+            total_stake = Decimal(0)
+            address_obj = pycardano.Address.decode(row.address)
+            payment_part = str(address_obj.payment_part) if address_obj.payment_part else None
+            staking_part = str(address_obj.staking_part) if address_obj.staking_part else None
+            snapshot_balances = self.user_reward_repository.get_cardano_balances(
+                address=row.address,
+                payment_part=payment_part,
+                staking_part=staking_part,
+                snapshot_window_id=self.airdrop_first_window_id,
+                snapshot_guid=self.snapshot_guid)
+            for balance in snapshot_balances:
+                total_balance += balance.balance
+                total_stake += balance.staked
+            score, normalized_score = self.calculate_score(total_balance, total_stake)
+            address_score[row.address] = (score, normalized_score)
+            total_score += normalized_score
+            logger.info(f"[{index + 1}/{amount}] Cardano Shelley address {row.address} and {len(snapshot_balances)} "
+                        f"related addresses with total balance={total_balance} and stake={total_stake}, "
+                        f"calculated normalized score = {normalized_score}")
 
         user_rewards = []
         for key, value in address_score.items():
