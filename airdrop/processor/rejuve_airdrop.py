@@ -214,10 +214,13 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def register_trezor(self, data: dict) -> list | str:
         logger.info("The process of registering trezor wallets")
-        address = Web3.to_checksum_address(data["address"])
+        address = data["address"]
         block_number = data["block_number"]
         wallet_name = data["wallet_name"]
         tx_hash = data["tx_hash"]
+
+        if Utils.recognize_blockchain_network(address) == "Ethereum":
+            address = Web3.to_checksum_address(address)
 
         registration_repo = UserRegistrationRepository()
         pending_registration_repo = UserPendingRegistrationRepository()
