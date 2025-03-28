@@ -24,7 +24,8 @@ class UserBalanceSnapshotRepository(BaseRepository):
                 )
                 .filter(
                     AirdropWindow.airdrop_id == airdrop_id,
-                    UserBalanceSnapshot.address == address
+                    UserBalanceSnapshot.address == address,
+                    UserBalanceSnapshot.total > 0
                 )
                 .all()
             )
@@ -49,8 +50,7 @@ class UserBalanceSnapshotRepository(BaseRepository):
                 )
                 .filter(
                     AirdropWindow.airdrop_id == airdrop_id,
-                    UserBalanceSnapshot.address == address,
-                    UserBalanceSnapshot.total > 0
+                    UserBalanceSnapshot.total > 0,
                     or_(
                         UserBalanceSnapshot.payment_part == payment_part,
                         UserBalanceSnapshot.staking_part == staking_part
