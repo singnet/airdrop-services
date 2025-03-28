@@ -391,6 +391,6 @@ functions:
             airdrop_id: ${file(./config.${self:provider.stage}.json):RejuveAirdropId}
 
   check_trezor_registrations:
-    handler: vote/application/handler/airdrop_handlers.check_trezor_registrations
+    handler: airdrop/application/handler/airdrop_handlers.check_trezor_registrations
     events:
       - schedule: cron(0/2 * * * ? *)
