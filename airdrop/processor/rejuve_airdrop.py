@@ -4,13 +4,14 @@ from typing import Dict, List, Tuple, Union
 from web3 import Web3
 from pycardano import Address
 
-from airdrop.constants import AirdropClaimStatus
+from airdrop.constants import AirdropClaimStatus, TransactionType
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration
 from airdrop.application.types.windows import WindowRegistrationData
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnapshotRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
+from airdrop.infrastructure.repositories.pending_user_registration_repo import UserPendingRegistrationRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils, datetime_in_utcnow
@@ -59,6 +60,19 @@ class RejuveAirdrop(DefaultAirdrop):
             "airdropWindowId": self.window_id,
             "blockNumber": block_number,
             "walletAddress": address.lower(),
+            "walletName": wallet_name
+        }
+        return formatted_message
+
+    def format_trezor_user_registration_signature_message(
+        self,
+        block_number: int,
+        wallet_name: str,
+    ) -> dict:
+        formatted_message = {
+            "airdropId": self.id,
+            "airdropWindowId": self.window_id,
+            "blockNumber": block_number,
             "walletName": wallet_name
         }
         return formatted_message
@@ -123,6 +137,13 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def register(self, data: dict) -> list | str:
         logger.info(f"Starting the registration process for {self.__class__.__name__}")
+        if "tx_hash" in data:
+            return self.register_trezor(data)
+        else:
+            return self.register_regular_wallet(data)
+
+    def register_regular_wallet(self, data: dict) -> list | str:
+        logger.info("The process of registering regular wallets")
         address = Web3.to_checksum_address(data["address"])
         signature = data["signature"]
         block_number = data["block_number"]
@@ -164,9 +185,63 @@ class RejuveAirdrop(DefaultAirdrop):
             self.window_id,
             address,
             receipt,
-            signature,
             formatted_message,
-            block_number
+            block_number,
+            signature
+        )
+
+        return receipt
+
+    def register_trezor(self, data: dict) -> list | str:
+        logger.info("The process of registering trezor wallets")
+        address = Web3.to_checksum_address(data["address"])
+        block_number = data["block_number"]
+        wallet_name = data["wallet_name"]
+        tx_hash = data["tx_hash"]
+
+        registration_repo = UserRegistrationRepository()
+        pending_registration_repo = UserPendingRegistrationRepository()
+        airdrop_window_repo = AirdropWindowRepository()
+        airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
+
+        is_registration_open = self.is_phase_window_open(
+            airdrop_window.registration_start_period,
+            airdrop_window.registration_end_period
+        )
+
+        if airdrop_window.registration_required and not is_registration_open:
+            logger.error("Airdrop window is not accepting registration at this moment")
+            raise Exception("Airdrop window is not accepting registration at this moment")
+
+        is_user_eligible = self.check_user_eligibility(address=address)
+        if not is_user_eligible:
+            logger.error("Address is not eligible for this airdrop")
+            raise Exception("Address is not eligible for this airdrop")
+
+        is_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
+        if is_registered:
+            logger.error("Address is already registered for this airdrop window")
+            raise Exception("Address is already registered for this airdrop window")
+
+        is_pending_registered = pending_registration_repo.is_pending_user_registration_exist(address, self.window_id)
+        if is_pending_registered:
+            logger.error("Address is already waiting to be registered for this airdrop window")
+            raise Exception("Address is already waiting to be registered for this airdrop window")
+
+        formatted_message = self.format_trezor_user_registration_signature_message(
+            block_number=block_number,
+            wallet_name=wallet_name
+        )
+
+        receipt = self.generate_user_registration_receipt(self.id, self.window_id, address)
+        pending_registration_repo.register_user(
+            airdrop_window_id=self.window_id,
+            address=address,
+            receipt=receipt,
+            tx_hash=tx_hash,
+            signature_details=formatted_message,
+            block_number=block_number,
+            transaction_type=TransactionType.REGISTRATION.value
         )
 
         return receipt

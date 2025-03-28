@@ -42,6 +42,7 @@ class UserBalanceSnapshotRepository(BaseRepository):
                 .filter(
                     AirdropWindow.airdrop_id == airdrop_id,
                     UserBalanceSnapshot.address == address,
+                    UserBalanceSnapshot.total > 0
                 )
                 .all()
             )

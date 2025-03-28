@@ -389,3 +389,8 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):rejuve_airdrop_update_claim_tx_cron_status}
           input:
             airdrop_id: ${file(./config.${self:provider.stage}.json):RejuveAirdropId}
+
+  check_trezor_registrations:
+    handler: vote/application/handler/airdrop_handlers.check_trezor_registrations
+    events:
+      - schedule: cron(0/2 * * * ? *)

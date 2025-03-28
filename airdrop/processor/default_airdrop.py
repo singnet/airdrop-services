@@ -167,13 +167,13 @@ class DefaultAirdrop(BaseAirdrop):
             airdrop_windows = airdrop_window_repo.get_airdrop_windows(self.id)
             for window in airdrop_windows:
                 receipt = self.generate_user_registration_receipt(self.id, window.id, address)
-                registration_repo.register_user(window.id, address, receipt, signature,
-                                                formatted_message, block_number)
+                registration_repo.register_user(window.id, address, receipt, formatted_message,
+                                                block_number, signature)
                 response.append({"airdrop_window_id": window.id, "receipt": receipt})
         else:
             receipt = self.generate_user_registration_receipt(self.id, self.window_id, address)
-            registration_repo.register_user(self.window_id, address, receipt, signature,
-                                            formatted_message, block_number)
+            registration_repo.register_user(self.window_id, address, receipt, formatted_message,
+                                            block_number, signature)
             # Keeping it backward compatible
             response = receipt
 
