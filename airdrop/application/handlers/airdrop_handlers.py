@@ -182,3 +182,9 @@ def update_user_claim_transaction_status_post_block_confirmation(event, context)
     airdrop_id = event["airdrop_id"]
     UserClaimService(airdrop_id).update_user_claim_transaction_status_post_block_confirmation()
     logger.info("success")
+
+
+def check_trezor_registrations(event, context):
+    logger.info(f"Checking trezor registrations transactions {event}")
+    UserRegistrationServices().check_trezor_registrations()
+    logger.info("Success")
