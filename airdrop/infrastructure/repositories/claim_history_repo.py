@@ -4,7 +4,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.models import ClaimHistory
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.utils import datetime_in_utcnow
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -12,6 +11,9 @@ logger = get_logger(__name__)
 
 class ClaimHistoryRepository(BaseRepository):
     def add_claim(self, claim_payload: dict) -> None:
+        logger.info(f"Add claim for address = {claim_payload.get('address')}, "
+                    f"window_id = {claim_payload.get('airdrop_window_id')}, "
+                    f"blockchain_method = {claim_payload.get('blockchain_method')}")
         self.add(
             ClaimHistory(
                 airdrop_id=claim_payload.get("airdrop_id"),
@@ -150,3 +152,17 @@ class ClaimHistoryRepository(BaseRepository):
             logger.exception(f"SQLAlchemyError: {str(e)}")
             self.session.rollback()
             raise e
+
+    def get_last_claim_history(self, airdrop_window_id: int, address: str, blockchain_method: str) -> ClaimHistory:
+        claim_history = (
+            self.session.query(ClaimHistory)
+            .filter(
+                ClaimHistory.airdrop_window_id == airdrop_window_id,
+                ClaimHistory.address == address,
+                ClaimHistory.blockchain_method == blockchain_method
+            )
+            .order_by(ClaimHistory.row_created.desc())
+            .first()
+        )
+
+        return claim_history

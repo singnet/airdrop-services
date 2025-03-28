@@ -17,10 +17,11 @@ from airdrop.constants import (
     UserClaimStatus
 )
 from airdrop.application.types.windows import WindowRegistrationData, RegistrationDetails
-from airdrop.infrastructure.models import PendingTransaction, UserRegistration
+from airdrop.infrastructure.models import PendingTransaction
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.pending_user_registration_repo import UserPendingRegistrationRepository
+from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils, datetime_in_utcnow
 from common.logger import get_logger
@@ -41,19 +42,19 @@ class UserRegistrationServices:
         )
         if not is_registered:
             return UserClaimStatus.NOT_REGISTERED
-        elif airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
+        elif airdrop_claim_status == AirdropClaimStatus.SUCCESS:
             return UserClaimStatus.RECEIVED
         elif airdrop_claim_status in (
-            AirdropClaimStatus.PENDING.value,
-            AirdropClaimStatus.ADA_RECEIVED.value,
-            AirdropClaimStatus.CLAIM_INITIATED.value,
-            AirdropClaimStatus.CLAIM_SUBMITTED.value
+            AirdropClaimStatus.PENDING,
+            AirdropClaimStatus.ADA_RECEIVED,
+            AirdropClaimStatus.CLAIM_INITIATED,
+            AirdropClaimStatus.CLAIM_SUBMITTED
         ):
             return UserClaimStatus.PENDING
-        elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED.value:
+        elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED:
             return UserClaimStatus.NOT_STARTED
         elif airdrop_claim_status in (
-            AirdropClaimStatus.FAILED.value,
+            AirdropClaimStatus.FAILED,
             None
         ):
             return UserClaimStatus.READY_TO_CLAIM
@@ -65,7 +66,23 @@ class UserRegistrationServices:
     def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
         is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(address, airdrop_window_id)
 
-        airdrop_claim_status = AirdropWindowRepository().is_airdrop_window_claimed(airdrop_window_id, address)
+        last_claim = ClaimHistoryRepository().get_last_claim_history(
+            airdrop_window_id=airdrop_window_id,
+            address=address,
+            blockchain_method="token_transfer"
+        )
+
+        last_ada_transfer = ClaimHistoryRepository().get_last_claim_history(
+            airdrop_window_id=airdrop_window_id,
+            address=address,
+            blockchain_method="ada_transfer"
+        )
+
+        airdrop_claim_status = None
+        if last_claim is not None:
+            airdrop_claim_status = AirdropClaimStatus(last_claim.transaction_status)
+        elif last_ada_transfer is not None:
+            airdrop_claim_status = AirdropClaimStatus(last_ada_transfer.transaction_status)
 
         user_claim_status = UserRegistrationServices.__generate_user_claim_status(is_registered, airdrop_claim_status)
 

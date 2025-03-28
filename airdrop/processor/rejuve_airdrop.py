@@ -161,11 +161,14 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def register_regular_wallet(self, data: dict) -> list | str:
         logger.info("The process of registering regular wallets")
-        address = Web3.to_checksum_address(data["address"])
+        address = data["address"]
         signature = data["signature"]
         block_number = data["block_number"]
         wallet_name = data["wallet_name"]
         key = data.get("key")
+
+        if Utils.recognize_blockchain_network(address) == "Ethereum":
+            address = Web3.to_checksum_address(address)
 
         registration_repo = UserRegistrationRepository()
         airdrop_window_repo = AirdropWindowRepository()
@@ -211,10 +214,13 @@ class RejuveAirdrop(DefaultAirdrop):
 
     def register_trezor(self, data: dict) -> list | str:
         logger.info("The process of registering trezor wallets")
-        address = Web3.to_checksum_address(data["address"])
+        address = data["address"]
         block_number = data["block_number"]
         wallet_name = data["wallet_name"]
         tx_hash = data["tx_hash"]
+
+        if Utils.recognize_blockchain_network(address) == "Ethereum":
+            address = Web3.to_checksum_address(address)
 
         registration_repo = UserRegistrationRepository()
         pending_registration_repo = UserPendingRegistrationRepository()
@@ -278,7 +284,7 @@ class RejuveAirdrop(DefaultAirdrop):
         """
         logger.info(f"Starting registration update process for {self.__class__.__name__}")
 
-        address = data["address"].lower()
+        address = data["address"]
         signature = data["signature"]
         reward_address = data["reward_address"]
         block_number = data["block_number"]
@@ -287,6 +293,9 @@ class RejuveAirdrop(DefaultAirdrop):
 
         registration_repo = UserRegistrationRepository()
         airdrop_window_repo = AirdropWindowRepository()
+
+        if Utils.recognize_blockchain_network(address) == "Ethereum":
+            address = Web3.to_checksum_address(address)
 
         airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
         if not airdrop_window:
