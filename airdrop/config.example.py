@@ -86,7 +86,7 @@ class DepositDetails:
 
 
 class TokenTransferCardanoService:
-    url = "http://127.0.0.1:5005/cardano/AGIX/transfer"
+    url = "http://127.0.0.1:5005/cardano/{token}/transfer"
     http_method = "post"
     headers = {'content-type': 'application/json'}
 

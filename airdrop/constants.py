@@ -159,3 +159,16 @@ class BlockFrostAPI:
 class TransactionType(Enum):
     CLAIM = "Claim"
     REGISTRATION = "Registration"
+
+
+class CardanoEra(Enum):
+    BYRON = "Byron"
+    SHELLEY = "Shelley"
+    ANY = "*"
+
+
+CARDANO_ADDRESS_PREFIXES = {
+    CardanoEra.BYRON: ["DdzFF", "Ae2", "37bt"],
+    CardanoEra.SHELLEY: ["addr1", "addr_test1"]
+}
+CARDANO_ADDRESS_PREFIXES[CardanoEra.ANY] = [prefix for era in CARDANO_ADDRESS_PREFIXES.values() for prefix in era]
