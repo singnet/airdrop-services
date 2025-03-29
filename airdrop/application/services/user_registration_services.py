@@ -64,7 +64,12 @@ class UserRegistrationServices:
 
     @staticmethod
     def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
-        is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(address, airdrop_window_id)
+        is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(
+            address, airdrop_window_id
+        )
+
+        if isinstance(user_registration, list):
+            raise Exception(f"Find multiple registrations for address={address}, window_id={airdrop_window_id}")           
 
         last_claim = ClaimHistoryRepository().get_last_claim_history(
             airdrop_window_id=airdrop_window_id,
@@ -87,10 +92,10 @@ class UserRegistrationServices:
         user_claim_status = UserRegistrationServices.__generate_user_claim_status(is_registered, airdrop_claim_status)
 
         registration_details = RegistrationDetails(
-            registration_id=user_registration.receipt_generated,
-            reject_reason=user_registration.reject_reason,
-            other_details=user_registration.signature_details,
-            registered_at=str(user_registration.registered_at)
+            registration_id = str(user_registration.receipt_generated),
+            reject_reason = str(user_registration.reject_reason),
+            other_details = user_registration.signature_details,
+            registered_at = str(user_registration.registered_at)
         ) if is_registered and user_registration is not None else None
 
         window_registration_data = WindowRegistrationData(
