@@ -25,6 +25,7 @@ from airdrop.infrastructure.repositories.pending_user_registration_repo import U
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils, datetime_in_utcnow
+from common.exceptions import BadRequestException
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -70,7 +71,8 @@ class UserRegistrationServices:
         )
 
         if isinstance(user_registration, list):
-            raise Exception(f"Find multiple registrations for address={address}, window_id={airdrop_window_id}")           
+            logger.error(f"Find multiple registrations for {address=}, {airdrop_window_id=}")
+            raise BadRequestException("Something wrong with user registration")
 
         last_claim = ClaimHistoryRepository().get_last_claim_history(
             airdrop_window_id=airdrop_window_id,
