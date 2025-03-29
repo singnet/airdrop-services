@@ -1,4 +1,5 @@
 import json
+from time import time
 
 from web3 import Web3
 from eth_account import Account
@@ -12,7 +13,7 @@ def test_match_signature():
     private_key = test_account.key.hex()
     address = Web3.to_checksum_address(test_account.address)
 
-    block_number = 123
+    timestamp = int(time())
     airdrop_id = 6
     airdrop_window_id = 24
     wallet_name = "Metamask"
@@ -22,27 +23,25 @@ def test_match_signature():
     message = {
         "airdropId": airdrop_id,
         "airdropWindowId": airdrop_window_id,
-        "blockNumber": block_number,
+        "timestamp": timestamp,
         "walletAddress": address.lower(),
         "walletName": wallet_name,
     }
 
-    message_str = json.dumps(message, separators=(",", ":"), sort_keys=True)
-    encoded_message = encode_defunct(text=message_str)
+    original_message = json.dumps(message, separators=(',', ':'))
+    encoded_message = encode_defunct(text=original_message)
     signed_message = Account.sign_message(encoded_message, private_key=private_key)
     signature = signed_message.signature.hex()
 
     formatted_message = airdrop.match_signature(
-        signature=signature,
         address=address,
-        block_number=block_number,
+        signature=signature,
+        timestamp=timestamp,
         wallet_name=wallet_name,
-        key=None,
+        key=None
     )
 
-    print("signature", signature)
-    print("address", address)
-    print("block_number", block_number)
-    print("wallet_name", wallet_name)
+    print("formatted_message", formatted_message)
+    print("original_message", original_message)
 
     assert formatted_message == message
