@@ -6,6 +6,7 @@ from jsonschema import validate, ValidationError
 
 from blockfrost import BlockFrostApi
 from blockfrost.utils import ApiError as BlockFrostApiError
+from web3 import Web3
 
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import BlockFrostAPIBaseURL, BlockFrostAccountDetails
@@ -114,11 +115,14 @@ class UserRegistrationServices:
             validate(instance=inputs, schema=ADDRESS_ELIGIBILITY_SCHEMA)
 
             airdrop_id = inputs["airdrop_id"]
-            address = inputs["address"].lower()
+            address = inputs["address"]
             signature = inputs.get("signature")
-            block_number = inputs.get("block_number")
+            timestamp = inputs.get("timestamp")
             wallet_name = inputs.get("wallet_name")
             key = inputs.get("key")
+
+            if Utils.recognize_blockchain_network(address) == "Ethereum":
+                address = Web3.to_checksum_address(address)
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
@@ -140,7 +144,7 @@ class UserRegistrationServices:
                 airdrop_object.match_signature(
                     address=address,
                     signature=signature,
-                    block_number=block_number,
+                    timestamp=timestamp,
                     wallet_name=wallet_name,
                     key=key
                 )
