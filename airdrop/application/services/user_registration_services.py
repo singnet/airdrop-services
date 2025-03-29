@@ -6,6 +6,7 @@ from jsonschema import validate, ValidationError
 
 from blockfrost import BlockFrostApi
 from blockfrost.utils import ApiError as BlockFrostApiError
+from web3 import Web3
 
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import BlockFrostAPIBaseURL, BlockFrostAccountDetails
@@ -24,6 +25,7 @@ from airdrop.infrastructure.repositories.pending_user_registration_repo import U
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils, datetime_in_utcnow
+from common.exceptions import BadRequestException
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -64,7 +66,13 @@ class UserRegistrationServices:
 
     @staticmethod
     def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
-        is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(address, airdrop_window_id)
+        is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(
+            address, airdrop_window_id
+        )
+
+        if isinstance(user_registration, list):
+            logger.error(f"Find multiple registrations for {address=}, {airdrop_window_id=}")
+            raise BadRequestException("Something wrong with user registration")
 
         last_claim = ClaimHistoryRepository().get_last_claim_history(
             airdrop_window_id=airdrop_window_id,
@@ -87,10 +95,10 @@ class UserRegistrationServices:
         user_claim_status = UserRegistrationServices.__generate_user_claim_status(is_registered, airdrop_claim_status)
 
         registration_details = RegistrationDetails(
-            registration_id=user_registration.receipt_generated,
-            reject_reason=user_registration.reject_reason,
-            other_details=user_registration.signature_details,
-            registered_at=str(user_registration.registered_at)
+            registration_id = str(user_registration.receipt_generated),
+            reject_reason = str(user_registration.reject_reason),
+            other_details = user_registration.signature_details,
+            registered_at = str(user_registration.registered_at)
         ) if is_registered and user_registration is not None else None
 
         window_registration_data = WindowRegistrationData(
@@ -109,11 +117,14 @@ class UserRegistrationServices:
             validate(instance=inputs, schema=ADDRESS_ELIGIBILITY_SCHEMA)
 
             airdrop_id = inputs["airdrop_id"]
-            address = inputs["address"].lower()
+            address = inputs["address"]
             signature = inputs.get("signature")
-            block_number = inputs.get("block_number")
+            timestamp = inputs.get("timestamp")
             wallet_name = inputs.get("wallet_name")
             key = inputs.get("key")
+
+            if Utils.recognize_blockchain_network(address) == "Ethereum":
+                address = Web3.to_checksum_address(address)
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
@@ -135,7 +146,7 @@ class UserRegistrationServices:
                 airdrop_object.match_signature(
                     address=address,
                     signature=signature,
-                    block_number=block_number,
+                    timestamp=timestamp,
                     wallet_name=wallet_name,
                     key=key
                 )
