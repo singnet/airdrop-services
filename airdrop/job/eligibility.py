@@ -224,9 +224,9 @@ def manual_rejuve_processes(event, context):
             "failed"
         )
 
-    claim_statuses = {item.value for item in RejuveProcesses}
-    if process not in claim_statuses:
-        logger.info(f"Invalid process name provided! Available processes: {claim_statuses}")
+    rejuve_job_methods = {item.value for item in RejuveProcesses}
+    if process not in rejuve_job_methods:
+        logger.info(f"Invalid process name provided! Available processes: {rejuve_job_methods}")
         return generate_lambda_response(
             200,
             "failed"
