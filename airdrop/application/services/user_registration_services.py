@@ -1,9 +1,15 @@
+from datetime import datetime
 from http import HTTPStatus
 from typing import List
 
 from jsonschema import validate, ValidationError
 
+from blockfrost import BlockFrostApi
+from blockfrost.utils import ApiError as BlockFrostApiError
+from web3 import Web3
+
 from airdrop.application.services.airdrop_services import AirdropServices
+from airdrop.config import BlockFrostAPIBaseURL, BlockFrostAccountDetails
 from airdrop.constants import (
     ELIGIBILITY_SCHEMA,
     ADDRESS_ELIGIBILITY_SCHEMA,
@@ -12,9 +18,14 @@ from airdrop.constants import (
     UserClaimStatus
 )
 from airdrop.application.types.windows import WindowRegistrationData, RegistrationDetails
+from airdrop.infrastructure.models import PendingTransaction
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
+from airdrop.infrastructure.repositories.pending_user_registration_repo import UserPendingRegistrationRepository
+from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
+from airdrop.utils import Utils, datetime_in_utcnow
+from common.exceptions import BadRequestException
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,19 +44,19 @@ class UserRegistrationServices:
         )
         if not is_registered:
             return UserClaimStatus.NOT_REGISTERED
-        elif airdrop_claim_status == AirdropClaimStatus.SUCCESS.value:
+        elif airdrop_claim_status == AirdropClaimStatus.SUCCESS:
             return UserClaimStatus.RECEIVED
         elif airdrop_claim_status in (
-            AirdropClaimStatus.PENDING.value,
-            AirdropClaimStatus.ADA_RECEIVED.value,
-            AirdropClaimStatus.CLAIM_INITIATED.value,
-            AirdropClaimStatus.CLAIM_SUBMITTED.value
+            AirdropClaimStatus.PENDING,
+            AirdropClaimStatus.ADA_RECEIVED,
+            AirdropClaimStatus.CLAIM_INITIATED,
+            AirdropClaimStatus.CLAIM_SUBMITTED
         ):
             return UserClaimStatus.PENDING
-        elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED.value:
+        elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED:
             return UserClaimStatus.NOT_STARTED
         elif airdrop_claim_status in (
-            AirdropClaimStatus.FAILED.value,
+            AirdropClaimStatus.FAILED,
             None
         ):
             return UserClaimStatus.READY_TO_CLAIM
@@ -55,17 +66,39 @@ class UserRegistrationServices:
 
     @staticmethod
     def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
-        is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(address, airdrop_window_id)
+        is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(
+            address, airdrop_window_id
+        )
 
-        airdrop_claim_status = AirdropWindowRepository().is_airdrop_window_claimed(airdrop_window_id, address)
+        if isinstance(user_registration, list):
+            logger.error(f"Find multiple registrations for {address=}, {airdrop_window_id=}")
+            raise BadRequestException("Something wrong with user registration")
+
+        last_claim = ClaimHistoryRepository().get_last_claim_history(
+            airdrop_window_id=airdrop_window_id,
+            address=address,
+            blockchain_method="token_transfer"
+        )
+
+        last_ada_transfer = ClaimHistoryRepository().get_last_claim_history(
+            airdrop_window_id=airdrop_window_id,
+            address=address,
+            blockchain_method="ada_transfer"
+        )
+
+        airdrop_claim_status = None
+        if last_claim is not None:
+            airdrop_claim_status = AirdropClaimStatus(last_claim.transaction_status)
+        elif last_ada_transfer is not None:
+            airdrop_claim_status = AirdropClaimStatus(last_ada_transfer.transaction_status)
 
         user_claim_status = UserRegistrationServices.__generate_user_claim_status(is_registered, airdrop_claim_status)
 
         registration_details = RegistrationDetails(
-            registration_id=user_registration.receipt_generated,
-            reject_reason=user_registration.reject_reason,
-            other_details=user_registration.signature_details,
-            registered_at=str(user_registration.registered_at)
+            registration_id = str(user_registration.receipt_generated),
+            reject_reason = str(user_registration.reject_reason),
+            other_details = user_registration.signature_details,
+            registered_at = str(user_registration.registered_at)
         ) if is_registered and user_registration is not None else None
 
         window_registration_data = WindowRegistrationData(
@@ -84,11 +117,14 @@ class UserRegistrationServices:
             validate(instance=inputs, schema=ADDRESS_ELIGIBILITY_SCHEMA)
 
             airdrop_id = inputs["airdrop_id"]
-            address = inputs["address"].lower()
+            address = inputs["address"]
             signature = inputs.get("signature")
-            block_number = inputs.get("block_number")
+            timestamp = inputs.get("timestamp")
             wallet_name = inputs.get("wallet_name")
             key = inputs.get("key")
+
+            if Utils.recognize_blockchain_network(address) == "Ethereum":
+                address = Web3.to_checksum_address(address)
 
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
@@ -110,7 +146,7 @@ class UserRegistrationServices:
                 airdrop_object.match_signature(
                     address=address,
                     signature=signature,
-                    block_number=block_number,
+                    timestamp=timestamp,
                     wallet_name=wallet_name,
                     key=key
                 )
@@ -254,3 +290,72 @@ class UserRegistrationServices:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)
         return HTTPStatus.OK, response
+
+    @staticmethod
+    def check_trezor_registrations() -> None:
+        logger.info("Calling the function to check the registration of Trezor wallets")
+        pending_registration_repo = UserPendingRegistrationRepository()
+        pending_registrations = pending_registration_repo.get_all_pending_registrations()
+        logger.info(f"Found {len(pending_registrations)} pending registrations to process")
+
+        blockfrost = BlockFrostApi(project_id=BlockFrostAccountDetails.project_id,
+                                   base_url=BlockFrostAPIBaseURL)
+        to_delete: list[PendingTransaction] = list()
+        to_save: list[PendingTransaction] = list()
+
+        for registration in pending_registrations:
+            logger.info(f"Processing pending registration {registration.id} for {registration.address}")
+            try:
+                tx_data = blockfrost.transaction(registration.tx_hash)
+                tx_metadata = blockfrost.transaction_metadata(registration.tx_hash)
+                tx_utxos = blockfrost.transaction_utxos(registration.tx_hash)
+
+                registration_repo = UserRegistrationRepository()
+                logger.info(f"Found tx {registration.tx_hash}: block={tx_data.block_height} index={tx_data.index}")
+                is_registered, _ = registration_repo.get_user_registration_details(registration.address,
+                                                                                   registration.airdrop_window_id)
+                if is_registered:
+                    logger.error("Address is already registered for this airdrop window")
+                    raise Exception("Address is already registered for this airdrop window")
+
+                # Transaction address check
+                is_address_match = False
+                for tx_input in tx_utxos.inputs:
+                    if tx_input.address == registration.address:
+                        is_address_match = True
+                        break
+                # Metadata check
+                is_metadata_match, metadata = Utils().compare_data_from_db_and_metadata(
+                    registration.signature_details,
+                    tx_metadata
+                )
+                logger.info(f"Checks: {is_registered = } | {is_address_match = } | {is_metadata_match = }")
+                if not is_registered and is_address_match and is_metadata_match:
+                    logger.info(f"Registration to save {registration.id}")
+                    registration.tx_metadata = metadata
+                    to_save.append(registration)
+                else:
+                    logger.info(f"Registration to delete {registration.id}")
+                    to_delete.append(registration)
+            except BlockFrostApiError as error:
+                logger.warning(f"Failed load transaction {registration.tx_hash} with blockfrost error {error}")
+                row_created = registration.row_created.replace(tzinfo=datetime.timezone.utc)
+                if datetime_in_utcnow() - row_created > datetime.timedelta(hours=48):
+                    logger.warning(f"Transaction live time expired, deleted transaction {registration.tx_hash}")
+                    to_delete.append(registration)
+                continue
+
+        logger.info(f"Amount of registrations to save: {len(to_save)}")
+        for registration in to_save:
+            registration_repo.register_user(
+                airdrop_window_id=registration.airdrop_window_id,
+                address=registration.address,
+                receipt=registration.receipt_generated,
+                tx_hash=registration.tx_hash,
+                signature_details=registration.signature_details,
+                block_number=registration.user_signature_block_number
+            )
+            to_delete.append(registration)
+
+        logger.info(f"Amount of registrations to delete: {len(to_delete)}")
+        pending_registration_repo.delete_pending_registrations(to_delete)
