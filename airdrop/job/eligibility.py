@@ -3,7 +3,7 @@ import sys
 
 sys.path.append('/opt')
 
-from airdrop.job.rejuve_processes import ChangerAddressFormat, ConverterFromStrToJSON, RejuveProcesses
+from airdrop.job.rejuve_processes import ChangerAddressFormat, ConverterFromStrToJSON, RejuveProcesses, snapshot_cardano_addresses
 from airdrop.job.reward_processors.loyalty_reward_processor import LoyaltyEligibilityProcessor
 from airdrop.job.reward_processors.rejuve_reward_processor import RejuveRewardProcessor
 
@@ -212,7 +212,7 @@ def manual_rejuve_processes(event, context):
             "failed"
         )
 
-    airdrop_id = event.get('airdrop_id')
+    airdrop_id = event.get('airdrop_id', 6)
     window_id = event.get('window_id')
     address = event.get('address')
     process = event.get('process')
@@ -236,6 +236,8 @@ def manual_rejuve_processes(event, context):
         response = ConverterFromStrToJSON(airdrop_id, window_id, address).process_convert()
     elif process == RejuveProcesses.CHANGE_ADDRESS_FORMAT.value:
         response = ChangerAddressFormat(airdrop_id, window_id, address).process_change()
+    elif process == RejuveProcesses.ADD_PAYMENT_AND_STAKING_PARTS.value:
+        response = snapshot_cardano_addresses(window_id)
 
     logger.info(f"Completed processing {process}")
     return generate_lambda_response(

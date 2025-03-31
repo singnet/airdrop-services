@@ -1,9 +1,12 @@
 from enum import Enum
 import json
 
+import pycardano
+from sqlalchemy import select
 from web3 import Web3
 
-from airdrop.infrastructure.models import UserRegistration
+from airdrop.infrastructure.models import UserBalanceSnapshot, UserRegistration
+from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils
 from common.logger import get_logger
@@ -14,6 +17,7 @@ logger = get_logger(__name__)
 class RejuveProcesses(Enum):
     CONVERT_FROM_STR_TO_JSON = "convert_str_to_json"
     CHANGE_ADDRESS_FORMAT = "change_address_format"
+    ADD_PAYMENT_AND_STAKING_PARTS = "add_payment_and_staking_parts"
 
 
 class ConverterFromStrToJSON:
@@ -107,3 +111,41 @@ class ChangerAddressFormat:
 
         return (f"{len(registrations)} registrations changed on "
                 f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
+
+
+def snapshot_cardano_addresses(window_id=24):
+    SNAPSHOT_UUID = "dafeabea-8ee5-4835-88f7-05508e9a50f1"
+    AIRDROP_WINDOW_ID = window_id
+    LINES_PER_BATCH = 10000
+
+    repo = AirdropRepository()
+    query = select(UserBalanceSnapshot).where(
+        UserBalanceSnapshot.snapshot_guid == SNAPSHOT_UUID,
+        UserBalanceSnapshot.airdrop_window_id == AIRDROP_WINDOW_ID,
+        UserBalanceSnapshot.address.like("addr%")
+    )
+    result = repo.session.execute(query).all()
+    total = len(result)
+
+    batch_count = 0
+    for index, row in enumerate(result):
+        logger.info(f"[{index+1}/{total}] {row[0].address}")
+        try:
+            addrobj = pycardano.Address.decode(row[0].address)
+        except Exception as e:
+            logger.exception(str(e))
+            continue
+
+        row[0].payment_part = str(addrobj.payment_part) if addrobj.payment_part else None
+        row[0].staking_part = str(addrobj.staking_part) if addrobj.staking_part else None
+
+        batch_count += 1
+
+        if batch_count == LINES_PER_BATCH:
+            repo.session.commit()
+            logger.info(f"Committed {index} records")
+            batch_count = 0
+
+    if batch_count > 0:
+        repo.session.commit()
+        logger.info("Final commit done")

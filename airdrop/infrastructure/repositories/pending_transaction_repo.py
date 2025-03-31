@@ -4,7 +4,7 @@ from airdrop.infrastructure.models import PendingTransaction
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
 
 
-class UserPendingRegistrationRepository(BaseRepository):
+class PendingTransactionRepository(BaseRepository):
 
     def register_user(self, airdrop_window_id: int,
                       address: str, receipt: str,
