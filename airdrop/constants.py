@@ -30,7 +30,7 @@ USER_REGISTRATION_SCHEMA = {
     "properties": {
         "address": {"type": "string"},
     },
-    "required": ["address", "airdrop_id", "airdrop_window_id", "block_number"],
+    "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
 
 CLAIM_SCHEMA = {
