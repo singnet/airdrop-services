@@ -3,7 +3,7 @@ import sys
 
 sys.path.append('/opt')
 
-from airdrop.job.convert_str_to_json import ConverterFromStrToJSON
+from airdrop.job.rejuve_processes import ChangerAddressFormat, ConverterFromStrToJSON, RejuveProcesses
 from airdrop.job.reward_processors.loyalty_reward_processor import LoyaltyEligibilityProcessor
 
 import time
@@ -183,8 +183,8 @@ def process_loyalty_airdrop_reward_eligibility(event, context):
 
 # Use for RJV Airdrop ONLY
 @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
-def process_convert_str_to_json(event, context):
-    logger.info(f"Converting string to json for the event={json.dumps(event)}")
+def manual_rejuve_processes(event, context):
+    logger.info(f"Proccesing for the event={json.dumps(event)}")
 
     if not event or not isinstance(event, dict):
         logger.info("Empty event provided for processing or invalid input format provided")
@@ -195,6 +195,8 @@ def process_convert_str_to_json(event, context):
 
     airdrop_id = event.get('airdrop_id')
     window_id = event.get('window_id')
+    address = event.get('address')
+    process = event.get('process')
 
     if not airdrop_id or not window_id:
         logger.info(f"Invalid airdrop_id={airdrop_id} or window_id={window_id} provided")
@@ -203,9 +205,20 @@ def process_convert_str_to_json(event, context):
             "failed"
         )
 
-    response = ConverterFromStrToJSON(airdrop_id=airdrop_id, window_id=window_id).process_convert()
+    claim_statuses = {item.value for item in RejuveProcesses}
+    if process not in claim_statuses:
+        logger.info(f"Invalid process name provided! Available processes: {claim_statuses}")
+        return generate_lambda_response(
+            200,
+            "failed"
+        )
 
-    logger.info(f"Completed Processing converting")
+    if process == RejuveProcesses.CONVERT_FROM_STR_TO_JSON.value:
+        response = ConverterFromStrToJSON(airdrop_id, window_id, address).process_convert()
+    elif process == RejuveProcesses.CHANGE_ADDRESS_FORMAT.value:
+        response = ChangerAddressFormat(airdrop_id, window_id, address).process_change()
+
+    logger.info(f"Completed processing {process}")
     return generate_lambda_response(
         200,
         response

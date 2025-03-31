@@ -1,3 +1,4 @@
+from enum import Enum
 import json
 
 from web3 import Web3
@@ -10,11 +11,16 @@ from common.logger import get_logger
 logger = get_logger(__name__)
 
 
+class RejuveProcesses(Enum):
+    CONVERT_FROM_STR_TO_JSON = "convert_str_to_json"
+    CHANGE_ADDRESS_FORMAT = "change_address_format"
+
+
 class ConverterFromStrToJSON:
-    def __init__(self, airdrop_id, window_id):
+    def __init__(self, airdrop_id, window_id, address=None):
         self._airdrop_id = airdrop_id
         self._window_id = window_id
-        self.address = None
+        self.address = address
 
     def receive_all_registrations(self) -> list[UserRegistration]:
         logger.info("Processing the receiving all registrations for the "
@@ -56,10 +62,10 @@ class ConverterFromStrToJSON:
 
 
 class ChangerAddressFormat:
-    def __init__(self, airdrop_id, window_id):
+    def __init__(self, airdrop_id, window_id, address=None):
         self._airdrop_id = airdrop_id
         self._window_id = window_id
-        self.address = None
+        self.address = address
 
     def receive_all_registrations(self) -> list[UserRegistration]:
         logger.info("Processing the receiving all registrations for the "

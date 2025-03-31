@@ -139,9 +139,9 @@ functions:
           name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-eligibility-processor
           enabled: true
 
-  process_convert_str_to_json:
+  manual_rejuve_processes:
     timeout: 600
-    handler: airdrop/job/eligibility.process_convert_str_to_json
+    handler: airdrop/job/eligibility.manual_rejuve_processes
     events: []
 
   get_airdrop_schedules:
