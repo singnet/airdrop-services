@@ -3,6 +3,7 @@ import sys
 
 sys.path.append('/opt')
 
+from airdrop.job.rejuve_processes import ChangerAddressFormat, ConverterFromStrToJSON, RejuveProcesses, snapshot_cardano_addresses
 from airdrop.job.reward_processors.loyalty_reward_processor import LoyaltyEligibilityProcessor
 from airdrop.job.reward_processors.rejuve_reward_processor import RejuveRewardProcessor
 
@@ -198,3 +199,44 @@ def process_rejuve_airdrop_reward(event, context):
 
     return {}
 
+
+# Use for RJV Airdrop ONLY
+@exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
+def manual_rejuve_processes(event, context):
+    logger.info(f"Proccesing for the event={json.dumps(event)}")
+
+    if not event or not isinstance(event, dict):
+        logger.info("Empty event provided for processing or invalid input format provided")
+        return generate_lambda_response(
+            200,
+            "failed"
+        )
+
+    process = event.get("process")
+    if not process:
+        logger.info("The process parameter was not passed")
+        return generate_lambda_response(
+            200,
+            "failed"
+        )
+
+    rejuve_job_methods = {item.value for item in RejuveProcesses}
+    if process not in rejuve_job_methods:
+        logger.info(f"Invalid process name provided! Available processes: {rejuve_job_methods}")
+        return generate_lambda_response(
+            200,
+            "failed"
+        )
+
+    if process == RejuveProcesses.CONVERT_FROM_STR_TO_JSON.value:
+        response = ConverterFromStrToJSON(event).process_convert()
+    elif process == RejuveProcesses.CHANGE_ADDRESS_FORMAT.value:
+        response = ChangerAddressFormat(event).process_change()
+    elif process == RejuveProcesses.ADD_PAYMENT_AND_STAKING_PARTS.value:
+        response = snapshot_cardano_addresses(event)
+
+    logger.info(f"Completed processing {process}")
+    return generate_lambda_response(
+        200,
+        response
+    )

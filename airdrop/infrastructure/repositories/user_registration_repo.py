@@ -110,6 +110,14 @@ class UserRegistrationRepository(BaseRepository):
         self.session.commit()
         return registration
 
+    def update_registration_address(self, airdrop_window_id, old_address, new_address):
+        registration = self.session.query(UserRegistration) \
+            .filter_by(airdrop_window_id=airdrop_window_id, address=old_address).one()
+        if new_address is not None:
+            registration.address = new_address
+        self.session.commit()
+        return registration
+
     def is_user_eligible_for_given_window(self, address, airdrop_id, airdrop_window_id):
         user_reward = self.session.query(UserReward) \
             .filter(UserReward.address == address) \

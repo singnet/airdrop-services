@@ -13,7 +13,7 @@ from airdrop.infrastructure.repositories.airdrop_repository import AirdropReposi
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.balance_snapshot import UserBalanceSnapshotRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
-from airdrop.infrastructure.repositories.pending_user_registration_repo import UserPendingRegistrationRepository
+from airdrop.infrastructure.repositories.pending_transaction_repo import PendingTransactionRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils, datetime_in_utcnow
@@ -263,7 +263,7 @@ class RejuveAirdrop(DefaultAirdrop):
             address = Web3.to_checksum_address(address)
 
         registration_repo = UserRegistrationRepository()
-        pending_registration_repo = UserPendingRegistrationRepository()
+        pending_registration_repo = PendingTransactionRepository()
         airdrop_window_repo = AirdropWindowRepository()
         airdrop_window = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
 

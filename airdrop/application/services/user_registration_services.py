@@ -21,7 +21,7 @@ from airdrop.application.types.windows import WindowRegistrationData, Registrati
 from airdrop.infrastructure.models import PendingTransaction
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
-from airdrop.infrastructure.repositories.pending_user_registration_repo import UserPendingRegistrationRepository
+from airdrop.infrastructure.repositories.pending_transaction_repo import PendingTransactionRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils, datetime_in_utcnow
@@ -294,7 +294,7 @@ class UserRegistrationServices:
     @staticmethod
     def check_trezor_registrations() -> None:
         logger.info("Calling the function to check the registration of Trezor wallets")
-        pending_registration_repo = UserPendingRegistrationRepository()
+        pending_registration_repo = PendingTransactionRepository()
         pending_registrations = pending_registration_repo.get_all_pending_registrations()
         logger.info(f"Found {len(pending_registrations)} pending registrations to process")
 
