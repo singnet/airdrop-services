@@ -22,9 +22,9 @@ class RejuveProcesses(Enum):
 
 class ConverterFromStrToJSON:
     def __init__(self, event: dict):
-        self._airdrop_id = event.get('airdrop_id')
-        self._window_id = event.get('window_id')
-        self.address = event.get('address')
+        self._airdrop_id = event.get("airdrop_id")
+        self._window_id = event.get("window_id")
+        self.address = event.get("address")
 
     def receive_all_registrations(self) -> list[UserRegistration]:
         logger.info("Processing the receiving all registrations for the "
@@ -71,9 +71,9 @@ class ConverterFromStrToJSON:
 
 class ChangerAddressFormat:
     def __init__(self, event: dict):
-        self._airdrop_id = event.get('airdrop_id')
-        self._window_id = event.get('window_id')
-        self.address = event.get('address')
+        self._airdrop_id = event.get("airdrop_id")
+        self._window_id = event.get("window_id")
+        self.address = event.get("address")
 
     def receive_all_registrations(self) -> list[UserRegistration]:
         logger.info("Processing the receiving all registrations for the "
@@ -122,8 +122,8 @@ class ChangerAddressFormat:
 
 
 def snapshot_cardano_addresses(event: dict):
-    window_id: int = event.get('window_id')
-    snapshot_guid: str = event.get('snapshot_guid')
+    window_id: int = event.get("window_id")
+    snapshot_guid: str = event.get("snapshot_guid")
     LINES_PER_BATCH = 10000
 
     if not window_id or not snapshot_guid:

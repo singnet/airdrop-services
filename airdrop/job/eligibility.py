@@ -212,7 +212,7 @@ def manual_rejuve_processes(event, context):
             "failed"
         )
 
-    process = event.get('process')
+    process = event.get("process")
     if not process:
         logger.info("The process parameter was not passed")
         return generate_lambda_response(
