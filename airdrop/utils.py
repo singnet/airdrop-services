@@ -119,3 +119,13 @@ class Utils:
         if message.startswith(prefix):
             message = message[len(prefix):]
         return message
+
+    @staticmethod
+    def compare_data_from_db_and_metadata(
+        registration_message: dict,
+        metadata: list
+    ) -> tuple[bool, None | dict]:
+        tx_value = metadata[0].json_metadata.to_dict()
+        if registration_message == tx_value:
+            return True, tx_value
+        return False, None

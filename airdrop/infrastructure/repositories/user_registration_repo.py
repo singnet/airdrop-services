@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -72,7 +72,8 @@ class UserRegistrationRepository(BaseRepository):
         else:
             return True, is_registered_user.receipt_generated
 
-    def register_user(self, airdrop_window_id, address, receipt, signature, signature_details, block_number):
+    def register_user(self, airdrop_window_id, address, receipt,
+                      signature_details, block_number, signature=None, tx_hash=None):
         user = UserRegistration(
             airdrop_window_id=airdrop_window_id,
             address=address,
@@ -80,7 +81,8 @@ class UserRegistrationRepository(BaseRepository):
             receipt_generated=receipt,
             user_signature=signature,
             signature_details=signature_details,
-            user_signature_block_number=block_number
+            user_signature_block_number=block_number,
+            tx_hash=tx_hash
         )
         self.add(user)
 
@@ -132,7 +134,7 @@ class UserRegistrationRepository(BaseRepository):
         address: Optional[str] = None,
         airdrop_window_id: Optional[int] = None,
         registration_id: Optional[str] = None
-    ) -> Tuple[bool, Optional[UserRegistration]]:
+    ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
         query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
         if address:
             query = query.filter(UserRegistration.address == address)

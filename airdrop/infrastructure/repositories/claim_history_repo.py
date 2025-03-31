@@ -4,25 +4,27 @@ from sqlalchemy.exc import SQLAlchemyError
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.models import ClaimHistory
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
-from airdrop.utils import datetime_in_utcnow
 from common.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class ClaimHistoryRepository(BaseRepository):
-    def add_claim(self, claim_payload):
+    def add_claim(self, claim_payload: dict) -> None:
+        logger.info(f"Add claim for address = {claim_payload.get('address')}, "
+                    f"window_id = {claim_payload.get('airdrop_window_id')}, "
+                    f"blockchain_method = {claim_payload.get('blockchain_method')}")
         self.add(
             ClaimHistory(
-                airdrop_id=claim_payload["airdrop_id"],
-                airdrop_window_id=claim_payload["airdrop_window_id"],
-                address=claim_payload["address"],
-                blockchain_method=claim_payload["blockchain_method"],
-                claimable_amount=claim_payload["claimable_amount"],
-                unclaimed_amount=claim_payload["unclaimed_amount"],
-                transaction_status=claim_payload["transaction_status"],
-                claimed_on=claim_payload["claimed_on"]
-
+                airdrop_id=claim_payload.get("airdrop_id"),
+                airdrop_window_id=claim_payload.get("airdrop_window_id"),
+                address=claim_payload.get("address"),
+                blockchain_method=claim_payload.get("blockchain_method"),
+                claimable_amount=claim_payload.get("claimable_amount"),
+                unclaimed_amount=claim_payload.get("unclaimed_amount"),
+                transaction_status=claim_payload.get("transaction_status"),
+                claimed_on=claim_payload.get("claimed_on"),
+                transaction_hash=claim_payload.get("transaction_hash")
             )
         )
 
@@ -33,14 +35,7 @@ class ClaimHistoryRepository(BaseRepository):
                 SELECT ur.address, 
                     COALESCE(
                         JSON_UNQUOTE(JSON_EXTRACT(ur.signature_details, '$.message.Airdrop.cardanoAddress')), 
-                        CASE 
-                            WHEN LEFT(TRIM(ur.signature_details), 1) = '"' 
-                            THEN JSON_UNQUOTE(JSON_EXTRACT(
-                                    CAST(JSON_UNQUOTE(ur.signature_details) AS JSON), 
-                                    '$.walletAddress'
-                                ))
-                            ELSE JSON_UNQUOTE(JSON_EXTRACT(ur.signature_details, '$.walletAddress'))
-                        END
+                        JSON_UNQUOTE(JSON_EXTRACT(ur.signature_details, '$.walletAddress'))
                     ) AS cardano_address, 
                     ch.airdrop_window_id, 
                     ch.claimable_amount 
@@ -135,7 +130,6 @@ class ClaimHistoryRepository(BaseRepository):
                      .filter(ClaimHistory.address == address)
                      .filter(ClaimHistory.airdrop_window_id == window_id)
                      .filter(ClaimHistory.blockchain_method == blockchain_method)
-                     .filter(ClaimHistory.transaction_status == AirdropClaimStatus.PENDING.value)
                      .first())
             if not query:
                 logger.info("Transaction is missing in db, create transaction")
@@ -147,12 +141,28 @@ class ClaimHistoryRepository(BaseRepository):
                     "unclaimed_amount": 0,
                     "transaction_hash": tx_hash,
                     "blockchain_method": blockchain_method,
-                    "transaction_status": AirdropClaimStatus.PENDING.value,
-                    "claimed_on": datetime_in_utcnow()
+                    "transaction_status": AirdropClaimStatus.PENDING.value
                 }
                 self.add_claim(claim_payload)
                 logger.info("Transaction created in db")
+            else:
+                logger.info(f"Transaction for {address = }, {window_id = } "
+                            f"and {blockchain_method = } already exists in the table")
         except SQLAlchemyError as e:
             logger.exception(f"SQLAlchemyError: {str(e)}")
             self.session.rollback()
             raise e
+
+    def get_last_claim_history(self, airdrop_window_id: int, address: str, blockchain_method: str) -> ClaimHistory:
+        claim_history = (
+            self.session.query(ClaimHistory)
+            .filter(
+                ClaimHistory.airdrop_window_id == airdrop_window_id,
+                ClaimHistory.address == address,
+                ClaimHistory.blockchain_method == blockchain_method
+            )
+            .order_by(ClaimHistory.row_created.desc())
+            .first()
+        )
+
+        return claim_history

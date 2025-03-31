@@ -167,13 +167,13 @@ class DefaultAirdrop(BaseAirdrop):
             airdrop_windows = airdrop_window_repo.get_airdrop_windows(self.id)
             for window in airdrop_windows:
                 receipt = self.generate_user_registration_receipt(self.id, window.id, address)
-                registration_repo.register_user(window.id, address, receipt, signature,
-                                                formatted_message, block_number)
+                registration_repo.register_user(window.id, address, receipt, formatted_message,
+                                                block_number, signature)
                 response.append({"airdrop_window_id": window.id, "receipt": receipt})
         else:
             receipt = self.generate_user_registration_receipt(self.id, self.window_id, address)
-            registration_repo.register_user(self.window_id, address, receipt, signature,
-                                            formatted_message, block_number)
+            registration_repo.register_user(self.window_id, address, receipt, formatted_message,
+                                            block_number, signature)
             # Keeping it backward compatible
             response = receipt
 
@@ -253,7 +253,7 @@ class DefaultAirdrop(BaseAirdrop):
         first_input_address = input_addresses[0]
         stake_address_from_event = Utils.get_stake_key_address(first_input_address)
 
-        ethereum_address = user_registration.address
+        ethereum_address = Web3.to_checksum_address(user_registration.address)
         cardano_address = user_registration.signature_details.get("message", {}).get("Airdrop", {}).get(
             "cardanoAddress", None)
         user_stake_address = Utils.get_stake_key_address(cardano_address)

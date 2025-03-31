@@ -29,9 +29,8 @@ USER_REGISTRATION_SCHEMA = {
     "type": "object",
     "properties": {
         "address": {"type": "string"},
-        "signature": {"type": "string"},
     },
-    "required": ["signature", "address", "airdrop_id", "airdrop_window_id", "block_number"],
+    "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
 
 CLAIM_SCHEMA = {
@@ -155,3 +154,21 @@ class BlockFrostAPI:
     get_transaction_details = BlockFrostAPIBaseURL + "/v0/txs/{hash}"
     get_stake_address = BlockFrostAPIBaseURL + "/v0/addresses/{address}"
     get_account_associated_addresses = BlockFrostAPIBaseURL + "/v0/accounts/{stake_address}/addresses"
+
+
+class TransactionType(Enum):
+    CLAIM = "Claim"
+    REGISTRATION = "Registration"
+
+
+class CardanoEra(Enum):
+    BYRON = "Byron"
+    SHELLEY = "Shelley"
+    ANY = "*"
+
+
+CARDANO_ADDRESS_PREFIXES = {
+    CardanoEra.BYRON: ["DdzFF", "Ae2", "37bt"],
+    CardanoEra.SHELLEY: ["addr1", "addr_test1"]
+}
+CARDANO_ADDRESS_PREFIXES[CardanoEra.ANY] = [prefix for era in CARDANO_ADDRESS_PREFIXES.values() for prefix in era]
