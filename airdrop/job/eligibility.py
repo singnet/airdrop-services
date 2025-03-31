@@ -212,13 +212,9 @@ def manual_rejuve_processes(event, context):
             "failed"
         )
 
-    airdrop_id = event.get('airdrop_id', 6)
-    window_id = event.get('window_id')
-    address = event.get('address')
     process = event.get('process')
-
-    if not airdrop_id or not window_id:
-        logger.info(f"Invalid airdrop_id={airdrop_id} or window_id={window_id} provided")
+    if not process:
+        logger.info("The process parameter was not passed")
         return generate_lambda_response(
             200,
             "failed"
@@ -233,11 +229,11 @@ def manual_rejuve_processes(event, context):
         )
 
     if process == RejuveProcesses.CONVERT_FROM_STR_TO_JSON.value:
-        response = ConverterFromStrToJSON(airdrop_id, window_id, address).process_convert()
+        response = ConverterFromStrToJSON(event).process_convert()
     elif process == RejuveProcesses.CHANGE_ADDRESS_FORMAT.value:
-        response = ChangerAddressFormat(airdrop_id, window_id, address).process_change()
+        response = ChangerAddressFormat(event).process_change()
     elif process == RejuveProcesses.ADD_PAYMENT_AND_STAKING_PARTS.value:
-        response = snapshot_cardano_addresses(window_id)
+        response = snapshot_cardano_addresses(event)
 
     logger.info(f"Completed processing {process}")
     return generate_lambda_response(

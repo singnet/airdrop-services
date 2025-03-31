@@ -21,10 +21,10 @@ class RejuveProcesses(Enum):
 
 
 class ConverterFromStrToJSON:
-    def __init__(self, airdrop_id, window_id, address=None):
-        self._airdrop_id = airdrop_id
-        self._window_id = window_id
-        self.address = address
+    def __init__(self, event: dict):
+        self._airdrop_id = event.get('airdrop_id')
+        self._window_id = event.get('window_id')
+        self.address = event.get('address')
 
     def receive_all_registrations(self) -> list[UserRegistration]:
         logger.info("Processing the receiving all registrations for the "
@@ -53,6 +53,10 @@ class ConverterFromStrToJSON:
                 logger.info("Successfully updated")
 
     def process_convert(self) -> str:
+        if not self._airdrop_id or not self._window_id:
+            logger.info(f"Invalid airdrop_id={self._airdrop_id} or window_id={self._window_id} provided")
+            return "failed"
+
         logger.info("Processing the converting for the "
                     f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
 
@@ -66,10 +70,10 @@ class ConverterFromStrToJSON:
 
 
 class ChangerAddressFormat:
-    def __init__(self, airdrop_id, window_id, address=None):
-        self._airdrop_id = airdrop_id
-        self._window_id = window_id
-        self.address = address
+    def __init__(self, event: dict):
+        self._airdrop_id = event.get('airdrop_id')
+        self._window_id = event.get('window_id')
+        self.address = event.get('address')
 
     def receive_all_registrations(self) -> list[UserRegistration]:
         logger.info("Processing the receiving all registrations for the "
@@ -101,6 +105,10 @@ class ChangerAddressFormat:
                 logger.info(f"Address = {addr.address} is not available for updating")
 
     def process_change(self) -> str:
+        if not self._airdrop_id or not self._window_id:
+            logger.info(f"Invalid airdrop_id={self._airdrop_id} or window_id={self._window_id} provided")
+            return "failed"
+
         logger.info("Processing the address format changing for the "
                     f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
 
@@ -113,15 +121,19 @@ class ChangerAddressFormat:
                 f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
 
 
-def snapshot_cardano_addresses(window_id=24):
-    SNAPSHOT_UUID = "dafeabea-8ee5-4835-88f7-05508e9a50f1"
-    AIRDROP_WINDOW_ID = window_id
+def snapshot_cardano_addresses(event: dict):
+    window_id: int = event.get('window_id')
+    snapshot_guid: str = event.get('snapshot_guid')
     LINES_PER_BATCH = 10000
+
+    if not window_id or not snapshot_guid:
+        logger.info(f"Invalid {window_id = } or {snapshot_guid = } provided")
+        return "failed"
 
     repo = AirdropRepository()
     query = select(UserBalanceSnapshot).where(
-        UserBalanceSnapshot.snapshot_guid == SNAPSHOT_UUID,
-        UserBalanceSnapshot.airdrop_window_id == AIRDROP_WINDOW_ID,
+        UserBalanceSnapshot.snapshot_guid == snapshot_guid,
+        UserBalanceSnapshot.airdrop_window_id == window_id,
         UserBalanceSnapshot.address.like("addr%")
     )
     result = repo.session.execute(query).all()
@@ -149,3 +161,5 @@ def snapshot_cardano_addresses(window_id=24):
     if batch_count > 0:
         repo.session.commit()
         logger.info("Final commit done")
+
+    return "success"
