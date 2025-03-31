@@ -2,7 +2,7 @@ from enum import Enum
 import json
 
 import pycardano
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from web3 import Web3
 
 from airdrop.infrastructure.models import UserBalanceSnapshot, UserRegistration
@@ -134,7 +134,13 @@ def snapshot_cardano_addresses(event: dict):
     query = select(UserBalanceSnapshot).where(
         UserBalanceSnapshot.snapshot_guid == snapshot_guid,
         UserBalanceSnapshot.airdrop_window_id == window_id,
-        UserBalanceSnapshot.address.like("addr%")
+        UserBalanceSnapshot.address.like("addr%"),
+        or_(
+            UserBalanceSnapshot.payment_part.is_(None),
+            UserBalanceSnapshot.payment_part == "",
+            UserBalanceSnapshot.staking_part.is_(None),
+            UserBalanceSnapshot.staking_part == ""
+        )
     )
     result = repo.session.execute(query).all()
     total = len(result)
