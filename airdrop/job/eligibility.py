@@ -4,6 +4,7 @@ import sys
 sys.path.append('/opt')
 
 from airdrop.job.reward_processors.loyalty_reward_processor import LoyaltyEligibilityProcessor
+from airdrop.job.reward_processors.rejuve_reward_processor import RejuveRewardProcessor
 
 import time
 import uuid
@@ -178,3 +179,22 @@ def process_loyalty_airdrop_reward_eligibility(event, context):
         200,
         response
     )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
+def process_rejuve_airdrop_reward(event, context):
+    # TODO: response format and data (depending on exception_handler)
+    logger.info(f"Processing Rejuve airdrop reward with the event={json.dumps(event)}")
+
+    airdrop_id = event.get("airdrop_id")
+    airdrop_window_id = event.get("airdrop_window_id")
+    snapshot_guid = event.get("snapshot_guid")
+
+    if not airdrop_id or not airdrop_window_id:
+        logger.error(f"Invalid airdrop_id={airdrop_id} or airdrop_window_id={airdrop_window_id}")
+        return {}
+
+    RejuveRewardProcessor(airdrop_id, airdrop_window_id, snapshot_guid).process_user_rewards()
+
+    return {}
+
