@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import timezone
+from typing import Tuple, Optional
 
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY, AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION
 from airdrop.utils import datetime_in_utcnow
@@ -12,7 +13,7 @@ logger = get_logger(__name__)
 
 class BaseAirdrop(ABC):
     @abstractmethod
-    def __init__(self, airdrop_id, airdrop_window_id=None):
+    def __init__(self, airdrop_id: int, airdrop_window_id: Optional[int] = None):
         self.domain_name = "Base Airdrop"
         self.id = airdrop_id
         self.window_id = airdrop_window_id
@@ -31,7 +32,7 @@ class BaseAirdrop(ABC):
         pass
 
     @staticmethod
-    def is_registration_window_open(start_period, end_period) -> bool:
+    def is_phase_window_open(start_period, end_period) -> bool:
         now = datetime_in_utcnow()
 
         if start_period.tzinfo is None:
@@ -67,9 +68,29 @@ class BaseAirdrop(ABC):
         pass
 
     @abstractmethod
-    def update_registration(self, **kwargs) -> list:
+    def update_registration(self, **kwargs) -> list | dict:
         pass
 
     @abstractmethod
-    def generate_eligibility_response(self, **kwargs):
+    def generate_multiple_windows_eligibility_response(self, **kwargs) -> dict:
+        pass
+
+    @abstractmethod
+    def check_user_eligibility(self, *args, **kwargs) -> bool:
+        pass
+
+    @abstractmethod
+    def match_signature(self, *args, **kwargs) -> dict:
+        pass
+
+    @abstractmethod
+    def generate_eligibility_response(self, **kwargs) -> dict:
+        pass
+
+    @abstractmethod
+    def get_claimable_amount(self, **kwargs) -> Tuple[int, int]:
+        pass
+
+    @abstractmethod
+    def validate_deposit_event(self, **kwargs) -> None:
         pass

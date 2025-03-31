@@ -40,8 +40,11 @@ class UserClaimService:
     @staticmethod
     def invoke_token_transfer_cardano_service(payload):
         logger.info("Invoking the cardano token transfer service")
-        response = requests.post(TokenTransferCardanoService.url, json=payload,
-                                 headers=TokenTransferCardanoService.headers)
+        response = requests.post(
+            TokenTransferCardanoService.url.format(token=payload["token"]),
+            json=payload,
+            headers=TokenTransferCardanoService.headers
+        )
         response_body = json.loads(response.text)
         logger.info("Response from transfer service:\n"
                     f"Response status code: {response.status_code}\n"
@@ -53,7 +56,6 @@ class UserClaimService:
             logger.exception(error_message)
             utils.report_slack(type=1, slack_message=error_message, slack_config=SLACK_HOOK)
             return {}
-        logger.info(f"Response from token transfer cardano service {response.text}")
         return response_body
 
     def initiate_claim_for_users(self):
@@ -96,14 +98,20 @@ class UserClaimService:
     def update_user_claim_transaction_status_post_block_confirmation(self):
         unique_transaction_hashes = ClaimHistoryRepository(). \
             get_unique_transaction_hashes(self.airdrop_id, AirdropClaimStatus.CLAIM_SUBMITTED.value)
+        logger.info(f"Unique transaction for updating status: {unique_transaction_hashes}")
         hashes_with_enough_confirmations = []
         for transaction_hash in unique_transaction_hashes:
             transaction_detail = EventConsumerService.get_transaction_details(transaction_hash)
             transaction_block_no = transaction_detail["block_height"]
             current_block_no = EventConsumerService.get_current_block_no()
             block_diff = current_block_no - transaction_block_no
+            logger.info(f"For transaction {transaction_hash} block passed: {block_diff}")
             if block_diff > MIN_BLOCK_CONFIRMATION_REQUIRED:
                 hashes_with_enough_confirmations.append(transaction_hash)
+                logger.info(f"Transaction {transaction_hash} added to updating status list")
+            else:
+                logger.info(f"Transaction {transaction_hash} remains waiting "
+                            "for the required number of blocks to be passed")
 
         ClaimHistoryRepository().update_claim_status_for_given_transaction_hashes(hashes_with_enough_confirmations,
                                                                                   AirdropClaimStatus.SUCCESS.value)

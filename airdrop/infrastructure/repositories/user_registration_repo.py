@@ -1,4 +1,4 @@
-from datetime import datetime
+from typing import Optional, Tuple, Union
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,7 +14,6 @@ class UserRegistrationRepository(BaseRepository):
 
     def subscribe_to_notifications(self, email, airdrop_id):
         try:
-
             is_existing_email = self.session.query(UserNotifications.id).filter(
                 UserNotifications.email == email).filter(UserNotifications.airdrop_id == airdrop_id).first()
 
@@ -27,7 +26,6 @@ class UserRegistrationRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-
 
     def airdrop_window_user_details(self, airdrop_window_id, address):
         user_data = (
@@ -74,7 +72,8 @@ class UserRegistrationRepository(BaseRepository):
         else:
             return True, is_registered_user.receipt_generated
 
-    def register_user(self, airdrop_window_id, address, receipt, signature, signature_details, block_number):
+    def register_user(self, airdrop_window_id, address, receipt,
+                      signature_details, block_number, signature=None, tx_hash=None):
         user = UserRegistration(
             airdrop_window_id=airdrop_window_id,
             address=address,
@@ -82,7 +81,8 @@ class UserRegistrationRepository(BaseRepository):
             receipt_generated=receipt,
             user_signature=signature,
             signature_details=signature_details,
-            user_signature_block_number=block_number
+            user_signature_block_number=block_number,
+            tx_hash=tx_hash
         )
         self.add(user)
 
@@ -110,6 +110,14 @@ class UserRegistrationRepository(BaseRepository):
         self.session.commit()
         return registration
 
+    def update_registration_address(self, airdrop_window_id, old_address, new_address):
+        registration = self.session.query(UserRegistration) \
+            .filter_by(airdrop_window_id=airdrop_window_id, address=old_address).one()
+        if new_address is not None:
+            registration.address = new_address
+        self.session.commit()
+        return registration
+
     def is_user_eligible_for_given_window(self, address, airdrop_id, airdrop_window_id):
         user_reward = self.session.query(UserReward) \
             .filter(UserReward.address == address) \
@@ -121,7 +129,12 @@ class UserRegistrationRepository(BaseRepository):
         else:
             return False
 
-    def get_user_registration_details(self, address=None, airdrop_window_id=None, registration_id=None):
+    def get_user_registration_details(
+        self,
+        address: Optional[str] = None,
+        airdrop_window_id: Optional[int] = None,
+        registration_id: Optional[str] = None
+    ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
         query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
         if address:
             query = query.filter(UserRegistration.address == address)

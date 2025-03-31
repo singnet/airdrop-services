@@ -97,11 +97,15 @@ class UserBalanceSnapshot(Base, AuditClass):
         nullable=False,
     )
     address = Column("address", VARCHAR(250), nullable=False)
+    payment_part = Column("payment_part", VARCHAR(250), nullable=True)
+    staking_part = Column("staking_part", VARCHAR(250), nullable=True)
     balance = Column("balance", DECIMAL(64, 0), nullable=False)
     staked = Column("staked", DECIMAL(64, 0), nullable=False)
     total = Column("total", DECIMAL(64, 0), nullable=False)
     snapshot_guid = Column("snapshot_guid", VARCHAR(50), nullable=False)
     Index("window_snapshotguid_addr_idx", airdrop_window_id, snapshot_guid, address)
+    Index("payment_part_staking_part_idx", payment_part, staking_part)
+    Index("snapshot_guid_idx", snapshot_guid)
 
 
 class UserRegistration(Base, AuditClass):
@@ -118,9 +122,29 @@ class UserRegistration(Base, AuditClass):
     user_signature = Column("user_signature", VARCHAR(250), nullable=True, index=True)
     signature_details = Column("signature_details", JSON, nullable=True)
     user_signature_block_number = Column("user_signature_block_number", BIGINT, nullable=True, index=True)
+    tx_hash = Column("tx_hash", VARCHAR(250), nullable=True, index=True)
 
     UniqueConstraint(airdrop_window_id, address)
     airdrop_window = relationship(AirdropWindow, backref="users")
+
+
+class PendingTransaction(Base, AuditClass):
+    __tablename__ = "pending_transactions"
+    airdrop_window_id = Column(
+        BIGINT,
+        ForeignKey("airdrop_window.row_id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    address = Column("address", VARCHAR(250), nullable=False)
+    reject_reason = Column("reject_reason", JSON, nullable=True)
+    receipt_generated = Column("receipt_generated", VARCHAR(250), nullable=True)
+    tx_hash = Column("tx_hash", VARCHAR(250), nullable=False)
+    signature_details = Column("signature_details", JSON, nullable=True)
+    user_signature_block_number = Column("user_signature_block_number", BIGINT, nullable=True)
+    transaction_type = Column("transaction_type", VARCHAR(50), nullable=True)
+
+    UniqueConstraint(airdrop_window_id, address)
+    airdrop_window = relationship(AirdropWindow, backref="pending_users")
 
 
 class UserReward(Base, AuditClass):
@@ -214,5 +238,5 @@ class ClaimHistory(Base, AuditClass):
         backref="claim_history",
         primaryjoin="foreign(ClaimHistory.airdrop_window_id) == UserRegistration.airdrop_window_id",
         lazy="joined",
-        uselist=True
+        uselist=False
     )

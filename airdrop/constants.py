@@ -16,13 +16,21 @@ ELIGIBILITY_SCHEMA = {
     },
     "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
+
+ADDRESS_ELIGIBILITY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "address": {"type": "string"},
+    },
+    "required": ["address", "airdrop_id"],
+}
+
 USER_REGISTRATION_SCHEMA = {
     "type": "object",
     "properties": {
         "address": {"type": "string"},
-        "signature": {"type": "string"},
     },
-    "required": ["signature", "address", "airdrop_id", "airdrop_window_id", "block_number"],
+    "required": ["address", "airdrop_id", "airdrop_window_id"],
 }
 
 CLAIM_SCHEMA = {
@@ -38,14 +46,11 @@ CLAIM_SCHEMA = {
 DEPOSIT_EVENT_TX_METADATA = {
     "type": "object",
     "properties": {
-        "s1": {"type": "string"},
-        "s2": {"type": "string"},
-        "s3": {"type": "string"},
         "r1": {"type": "string"},
         "r2": {"type": "string"},
         "wid": {"type": "string"}
     },
-    "required": ["s1", "s2", "s3", "r1", "r2", "wid"]
+    "required": ["r1", "r2", "wid"]
 }
 
 USER_REGISTRATION_SIGNATURE_DEFAULT_FORMAT = {
@@ -119,6 +124,15 @@ USER_CLAIM_SIGNATURE_DEFAULT_FORMAT = {
     },
 }
 
+
+class UserClaimStatus(Enum):
+    RECEIVED = "RECEIVED"
+    READY_TO_CLAIM = "READY_TO_CLAIM"
+    NOT_REGISTERED = "NOT_REGISTERED"
+    NOT_STARTED = "NOT_STARTED"
+    PENDING = "PENDING"
+
+
 class AirdropClaimStatus(Enum):
     PENDING = "PENDING"
     SUCCESS = "SUCCESS"
@@ -140,3 +154,21 @@ class BlockFrostAPI:
     get_transaction_details = BlockFrostAPIBaseURL + "/v0/txs/{hash}"
     get_stake_address = BlockFrostAPIBaseURL + "/v0/addresses/{address}"
     get_account_associated_addresses = BlockFrostAPIBaseURL + "/v0/accounts/{stake_address}/addresses"
+
+
+class TransactionType(Enum):
+    CLAIM = "Claim"
+    REGISTRATION = "Registration"
+
+
+class CardanoEra(Enum):
+    BYRON = "Byron"
+    SHELLEY = "Shelley"
+    ANY = "*"
+
+
+CARDANO_ADDRESS_PREFIXES = {
+    CardanoEra.BYRON: ["DdzFF", "Ae2", "37bt"],
+    CardanoEra.SHELLEY: ["addr1", "addr_test1"]
+}
+CARDANO_ADDRESS_PREFIXES[CardanoEra.ANY] = [prefix for era in CARDANO_ADDRESS_PREFIXES.values() for prefix in era]

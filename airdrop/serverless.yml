@@ -139,6 +139,15 @@ functions:
           name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-eligibility-processor
           enabled: true
 
+  process_rejuve_reward:
+    timeout: 600
+    handler: airdrop/job/eligibility.process_rejuve_airdrop_reward
+
+  manual_rejuve_processes:
+    timeout: 600
+    handler: airdrop/job/eligibility.manual_rejuve_processes
+    events: []
+
   get_airdrop_schedules:
     handler: airdrop/application/handlers/airdrop_handlers.get_airdrop_schedules
     events:
@@ -179,6 +188,23 @@ functions:
     events:
       - http:
           path: /airdrop/registration/update
+          method: post
+          cors:
+            origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-requested-with
+
+  address_eligibility:
+    handler: airdrop/application/handlers/airdrop_handlers.address_eligibility
+    events:
+      - http:
+          path: /airdrop/address-eligibility
           method: post
           cors:
             origin: ${file(./config.${self:provider.stage}.json):ORIGIN}
@@ -349,6 +375,13 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_transfer_claim_cron_status}
           input:
             airdrop_id: ${file(./config.${self:provider.stage}.json):LoyaltyAirdropId}
+      - schedule:
+          rate: rate(1 hour)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-rejuve-airdrop-transfer-claim
+          enabled: ${file(./config.${self:provider.stage}.json):rejuve_airdrop_transfer_claim_cron_status}
+          input:
+            airdrop_id: ${file(./config.${self:provider.stage}.json):RejuveAirdropId}
+    timeout: 300
 
   cardano-airdrop-update-claim-tx-status:
     handler: airdrop/application/handlers/airdrop_handlers.update_user_claim_transaction_status_post_block_confirmation
@@ -359,3 +392,14 @@ functions:
           enabled: ${file(./config.${self:provider.stage}.json):loyalty_airdrop_update_claim_tx_cron_status}
           input:
             airdrop_id: ${file(./config.${self:provider.stage}.json):LoyaltyAirdropId}
+      - schedule:
+          rate: rate(5 minutes)
+          name: ${file(./config.${self:provider.stage}.json):ENVIRONMENT}-rejuve-airdrop-update-claim-tx-status
+          enabled: ${file(./config.${self:provider.stage}.json):rejuve_airdrop_update_claim_tx_cron_status}
+          input:
+            airdrop_id: ${file(./config.${self:provider.stage}.json):RejuveAirdropId}
+
+  check_trezor_registrations:
+    handler: airdrop/application/handlers/airdrop_handlers.check_trezor_registrations
+    events:
+      - schedule: cron(0/2 * * * ? *)

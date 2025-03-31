@@ -65,6 +65,18 @@ def airdrop_window_stake_details(event, context):
 
 
 @exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+def address_eligibility(event, context):
+    logger.info(f"Got Airdrops Event {event}")
+    status, response = UserRegistrationServices().eligibility_v2(request(event))
+    return generate_lambda_response(
+        status.value,
+        status.phrase,
+        response,
+        cors_enabled=True,
+    )
+
+
+@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
 def user_eligibility(event, context):
     logger.info(f"Got Airdrops Event {event}")
     status, response = UserRegistrationServices().eligibility(request(event))
@@ -170,3 +182,9 @@ def update_user_claim_transaction_status_post_block_confirmation(event, context)
     airdrop_id = event["airdrop_id"]
     UserClaimService(airdrop_id).update_user_claim_transaction_status_post_block_confirmation()
     logger.info("success")
+
+
+def check_trezor_registrations(event, context):
+    logger.info(f"Checking trezor registrations transactions {event}")
+    UserRegistrationServices().check_trezor_registrations()
+    logger.info("Success")

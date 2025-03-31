@@ -35,7 +35,7 @@ TOKEN_SNAPSHOT_DB_CONFIG = {
     "DB_LOGGING": True,
 }
 
-NETWORK_ID = 5
+NETWORK_ID = 11155111
 DEFAULT_REGION = "us-east-1"
 SLACK_HOOK = {
     "hostname": "https://hooks.slack.com",
@@ -69,6 +69,11 @@ class LoyaltyAirdropConfig(Enum):
     pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
     chain = "Cardano"
 
+class RejuveAirdropConfig(Enum):
+    deposit_address = "addr"
+    claim_address = "addr"
+    pre_claim_transfer_amount = {"amount": 2, "unit": "ADA"}
+    chain = "Cardano"
 
 class BlockFrostAccountDetails:
     project_id = ""
@@ -81,7 +86,7 @@ class DepositDetails:
 
 
 class TokenTransferCardanoService:
-    url = "http://127.0.0.1:5005/cardano/AGIX/transfer"
+    url = "http://127.0.0.1:5005/cardano/{token}/transfer"
     http_method = "post"
     headers = {'content-type': 'application/json'}
 
