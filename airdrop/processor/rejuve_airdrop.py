@@ -2,11 +2,13 @@ from base64 import b64encode
 import json
 from typing import Dict, List, Tuple, Union
 
-from web3 import Web3
-from pycardano import Address
+from blockfrost import BlockFrostApi
+from blockfrost.utils import ApiError as BlockFrostApiError
 from eth_account.messages import encode_defunct
+from pycardano import Address
+from web3 import Web3
 
-from airdrop.constants import AirdropClaimStatus, TransactionType
+from airdrop.constants import CARDANO_ADDRESS_PREFIXES, AirdropClaimStatus, CardanoEra, TransactionType
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration
 from airdrop.application.types.windows import WindowRegistrationData
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
@@ -17,10 +19,9 @@ from airdrop.infrastructure.repositories.pending_transaction_repo import Pending
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop
 from airdrop.utils import Utils, datetime_in_utcnow
-from airdrop.config import NETWORK, RejuveAirdropConfig
-from common.exceptions import ValidationFailedException
+from airdrop.config import NETWORK, BlockFrostAPIBaseURL, BlockFrostAccountDetails, RejuveAirdropConfig
+from common.exceptions import TransactionNotFound, ValidationFailedException
 from common.logger import get_logger
-from airdrop.constants import CARDANO_ADDRESS_PREFIXES, CardanoEra
 
 logger = get_logger(__name__)
 
@@ -314,6 +315,14 @@ class RejuveAirdrop(DefaultAirdrop):
         return receipt
 
     def update_registration(self, data: dict):
+        logger.info(f"Starting registration update process for {self.__class__.__name__}")
+
+        if "tx_hash" in data:
+            return self.update_registration_trezor(data)
+        else:
+            return self.update_registration_regular_wallet(data)
+
+    def update_registration_regular_wallet(self, data: dict):
         """
         Update the user's registration details for a specific airdrop window.
 
@@ -326,7 +335,7 @@ class RejuveAirdrop(DefaultAirdrop):
         6. Generate new receipt.
         7. Update the registration with new signature details.
         """
-        logger.info(f"Starting registration update process for {self.__class__.__name__}")
+        logger.info(f"Starting regular wallet registration update process for {self.__class__.__name__}")
 
         address = data["address"]
         signature = data["signature"]
@@ -378,6 +387,116 @@ class RejuveAirdrop(DefaultAirdrop):
             airdrop_window_id=self.window_id,
             address=address,
             signature_details=signature_details,
+            receipt=receipt
+        )
+
+        claimable_amount, total_eligible_amount = self.get_claimable_amount(user_address=address)
+
+        return {
+            "airdrop_id": str(self.id),
+            "airdrop_window_id": str(airdrop_window.id),
+            "claimable_amount": str(claimable_amount),
+            "total_eligibility_amount": str(total_eligible_amount),
+            "chain_context": self.chain_context,
+            "registration_id": receipt
+        }
+
+    def update_registration_trezor(self, data: dict):
+        """
+        Update the user's registration details for a specific airdrop window.
+
+        Steps:
+        1. Validate the airdrop window exists.
+        2. Check if claim phase is open.
+        3. Check if the user is eligible for the airdrop.
+        4. Ensure the user is already registered.
+        5. Transaction address, transaction metadata and timestamp checks
+        6. Generate new receipt.
+        7. Update the registration with new signature details.
+        """
+        logger.info(f"Starting trezor wallet registration update process for {self.__class__.__name__}")
+
+        address = data["address"]
+        reward_address = data["reward_address"]
+        timestamp = data["timestamp"]
+        wallet_name = data["wallet_name"]
+        tx_hash = data["tx_hash"]
+
+        if self.window_id is None:
+            raise Exception("Window ID is None")
+
+        registration_repo = UserRegistrationRepository()
+        airdrop_window_repo = AirdropWindowRepository()
+
+        if Utils.recognize_blockchain_network(address) == "Ethereum":
+            address = Web3.to_checksum_address(address)
+
+        airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
+        if not airdrop_window:
+            raise Exception(f"Airdrop window does not exist: {self.window_id}")
+
+        if not self.is_phase_window_open(
+            airdrop_window.claim_start_period,
+            airdrop_window.claim_end_period
+        ):
+            raise Exception("Airdrop window is not accepting claim at this moment")
+
+        if not self.check_user_eligibility(address=address):
+            logger.error(f"Address {address} is not eligible for airdrop in window {self.window_id}")
+            raise Exception("Address is not eligible for this airdrop.")
+
+        is_registered, registration = registration_repo.get_user_registration_details(address, self.window_id)
+        if not is_registered:
+            logger.error(f"Address {address} is not registered for window {self.window_id}")
+            raise Exception("Address is not registered for this airdrop window.")
+
+        blockfrost = BlockFrostApi(project_id=BlockFrostAccountDetails.project_id,
+                                   base_url=BlockFrostAPIBaseURL)
+        try:
+            tx_data = blockfrost.transaction(tx_hash)
+            tx_metadata = blockfrost.transaction_metadata(tx_hash)
+            tx_utxos = blockfrost.transaction_utxos(tx_hash)
+            logger.info(f"Found tx {tx_hash}: block={tx_data.block_height} index={tx_data.index}")
+        except BlockFrostApiError as error:
+            logger.exception(f"BlockFrostApiError: {error}")
+            raise TransactionNotFound(f"Transaction with {tx_hash = } not found in blockchain")
+
+        # Transaction address check
+        is_address_match = False
+        for tx_input in tx_utxos.inputs:
+            if tx_input.address == address:
+                is_address_match = True
+                break
+        if not is_address_match:
+            raise Exception("Transaction address is not valid")
+
+        formatted_message = self.format_trezor_user_registration_signature_message(
+            timestamp=timestamp,
+            wallet_name=wallet_name,
+        )
+        # Metadata check
+        is_metadata_match, metadata = Utils().compare_data_from_db_and_metadata(
+            formatted_message,
+            tx_metadata
+        )
+        if not is_metadata_match:
+            raise Exception("Transaction metadata is not valid")
+
+        # Timestamp from metadata check
+        is_transaction_newest = False
+        if metadata["timestamp"] > registration.signature_details["timestamp"]:
+            is_transaction_newest = True
+        if not is_transaction_newest:
+            raise Exception("The transaction you passed is older than the one you used previously")
+
+        formatted_message["walletAddress"] = reward_address.lower()
+        receipt = self.get_receipt(address=address, timestamp=timestamp)
+
+        registration_repo.update_registration(
+            airdrop_window_id=self.window_id,
+            address=address,
+            signature_details=formatted_message,
+            tx_hash=tx_hash,
             receipt=receipt
         )
 
