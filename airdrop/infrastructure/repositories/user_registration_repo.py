@@ -93,6 +93,7 @@ class UserRegistrationRepository(BaseRepository):
         signature = kwargs.get("signature")
         signature_details = kwargs.get("signature_details")
         block_number = kwargs.get("block_number")
+        tx_hash = kwargs.get("tx_hash")
         registration = self.session.query(UserRegistration) \
             .filter_by(airdrop_window_id=airdrop_window_id, address=address).one()
         if registered_at is not None:
@@ -107,6 +108,8 @@ class UserRegistrationRepository(BaseRepository):
             registration.signature_details = signature_details
         if block_number is not None:
             registration.user_signature_block_number = block_number
+        if tx_hash is not None:
+            registration.tx_hash = tx_hash
         self.session.commit()
         return registration
 

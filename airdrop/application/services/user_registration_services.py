@@ -25,7 +25,7 @@ from airdrop.infrastructure.repositories.pending_transaction_repo import Pending
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils, datetime_in_utcnow
-from common.exceptions import BadRequestException
+from common.exceptions import BadRequestException, TransactionNotFound
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -286,6 +286,9 @@ class UserRegistrationServices:
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             response: dict | list | str = airdrop_object.update_registration(data=data)
+        except TransactionNotFound as e:
+            logger.exception(f"TransactionNotFound Error: {str(e)}")
+            return HTTPStatus.NOT_FOUND, str(e)
         except (ValidationError, BaseException) as e:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)

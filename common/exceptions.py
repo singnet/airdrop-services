@@ -18,3 +18,7 @@ class ValidationFailedException(CustomException):
 class RequiredDataNotFound(CustomException):
     def __init__(self, error_details):
         super().__init__(error_details)
+
+
+class TransactionNotFound(Exception):
+    pass
