@@ -237,6 +237,17 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
 
+        if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+            formatted_address = Address.from_primitive(address)
+
+            if bool(registration_repo.get_balances_by_staking_payment_parts_for_airdrop(
+                self.window_id,
+                str(formatted_address.payment_part),
+                str(formatted_address.staking_part)
+            )):
+                logger.error("Address with same staking part or pyament part is already exist")
+                raise Exception("Address with same staking part or pyament part is already exist")
+
         receipt = self.get_receipt(address=address, timestamp=timestamp)
         registration_repo.register_user(
             self.window_id,
@@ -288,6 +299,17 @@ class RejuveAirdrop(DefaultAirdrop):
         if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
+
+        if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+            formatted_address = Address.from_primitive(address)
+
+            if bool(registration_repo.get_balances_by_staking_payment_parts_for_airdrop(
+                self.window_id,
+                str(formatted_address.payment_part),
+                str(formatted_address.staking_part)
+            )):
+                logger.error("Address with same staking part or pyament part is already exist")
+                raise Exception("Address with same staking part or pyament part is already exist")
 
         is_pending_registered = pending_registration_repo.is_pending_user_registration_exist(address, self.window_id)
         if is_pending_registered:
