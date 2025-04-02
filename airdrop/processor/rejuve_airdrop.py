@@ -240,7 +240,7 @@ class RejuveAirdrop(DefaultAirdrop):
         if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
             formatted_address = Address.from_primitive(address)
 
-            if bool(registration_repo.get_balances_by_staking_payment_parts_for_airdrop(
+            if bool(registration_repo.get_registration_by_staking_payment_parts_for_airdrop(
                 self.window_id,
                 str(formatted_address.payment_part),
                 str(formatted_address.staking_part)
@@ -303,7 +303,7 @@ class RejuveAirdrop(DefaultAirdrop):
         if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
             formatted_address = Address.from_primitive(address)
 
-            if bool(registration_repo.get_balances_by_staking_payment_parts_for_airdrop(
+            if bool(registration_repo.get_registration_by_staking_payment_parts_for_airdrop(
                 self.window_id,
                 str(formatted_address.payment_part),
                 str(formatted_address.staking_part)

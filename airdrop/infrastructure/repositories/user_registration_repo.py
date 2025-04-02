@@ -176,14 +176,14 @@ class UserRegistrationRepository(BaseRepository):
         unclaimed_reward = int(row["unclaimed_reward"]) if row else 0
         return unclaimed_reward
 
-    def get_balances_by_staking_payment_parts_for_airdrop(
+    def get_registration_by_staking_payment_parts_for_airdrop(
         self,
         airdrop_window_id: int,
         payment_part: str,
         staking_part: str,
     ) -> UserRegistration | None:
         try:
-            balance = (
+            registration = (
                 self.session.query(UserRegistration)
                 .filter(
                     UserRegistration.airdrop_window_id == airdrop_window_id,
@@ -194,7 +194,7 @@ class UserRegistrationRepository(BaseRepository):
                 )
             ).first()
 
-            return balance
+            return registration
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
