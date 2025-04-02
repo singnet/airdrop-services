@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union
 
-from sqlalchemy import text
+from sqlalchemy import or_, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.constants import AirdropClaimStatus
@@ -178,3 +178,26 @@ class UserRegistrationRepository(BaseRepository):
         row = result.mappings().first()
         unclaimed_reward = int(row["unclaimed_reward"]) if row else 0
         return unclaimed_reward
+
+    def get_registration_by_staking_payment_parts_for_airdrop(
+        self,
+        airdrop_window_id: int,
+        payment_part: str,
+        staking_part: str,
+    ) -> UserRegistration | None:
+        try:
+            registration = (
+                self.session.query(UserRegistration)
+                .filter(
+                    UserRegistration.airdrop_window_id == airdrop_window_id,
+                    or_(
+                        UserRegistration.payment_part == payment_part,
+                        UserRegistration.staking_part == staking_part
+                    )
+                )
+            ).first()
+
+            return registration
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
