@@ -389,6 +389,13 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error(f"Address {address} is not eligible for airdrop in window {self.window_id}")
             raise Exception("Address is not eligible for this airdrop.")
 
+        claim_history_obj = ClaimHistoryRepository().get_claim_history(self.window_id, address, "ada_transfer")
+        if claim_history_obj:
+            logger.error(f"Claim transaction already created for {address = }, "
+                         f"window_id = {self.window_id} and blockchain_method = ada_transfer")
+            raise Exception("It is forbidden to update the data because a claim "
+                            "transaction has already been created for it")
+
         signature_details = self.match_signature(
             address=address,
             signature=signature,
@@ -408,6 +415,7 @@ class RejuveAirdrop(DefaultAirdrop):
         registration_repo.update_registration(
             airdrop_window_id=self.window_id,
             address=address,
+            signature=signature,
             signature_details=signature_details,
             receipt=receipt
         )
@@ -466,6 +474,13 @@ class RejuveAirdrop(DefaultAirdrop):
         if not self.check_user_eligibility(address=address):
             logger.error(f"Address {address} is not eligible for airdrop in window {self.window_id}")
             raise Exception("Address is not eligible for this airdrop.")
+
+        claim_history_obj = ClaimHistoryRepository().get_claim_history(self.window_id, address, "ada_transfer")
+        if claim_history_obj:
+            logger.error(f"Claim transaction already created for {address = }, "
+                         f"window_id = {self.window_id} and blockchain_method = ada_transfer")
+            raise Exception("It is forbidden to update the data because a claim "
+                            "transaction has already been created for it")
 
         is_registered, registration = registration_repo.get_user_registration_details(address, self.window_id)
         if not is_registered:

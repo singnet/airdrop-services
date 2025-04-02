@@ -185,6 +185,7 @@ functions:
 
   user_registration_update:
     handler: airdrop/application/handlers/airdrop_handlers.user_registration_update
+    role: ${file(./config.${self:provider.stage}.json):ROLE_WITH_SM}
     events:
       - http:
           path: /airdrop/registration/update
