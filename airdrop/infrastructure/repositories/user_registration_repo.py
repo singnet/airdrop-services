@@ -72,8 +72,18 @@ class UserRegistrationRepository(BaseRepository):
         else:
             return True, is_registered_user.receipt_generated
 
-    def register_user(self, airdrop_window_id, address, receipt,
-                      signature_details, block_number, signature=None, tx_hash=None):
+    def register_user(
+        self,
+        airdrop_window_id,
+        address,
+        receipt,
+        signature_details,
+        block_number,
+        signature=None,
+        payment_part=None,
+        staking_part=None,
+        tx_hash=None
+    ):
         user = UserRegistration(
             airdrop_window_id=airdrop_window_id,
             address=address,
@@ -82,6 +92,8 @@ class UserRegistrationRepository(BaseRepository):
             user_signature=signature,
             signature_details=signature_details,
             user_signature_block_number=block_number,
+            payment_part=payment_part,
+            staking_part=staking_part,
             tx_hash=tx_hash
         )
         self.add(user)

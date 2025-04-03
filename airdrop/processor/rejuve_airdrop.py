@@ -238,25 +238,31 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
 
+        payment_part: str | None = None
+        staking_part: str | None = None
         if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
             formatted_address = Address.from_primitive(address)
+            payment_part = str(formatted_address.payment_part)
+            staking_part = str(formatted_address.staking_part)
 
             if bool(registration_repo.get_registration_by_staking_payment_parts_for_airdrop(
                 self.window_id,
-                str(formatted_address.payment_part),
-                str(formatted_address.staking_part)
+                payment_part,
+                staking_part
             )):
                 logger.error("Address with same staking part or pyament part is already exist")
                 raise Exception("Address with same staking part or pyament part is already exist")
 
         receipt = self.get_receipt(address=address, timestamp=timestamp)
         registration_repo.register_user(
-            self.window_id,
-            address,
-            receipt,
-            formatted_message,
-            0,
-            signature
+            airdrop_window_id=self.window_id,
+            address=address,
+            receipt=receipt,
+            signature_details=formatted_message,
+            block_number=0,
+            signature=signature,
+            payment_part=payment_part,
+            staking_part=staking_part
         )
 
         return receipt
