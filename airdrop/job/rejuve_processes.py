@@ -5,6 +5,7 @@ import pycardano
 from sqlalchemy import or_, select
 from web3 import Web3
 
+from airdrop.constants import CARDANO_ADDRESS_PREFIXES, CardanoEra
 from airdrop.infrastructure.models import UserBalanceSnapshot, UserRegistration
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
@@ -17,7 +18,8 @@ logger = get_logger(__name__)
 class RejuveProcesses(Enum):
     CONVERT_FROM_STR_TO_JSON = "convert_str_to_json"
     CHANGE_ADDRESS_FORMAT = "change_address_format"
-    ADD_PAYMENT_AND_STAKING_PARTS = "add_payment_and_staking_parts"
+    ADD_PAYMENT_AND_STAKING_PARTS_SNAPSHOT = "add_payment_and_staking_parts_in_snapshot"
+    ADD_PAYMENT_AND_STAKING_PARTS_REGISTRATION = "add_payment_and_staking_parts_in_registration"
 
 
 class ConverterFromStrToJSON:
@@ -140,6 +142,51 @@ def snapshot_cardano_addresses(event: dict):
             UserBalanceSnapshot.payment_part == "",
             UserBalanceSnapshot.staking_part.is_(None),
             UserBalanceSnapshot.staking_part == ""
+        )
+    )
+    result = repo.session.execute(query).all()
+    total = len(result)
+
+    batch_count = 0
+    for index, row in enumerate(result):
+        logger.info(f"[{index+1}/{total}] {row[0].address}")
+        try:
+            addrobj = pycardano.Address.decode(row[0].address)
+        except Exception as e:
+            logger.exception(str(e))
+            continue
+
+        row[0].payment_part = str(addrobj.payment_part) if addrobj.payment_part else None
+        row[0].staking_part = str(addrobj.staking_part) if addrobj.staking_part else None
+
+        batch_count += 1
+
+        if batch_count == LINES_PER_BATCH:
+            repo.session.commit()
+            logger.info(f"Committed {index} records")
+            batch_count = 0
+
+    if batch_count > 0:
+        repo.session.commit()
+        logger.info("Final commit done")
+
+    return "success"
+
+
+def user_registration_cardano_adresses(event: dict):
+    window_id: int = event.get("window_id")
+    LINES_PER_BATCH = 10000
+    prefixes = CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]
+
+    repo = AirdropRepository()
+    query = select(UserRegistration).where(
+        UserRegistration.airdrop_window_id == window_id,
+        or_(*[UserRegistration.address.like(f"{prefix}%") for prefix in prefixes]),
+        or_(
+            UserRegistration.payment_part.is_(None),
+            UserRegistration.payment_part == "",
+            UserRegistration.staking_part.is_(None),
+            UserRegistration.staking_part == ""
         )
     )
     result = repo.session.execute(query).all()

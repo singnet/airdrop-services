@@ -123,6 +123,8 @@ class UserRegistration(Base, AuditClass):
     signature_details = Column("signature_details", JSON, nullable=True)
     user_signature_block_number = Column("user_signature_block_number", BIGINT, nullable=True, index=True)
     tx_hash = Column("tx_hash", VARCHAR(250), nullable=True, index=True)
+    payment_part = Column("payment_part", VARCHAR(250), nullable=True)
+    staking_part = Column("staking_part", VARCHAR(250), nullable=True)
 
     UniqueConstraint(airdrop_window_id, address)
     airdrop_window = relationship(AirdropWindow, backref="users")

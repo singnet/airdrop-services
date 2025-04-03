@@ -7,14 +7,17 @@ from jsonschema import validate, ValidationError
 from blockfrost import BlockFrostApi
 from blockfrost.utils import ApiError as BlockFrostApiError
 from web3 import Web3
+from pycardano import Address
 
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import BlockFrostAPIBaseURL, BlockFrostAccountDetails
 from airdrop.constants import (
+    CARDANO_ADDRESS_PREFIXES,
     ELIGIBILITY_SCHEMA,
     ADDRESS_ELIGIBILITY_SCHEMA,
     USER_REGISTRATION_SCHEMA,
     AirdropClaimStatus,
+    CardanoEra,
     UserClaimStatus
 )
 from airdrop.application.types.windows import WindowRegistrationData, RegistrationDetails
@@ -25,7 +28,7 @@ from airdrop.infrastructure.repositories.pending_transaction_repo import Pending
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
 from airdrop.utils import Utils, datetime_in_utcnow
-from common.exceptions import BadRequestException
+from common.exceptions import BadRequestException, TransactionNotFound
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -286,6 +289,9 @@ class UserRegistrationServices:
             airdrop_object = airdrop_class(airdrop_id, airdrop_window_id)
 
             response: dict | list | str = airdrop_object.update_registration(data=data)
+        except TransactionNotFound as e:
+            logger.exception(f"TransactionNotFound Error: {str(e)}")
+            return HTTPStatus.NOT_FOUND, str(e)
         except (ValidationError, BaseException) as e:
             logger.exception(f"Error: {str(e)}")
             return HTTPStatus.BAD_REQUEST, str(e)
@@ -347,13 +353,22 @@ class UserRegistrationServices:
 
         logger.info(f"Amount of registrations to save: {len(to_save)}")
         for registration in to_save:
+            payment_part: str | None = None
+            staking_part: str | None = None
+            if any(registration.address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+                formatted_address = Address.from_primitive(registration.address)
+                payment_part = str(formatted_address.payment_part) if formatted_address.payment_part else None
+                staking_part = str(formatted_address.staking_part) if formatted_address.staking_part else None
+
             registration_repo.register_user(
                 airdrop_window_id=registration.airdrop_window_id,
                 address=registration.address,
                 receipt=registration.receipt_generated,
                 tx_hash=registration.tx_hash,
                 signature_details=registration.signature_details,
-                block_number=registration.user_signature_block_number
+                block_number=registration.user_signature_block_number,
+                payment_part=payment_part,
+                staking_part=staking_part
             )
             to_delete.append(registration)
 

@@ -54,12 +54,12 @@ class UserRewardRepository(BaseRepository):
         return result
 
     def get_cardano_balances(self,
-                             address: str = None,
-                             payment_part: str = None,
-                             staking_part: str = None,
+                             address: str | None = None,
+                             payment_part: str | None = None,
+                             staking_part: str | None = None,
                              *,
-                             snapshot_window_id: int = None,
-                             snapshot_guid: str = None):
+                             snapshot_window_id: int | None = None,
+                             snapshot_guid: str | None = None):
         if not address and not payment_part and not staking_part:
             raise ValueError("At least one of address / payment_part / staking_part arguments must be provided")
         or_clause = list()

@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union
 
-from sqlalchemy import text
+from sqlalchemy import or_, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.constants import AirdropClaimStatus
@@ -72,8 +72,18 @@ class UserRegistrationRepository(BaseRepository):
         else:
             return True, is_registered_user.receipt_generated
 
-    def register_user(self, airdrop_window_id, address, receipt,
-                      signature_details, block_number, signature=None, tx_hash=None):
+    def register_user(
+        self,
+        airdrop_window_id,
+        address,
+        receipt,
+        signature_details,
+        block_number,
+        signature=None,
+        payment_part=None,
+        staking_part=None,
+        tx_hash=None
+    ):
         user = UserRegistration(
             airdrop_window_id=airdrop_window_id,
             address=address,
@@ -82,6 +92,8 @@ class UserRegistrationRepository(BaseRepository):
             user_signature=signature,
             signature_details=signature_details,
             user_signature_block_number=block_number,
+            payment_part=payment_part,
+            staking_part=staking_part,
             tx_hash=tx_hash
         )
         self.add(user)
@@ -93,6 +105,7 @@ class UserRegistrationRepository(BaseRepository):
         signature = kwargs.get("signature")
         signature_details = kwargs.get("signature_details")
         block_number = kwargs.get("block_number")
+        tx_hash = kwargs.get("tx_hash")
         registration = self.session.query(UserRegistration) \
             .filter_by(airdrop_window_id=airdrop_window_id, address=address).one()
         if registered_at is not None:
@@ -107,6 +120,8 @@ class UserRegistrationRepository(BaseRepository):
             registration.signature_details = signature_details
         if block_number is not None:
             registration.user_signature_block_number = block_number
+        if tx_hash is not None:
+            registration.tx_hash = tx_hash
         self.session.commit()
         return registration
 
@@ -175,3 +190,30 @@ class UserRegistrationRepository(BaseRepository):
         row = result.mappings().first()
         unclaimed_reward = int(row["unclaimed_reward"]) if row else 0
         return unclaimed_reward
+
+    def get_registration_by_staking_payment_parts_for_airdrop(
+        self,
+        airdrop_window_id: int,
+        payment_part: str | None = None,
+        staking_part: str | None = None,
+    ) -> UserRegistration | None:
+        if not payment_part and not staking_part:
+            raise ValueError("At least one of payment_part / staking_part arguments must be provided")
+        or_clause = list()
+        if payment_part:
+            or_clause.append(UserRegistration.payment_part == payment_part)
+        if staking_part:
+            or_clause.append(UserRegistration.staking_part == staking_part)
+        try:
+            registration = (
+                self.session.query(UserRegistration)
+                .filter(
+                    UserRegistration.airdrop_window_id == airdrop_window_id,
+                    or_(*or_clause)
+                )
+            ).first()
+
+            return registration
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e

@@ -28,6 +28,14 @@ class ClaimHistoryRepository(BaseRepository):
             )
         )
 
+    def get_claim_history(self, window_id: int, address: str, blockchain_method: str) -> ClaimHistory:
+        query = (self.session.query(ClaimHistory)
+                 .filter(ClaimHistory.address == address)
+                 .filter(ClaimHistory.airdrop_window_id == window_id)
+                 .filter(ClaimHistory.blockchain_method == blockchain_method)
+                 .one_or_none())
+        return query
+
     def get_pending_claims_for_given_airdrop_id(self, airdrop_id, blockchain_method):
         response = []
         try:
@@ -126,11 +134,7 @@ class ClaimHistoryRepository(BaseRepository):
     ) -> None:
         logger.info("Start searching for a transaction and creating it in case of a mismatch")
         try:
-            query = (self.session.query(ClaimHistory)
-                     .filter(ClaimHistory.address == address)
-                     .filter(ClaimHistory.airdrop_window_id == window_id)
-                     .filter(ClaimHistory.blockchain_method == blockchain_method)
-                     .first())
+            query = self.get_claim_history(window_id, address, blockchain_method)
             if not query:
                 logger.info("Transaction is missing in db, create transaction")
                 claim_payload = {
