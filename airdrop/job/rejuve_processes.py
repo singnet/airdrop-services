@@ -5,6 +5,7 @@ import pycardano
 from sqlalchemy import or_, select
 from web3 import Web3
 
+from airdrop.constants import CARDANO_ADDRESS_PREFIXES, CardanoEra
 from airdrop.infrastructure.models import UserBalanceSnapshot, UserRegistration
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
@@ -175,11 +176,12 @@ def snapshot_cardano_addresses(event: dict):
 def user_registration_cardano_adresses(event: dict):
     window_id: int = event.get("window_id")
     LINES_PER_BATCH = 10000
+    prefixes = CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]
 
     repo = AirdropRepository()
     query = select(UserRegistration).where(
         UserRegistration.airdrop_window_id == window_id,
-        UserRegistration.address.like("addr%"),
+        or_(*[UserRegistration.address.like(f"{prefix}%") for prefix in prefixes]),
         or_(
             UserRegistration.payment_part.is_(None),
             UserRegistration.payment_part == "",

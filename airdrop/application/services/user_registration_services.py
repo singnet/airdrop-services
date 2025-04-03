@@ -357,8 +357,8 @@ class UserRegistrationServices:
             staking_part: str | None = None
             if any(registration.address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
                 formatted_address = Address.from_primitive(registration.address)
-                payment_part = str(formatted_address.payment_part)
-                staking_part = str(formatted_address.staking_part)
+                payment_part = str(formatted_address.payment_part) if formatted_address.payment_part else None
+                staking_part = str(formatted_address.staking_part) if formatted_address.staking_part else None
 
             registration_repo.register_user(
                 airdrop_window_id=registration.airdrop_window_id,

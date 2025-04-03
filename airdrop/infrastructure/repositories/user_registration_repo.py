@@ -194,18 +194,22 @@ class UserRegistrationRepository(BaseRepository):
     def get_registration_by_staking_payment_parts_for_airdrop(
         self,
         airdrop_window_id: int,
-        payment_part: str,
-        staking_part: str,
+        payment_part: str | None = None,
+        staking_part: str | None = None,
     ) -> UserRegistration | None:
+        if not payment_part and not staking_part:
+            raise ValueError("At least one of payment_part / staking_part arguments must be provided")
+        or_clause = list()
+        if payment_part:
+            or_clause.append(UserRegistration.payment_part == payment_part)
+        if staking_part:
+            or_clause.append(UserRegistration.staking_part == staking_part)
         try:
             registration = (
                 self.session.query(UserRegistration)
                 .filter(
                     UserRegistration.airdrop_window_id == airdrop_window_id,
-                    or_(
-                        UserRegistration.payment_part == payment_part,
-                        UserRegistration.staking_part == staking_part
-                    )
+                    or_(*or_clause)
                 )
             ).first()
 
