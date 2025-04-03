@@ -7,14 +7,17 @@ from jsonschema import validate, ValidationError
 from blockfrost import BlockFrostApi
 from blockfrost.utils import ApiError as BlockFrostApiError
 from web3 import Web3
+from pycardano import Address
 
 from airdrop.application.services.airdrop_services import AirdropServices
 from airdrop.config import BlockFrostAPIBaseURL, BlockFrostAccountDetails
 from airdrop.constants import (
+    CARDANO_ADDRESS_PREFIXES,
     ELIGIBILITY_SCHEMA,
     ADDRESS_ELIGIBILITY_SCHEMA,
     USER_REGISTRATION_SCHEMA,
     AirdropClaimStatus,
+    CardanoEra,
     UserClaimStatus
 )
 from airdrop.application.types.windows import WindowRegistrationData, RegistrationDetails
@@ -350,13 +353,22 @@ class UserRegistrationServices:
 
         logger.info(f"Amount of registrations to save: {len(to_save)}")
         for registration in to_save:
+            payment_part: str | None = None
+            staking_part: str | None = None
+            if any(registration.address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+                formatted_address = Address.from_primitive(registration.address)
+                payment_part = str(formatted_address.payment_part)
+                staking_part = str(formatted_address.staking_part)
+
             registration_repo.register_user(
                 airdrop_window_id=registration.airdrop_window_id,
                 address=registration.address,
                 receipt=registration.receipt_generated,
                 tx_hash=registration.tx_hash,
                 signature_details=registration.signature_details,
-                block_number=registration.user_signature_block_number
+                block_number=registration.user_signature_block_number,
+                payment_part=payment_part,
+                staking_part=staking_part
             )
             to_delete.append(registration)
 
