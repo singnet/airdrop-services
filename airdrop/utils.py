@@ -9,7 +9,7 @@ import requests
 from web3 import Web3
 
 from airdrop.config import BlockFrostAccountDetails
-from airdrop.constants import BlockFrostAPI
+from airdrop.constants import BlockFrostAPI, Blockchain
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,9 +23,9 @@ class Utils:
     @staticmethod
     def recognize_blockchain_network(address: str) -> str:
         if address[:2] == "0x":
-            return "Ethereum"
+            return Blockchain.ETHEREUM.value
         elif address[:4] == "addr":
-            return "Cardano"
+            return Blockchain.CARDANO.value
         else:
             return "Unknown"
 
