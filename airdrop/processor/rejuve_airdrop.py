@@ -522,7 +522,7 @@ class RejuveAirdrop(DefaultAirdrop):
             wallet_name=wallet_name,
         )
         # Metadata check
-        is_metadata_match, metadata = Utils().compare_data_from_db_and_metadata(
+        is_metadata_match, metadata = Utils.compare_data_from_db_and_metadata(
             formatted_message,
             tx_metadata
         )
