@@ -152,8 +152,7 @@ class RejuveAirdrop(DefaultAirdrop):
             raise Exception("Window ID is not set")
 
         try:
-            if Utils.recognize_blockchain_network(address) == Blockchain.ETHEREUM.value:
-                address = Web3.to_checksum_address(address)
+            address = self.to_checksum_address_if_ethereum(address)
 
             message = Web3.solidity_keccak(
                 ["string", "string", "uint256", "uint256", "uint256"],
