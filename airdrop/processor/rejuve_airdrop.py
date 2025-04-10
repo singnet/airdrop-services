@@ -65,11 +65,6 @@ class RejuveAirdrop(DefaultAirdrop):
 
             return bool(balances and len(balances) > 0)
 
-    def to_checksum_address_if_ethereum(self, address: str) -> str:
-        if Utils.recognize_blockchain_network(address) == Blockchain.ETHEREUM.value:
-            address = Web3.to_checksum_address(address)
-        return address
-
     def format_user_registration_signature_message(
         self,
         address: str,
@@ -116,9 +111,8 @@ class RejuveAirdrop(DefaultAirdrop):
         if network not in {Blockchain.ETHEREUM.value, Blockchain.CARDANO.value}:
             raise ValueError(f"Unsupported network: {network}")
 
-        if network == Blockchain.ETHEREUM.value:
-            address = Web3.to_checksum_address(address)
-        elif network == Blockchain.CARDANO.value and key is None:
+        address = self.to_checksum_address_if_ethereum(address)
+        if network == Blockchain.CARDANO.value and key is None:
             raise ValueError("Key must be provided for Cardano signatures.")
 
         formatted_message = self.format_user_registration_signature_message(

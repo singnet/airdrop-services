@@ -127,9 +127,6 @@ class UserRegistrationServices:
             wallet_name = inputs.get("wallet_name")
             key = inputs.get("key")
 
-            if Utils.recognize_blockchain_network(address) == Blockchain.ETHEREUM.value:
-                address = Web3.to_checksum_address(address)
-
             airdrop = AirdropRepository().get_airdrop_details(airdrop_id)
             if not airdrop:
                 logger.error("Airdrop id is not valid")
@@ -142,6 +139,8 @@ class UserRegistrationServices:
 
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id)
+
+            address = airdrop_object.to_checksum_address_if_ethereum(address)
 
             is_user_eligible = airdrop_object.check_user_eligibility(address)
 
