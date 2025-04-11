@@ -143,7 +143,7 @@ class RejuveRewardProcessor:
             user_rewards.append(user_reward)
         self.user_reward_repository.add_all_items(user_rewards)  # TODO: batching
 
-    def calculate_score(self, balance: Decimal, stake: Decimal) -> (Decimal, Decimal):
+    def calculate_score(self, balance: Decimal, stake: Decimal) -> tuple[Decimal, Decimal]:
         score = (balance + self.REWARD_STAKE_RATIO * stake) / self.REWARD_SCORE_DENOM
         normalized_score = (score + 1).log10()
         return score, normalized_score
