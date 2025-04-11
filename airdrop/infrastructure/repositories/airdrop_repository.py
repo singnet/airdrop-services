@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import NoResultFound, SQLAlchemyError
 
 from airdrop.constants import AirdropClaimStatus
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
@@ -376,16 +376,13 @@ class AirdropRepository(BaseRepository):
                     isouter = True
                 )
                 .filter(Airdrop.id == airdrop_id)
-                .first()
+                .one()
             )
             self.session.commit()
-        except SQLAlchemyError as e:
+        except (SQLAlchemyError, NoResultFound) as e:
             self.session.rollback()
             raise e
-        if airdrop_row_data is not None:
-            return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(airdrop_row_data)
-        else:
-            raise Exception('Non eligible user')
+        return AirdropFactory.convert_airdrop_schedule_model_to_entity_model(airdrop_row_data)
 
     def get_airdrop_details(self, airdrop_id):
         return self.session.query(Airdrop).filter(Airdrop.id == airdrop_id).first()

@@ -7,29 +7,32 @@ from typing import Type
 import web3
 from eth_account.messages import encode_defunct
 from jsonschema import validate, ValidationError
+from sqlalchemy.exc import NoResultFound
 from web3 import Web3, types
 
-from airdrop.config import NETWORK, DEFAULT_REGION
 from airdrop.config import (
-    SIGNER_PRIVATE_KEY,
-    SIGNER_PRIVATE_KEY_STORAGE_REGION,
-    NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION,
+    DEFAULT_REGION,
+    MATTERMOST_CONFIG,
+    NETWORK,
     NUNET_SIGNER_PRIVATE_KEY,
-    SLACK_HOOK
+    NUNET_SIGNER_PRIVATE_KEY_STORAGE_REGION,
+    SIGNER_PRIVATE_KEY,
+    SIGNER_PRIVATE_KEY_STORAGE_REGION
 )
 from airdrop.constants import (
-    STAKING_CONTRACT_PATH,
     CLAIM_SCHEMA,
-    AirdropEvents,
-    AirdropClaimStatus,
     PROCESSOR_PATH,
+    STAKING_CONTRACT_PATH,
+    AirdropClaimStatus,
+    AirdropEvents,
     Blockchain
 )
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.processor.default_airdrop import DefaultAirdrop, BaseAirdrop
-from airdrop.utils import Utils as ut
+from airdrop.utils import Utils
+from common.alerts import MattermostProcessor
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import (
@@ -37,10 +40,10 @@ from common.utils import (
     generate_claim_signature_with_total_eligibile_amount,
     get_contract_instance,
     get_transaction_receipt_from_blockchain,
-    get_checksum_address,
-    Utils
+    get_checksum_address
 )
 
+alert_processor = MattermostProcessor(config=MATTERMOST_CONFIG)
 logger = get_logger(__name__)
 
 
@@ -178,10 +181,10 @@ class AirdropServices:
 
         except BaseException as e:
             logger.error(e)
-            Utils().report_slack(
-                type=0, slack_message=f"Issue with Stake window Opened exeption {e} user_address {user_wallet_address},"
-                                      f" stake_contract_address: {contract_address}", slack_config=SLACK_HOOK
-            )
+            alert_processor.send(type=1,
+                                 message=f"Issue with Stake window Opened exeption {e} "
+                                         f"user_address {user_wallet_address}, "
+                                         f"stake_contract_address: {contract_address}")
             return False, 0, airdrop_rewards
 
     def get_stake_and_claimable_amounts(self, airdrop_rewards, is_stake_window_is_open, max_stake_amount,
@@ -322,7 +325,7 @@ class AirdropServices:
             amount = inputs["amount"]
             blockchain_method = inputs["blockchain_method"]
 
-            if ut.recognize_blockchain_network(user_address) == Blockchain.ETHEREUM.value:
+            if Utils.recognize_blockchain_network(user_address) == Blockchain.ETHEREUM.value:
                 user_address = Web3.to_checksum_address(user_address)
 
             AirdropRepository().airdrop_window_claim_txn(
@@ -480,12 +483,12 @@ class AirdropServices:
             raise e
 
     def get_airdrops_schedule(self, airdrop_id):
-        status = HTTPStatus.BAD_REQUEST
         try:
             response = AirdropRepository().get_airdrops_schedule(airdrop_id)
             status = HTTPStatus.OK
-        except ValidationError as e:
-            response = e.message
+        except NoResultFound as e:
+            response = f"Airdrop with id = {airdrop_id} does not exist"
+            status = HTTPStatus.BAD_REQUEST
         except BaseException as e:
             response = str(e)
             status = HTTPStatus.INTERNAL_SERVER_ERROR

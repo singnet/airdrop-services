@@ -2,10 +2,10 @@
 import math
 
 from decimal import Decimal
+from common.alerts import MattermostProcessor
 from common.exception_handler import exception_handler
-from airdrop.config import SLACK_HOOK
+from airdrop.config import MATTERMOST_CONFIG
 from common.logger import get_logger
-from common.utils import Utils
 
 logger = get_logger(__name__)
 
@@ -87,9 +87,9 @@ class NunetRewardProcessor:
         try:
             self.__slack_messages.append(message)
             if send:
-                u = Utils()
+                alert_processor = MattermostProcessor(config=MATTERMOST_CONFIG)
                 for message in self.__slack_messages:
-                    u.report_slack(type=0, slack_message=message, slack_config=SLACK_HOOK)
+                    alert_processor.send(type=1, message=message)
         except Exception as e:
             logger.info(f"Unable to send slack message {self.__slack_messages}")
 
@@ -105,7 +105,7 @@ class NunetRewardProcessor:
             user_pending_rewards[row["address"].lower()] = row["pending_reward"]
         return additional_rewards, user_pending_rewards
 
-    # @exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
+    # @exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, logger=logger)
     def process_rewards(self, only_registered):
         if only_registered:
             self.__send_slack_message(f"Computing final rewards for window {self._window_id}")
