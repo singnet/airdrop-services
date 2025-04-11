@@ -5,7 +5,7 @@ import pycardano
 from sqlalchemy import or_, select
 from web3 import Web3
 
-from airdrop.constants import CARDANO_ADDRESS_PREFIXES, CardanoEra
+from airdrop.constants import CARDANO_ADDRESS_PREFIXES, Blockchain, CardanoEra
 from airdrop.infrastructure.models import UserBalanceSnapshot, UserRegistration
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
@@ -92,19 +92,19 @@ class ChangerAddressFormat:
         logger.info("Processing the changing address format for the "
                     f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
 
-        for addr in registrations:
-            if (isinstance(addr.address, str) and
-                Utils.recognize_blockchain_network(addr.address) == "Ethereum"):
-                user_address = Web3.to_checksum_address(addr.address)
-                logger.info(f"Old format {addr.address = }. New format {user_address = }")
+        for registration in registrations:
+            if (isinstance(registration.address, str) and
+                Utils.recognize_blockchain_network(registration.address) == Blockchain.ETHEREUM.value):
+                user_address = Web3.to_checksum_address(registration.address)
+                logger.info(f"Old format {registration.address = }. New format {user_address = }")
                 UserRegistrationRepository().update_registration_address(
                     airdrop_window_id=self._window_id,
-                    old_address=addr.address,
+                    old_address=registration.address,
                     new_address=user_address
                 )
                 logger.info("Successfully updated")
             else:
-                logger.info(f"Address = {addr.address} is not available for updating")
+                logger.info(f"Address = {registration.address} is not available for updating")
 
     def process_change(self) -> str:
         if not self._airdrop_id or not self._window_id:

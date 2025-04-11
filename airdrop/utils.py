@@ -9,7 +9,8 @@ import requests
 from web3 import Web3
 
 from airdrop.config import BlockFrostAccountDetails
-from airdrop.constants import BlockFrostAPI
+from airdrop.constants import (CARDANO_ADDRESS_PREFIXES, BlockFrostAPI,
+                               Blockchain, CardanoEra)
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,10 +23,10 @@ def datetime_in_utcnow():
 class Utils:
     @staticmethod
     def recognize_blockchain_network(address: str) -> str:
-        if address[:2] == "0x":
-            return "Ethereum"
-        elif address[:4] == "addr":
-            return "Cardano"
+        if address.startswith("0x"):
+            return Blockchain.ETHEREUM.value
+        elif address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.ANY])):
+            return Blockchain.CARDANO.value
         else:
             return "Unknown"
 

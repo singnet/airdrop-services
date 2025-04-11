@@ -161,6 +161,11 @@ class TransactionType(Enum):
     REGISTRATION = "Registration"
 
 
+class Blockchain(Enum):
+    CARDANO = "Cardano"
+    ETHEREUM = "Ethereum"
+
+
 class CardanoEra(Enum):
     BYRON = "Byron"
     SHELLEY = "Shelley"

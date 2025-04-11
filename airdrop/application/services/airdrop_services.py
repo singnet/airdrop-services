@@ -24,7 +24,8 @@ from airdrop.constants import (
     PROCESSOR_PATH,
     STAKING_CONTRACT_PATH,
     AirdropClaimStatus,
-    AirdropEvents
+    AirdropEvents,
+    Blockchain
 )
 from airdrop.domain.factory.airdrop_factory import AirdropFactory
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
@@ -324,7 +325,7 @@ class AirdropServices:
             amount = inputs["amount"]
             blockchain_method = inputs["blockchain_method"]
 
-            if Utils.recognize_blockchain_network(user_address) == "Ethereum":
+            if Utils.recognize_blockchain_network(user_address) == Blockchain.ETHEREUM.value:
                 user_address = Web3.to_checksum_address(user_address)
 
             AirdropRepository().airdrop_window_claim_txn(

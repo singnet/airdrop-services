@@ -8,7 +8,7 @@ from eth_account.messages import encode_defunct
 from pycardano import Address
 from web3 import Web3
 
-from airdrop.constants import CARDANO_ADDRESS_PREFIXES, AirdropClaimStatus, CardanoEra, TransactionType
+from airdrop.constants import CARDANO_ADDRESS_PREFIXES, AirdropClaimStatus, Blockchain, CardanoEra, TransactionType
 from airdrop.infrastructure.models import AirdropWindow, UserRegistration
 from airdrop.application.types.windows import WindowRegistrationData
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
@@ -108,12 +108,11 @@ class RejuveAirdrop(DefaultAirdrop):
         network = Utils.recognize_blockchain_network(address)
         logger.info(f"Start of signature matching | address={address}, signature={signature}, network={network}")
 
-        if network not in {"Ethereum", "Cardano"}:
+        if network not in {Blockchain.ETHEREUM.value, Blockchain.CARDANO.value}:
             raise ValueError(f"Unsupported network: {network}")
 
-        if network == "Ethereum":
-            address = Web3.to_checksum_address(address)
-        elif network == "Cardano" and key is None:
+        address = self.to_checksum_address_if_ethereum(address)
+        if network == Blockchain.CARDANO.value and key is None:
             raise ValueError("Key must be provided for Cardano signatures.")
 
         formatted_message = self.format_user_registration_signature_message(
@@ -125,7 +124,7 @@ class RejuveAirdrop(DefaultAirdrop):
 
         sign_verified = (
             Utils.match_ethereum_signature_eip191(address, message, signature)
-            if network == "Ethereum"
+            if network == Blockchain.ETHEREUM.value
             else Utils.match_cardano_signature(message, signature, key) # type: ignore
         )
 
@@ -147,8 +146,7 @@ class RejuveAirdrop(DefaultAirdrop):
             raise Exception("Window ID is not set")
 
         try:
-            if Utils.recognize_blockchain_network(address) == "Ethereum":
-                address = Web3.to_checksum_address(address)
+            address = self.to_checksum_address_if_ethereum(address)
 
             message = Web3.solidity_keccak(
                 ["string", "string", "uint256", "uint256", "uint256"],
@@ -202,8 +200,7 @@ class RejuveAirdrop(DefaultAirdrop):
         if self.window_id is None:
             raise Exception("Window ID is None")
 
-        if Utils.recognize_blockchain_network(address) == "Ethereum":
-            address = Web3.to_checksum_address(address)
+        address = self.to_checksum_address_if_ethereum(address)
 
         registration_repo = UserRegistrationRepository()
         airdrop_window_repo = AirdropWindowRepository()
@@ -277,8 +274,7 @@ class RejuveAirdrop(DefaultAirdrop):
         if self.window_id is None:
             raise Exception("Window ID is None")
 
-        if Utils.recognize_blockchain_network(address) == "Ethereum":
-            address = Web3.to_checksum_address(address)
+        address = self.to_checksum_address_if_ethereum(address)
 
         registration_repo = UserRegistrationRepository()
         pending_registration_repo = PendingTransactionRepository()
@@ -382,8 +378,7 @@ class RejuveAirdrop(DefaultAirdrop):
         registration_repo = UserRegistrationRepository()
         airdrop_window_repo = AirdropWindowRepository()
 
-        if Utils.recognize_blockchain_network(address) == "Ethereum":
-            address = Web3.to_checksum_address(address)
+        address = self.to_checksum_address_if_ethereum(address)
 
         airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
         if not airdrop_window:
@@ -468,8 +463,7 @@ class RejuveAirdrop(DefaultAirdrop):
         registration_repo = UserRegistrationRepository()
         airdrop_window_repo = AirdropWindowRepository()
 
-        if Utils.recognize_blockchain_network(address) == "Ethereum":
-            address = Web3.to_checksum_address(address)
+        address = self.to_checksum_address_if_ethereum(address)
 
         airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
         if not airdrop_window:
