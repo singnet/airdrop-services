@@ -37,13 +37,9 @@ TOKEN_SNAPSHOT_DB_CONFIG = {
 
 NETWORK_ID = 11155111
 DEFAULT_REGION = "us-east-1"
-SLACK_HOOK = {
-    "hostname": "https://hooks.slack.com",
-    "port": 443,
-    "path": "",
-    "method": "POST",
-    "headers": {"Content-Type": "application/json"},
-    "channel_name": "airdrop-ropsten-alerts"
+
+MATTERMOST_CONFIG = {
+    "url": "https://chat.mattermost.io/hooks/test"
 }
 
 SIGNER_PRIVATE_KEY = 'AIRDROP_SIGNER_PRIVATE_KEY'

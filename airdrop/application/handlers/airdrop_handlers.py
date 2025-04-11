@@ -3,7 +3,7 @@ import sys
 sys.path.append('/opt')
 
 from common.exception_handler import exception_handler
-from airdrop.config import SLACK_HOOK, NETWORK_ID
+from airdrop.config import MATTERMOST_CONFIG, NETWORK_ID
 from common.logger import get_logger
 from common.utils import generate_lambda_response, request
 from airdrop.application.services.airdrop_services import AirdropServices
@@ -14,7 +14,7 @@ from airdrop.application.services.user_claim_service import UserClaimService
 logger = get_logger(__name__)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def get_airdrop_schedules(event, context):
     logger.info(f"Got Airdrops Event {event}")
     parameters = event['pathParameters']
@@ -28,7 +28,7 @@ def get_airdrop_schedules(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def user_registration(event, context):
     logger.info(f"Got Airdrops Event {event}")
     status, response = UserRegistrationServices().register(request(event))
@@ -40,7 +40,7 @@ def user_registration(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def user_registration_update(event, context):
     logger.info(f"Got Airdrops Event {event}")
     status, response = UserRegistrationServices().update_registration(request(event))
@@ -52,7 +52,7 @@ def user_registration_update(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_window_stake_details(event, context):
     logger.info(f"Got Airdrops Window Stake details {event}")
     status, response = AirdropServices().get_airdrop_window_stake_details(request(event))
@@ -64,7 +64,7 @@ def airdrop_window_stake_details(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def address_eligibility(event, context):
     logger.info(f"Got Airdrops Event {event}")
     status, response = UserRegistrationServices().eligibility_v2(request(event))
@@ -76,7 +76,7 @@ def address_eligibility(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def user_eligibility(event, context):
     logger.info(f"Got Airdrops Event {event}")
     status, response = UserRegistrationServices().eligibility(request(event))
@@ -88,7 +88,7 @@ def user_eligibility(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def occam_airdrop_window_claim(event, context):
     logger.info(f"Got occam_airdrop_window_claim event {event}")
     status, response = AirdropServices().occam_airdrop_window_claim(request(event))
@@ -100,7 +100,7 @@ def occam_airdrop_window_claim(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_window_claim(event, context):
     logger.info(f"Got airdrop_window_claim Events {event}")
     status, response = AirdropServices().airdrop_window_claim(request(event))
@@ -112,7 +112,7 @@ def airdrop_window_claim(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_window_claim_status(event, context):
     logger.info(f"Got Airdrops Window Claims Statys Events {event}")
     status, response = AirdropServices(
@@ -125,7 +125,7 @@ def airdrop_window_claim_status(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_window_claim_history(event, context):
     logger.info(f"Got Airdrops Window Claims Statys Events {event}")
     status, response = AirdropServices(
@@ -138,7 +138,7 @@ def airdrop_window_claim_history(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_event_consumer(event, context):
     logger.info(f"Got Airdrops event listener {event}")
     status, response = AirdropServices(
@@ -151,13 +151,13 @@ def airdrop_event_consumer(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def airdrop_txn_watcher(event, context):
     logger.info(f"Got Airdrops txn status watcher {event}")
     AirdropServices().airdrop_txn_watcher()
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, NETWORK_ID=NETWORK_ID, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, NETWORK_ID=NETWORK_ID, logger=logger)
 def user_notifications(event, context):
     logger.info(f"Got Airdrops user notifications {event}")
     status, response = UserNotificationService(

@@ -94,7 +94,7 @@ class ChangerAddressFormat:
 
         for addr in registrations:
             if (isinstance(addr.address, str) and
-                Utils().recognize_blockchain_network(addr.address) == "Ethereum"):
+                Utils.recognize_blockchain_network(addr.address) == "Ethereum"):
                 user_address = Web3.to_checksum_address(addr.address)
                 logger.info(f"Old format {addr.address = }. New format {user_address = }")
                 UserRegistrationRepository().update_registration_address(

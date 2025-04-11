@@ -331,7 +331,7 @@ class UserRegistrationServices:
                         is_address_match = True
                         break
                 # Metadata check
-                is_metadata_match, metadata = Utils().compare_data_from_db_and_metadata(
+                is_metadata_match, metadata = Utils.compare_data_from_db_and_metadata(
                     registration.signature_details,
                     tx_metadata
                 )

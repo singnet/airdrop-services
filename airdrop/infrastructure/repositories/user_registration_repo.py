@@ -150,18 +150,22 @@ class UserRegistrationRepository(BaseRepository):
         airdrop_window_id: Optional[int] = None,
         registration_id: Optional[str] = None
     ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
-        query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
-        if address:
-            query = query.filter(UserRegistration.address == address)
-        if airdrop_window_id:
-            query = query.filter(UserRegistration.airdrop_window_id == airdrop_window_id)
-        if registration_id:
-            query = query.filter(UserRegistration.receipt_generated == registration_id)
-        user_registrations = query.all()
-        registration_count = len(user_registrations)
-        if registration_count:
-            return True, user_registrations[0] if registration_count == 1 else user_registrations
-        return False, None
+        try:
+            query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
+            if address:
+                query = query.filter(UserRegistration.address == address)
+            if airdrop_window_id:
+                query = query.filter(UserRegistration.airdrop_window_id == airdrop_window_id)
+            if registration_id:
+                query = query.filter(UserRegistration.receipt_generated == registration_id)
+            user_registrations = query.all()
+            registration_count = len(user_registrations)
+            if registration_count:
+                return True, user_registrations[0] if registration_count == 1 else user_registrations
+            return False, None
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
 
     def get_unclaimed_reward(self, airdrop_id, address):
         in_progress_or_completed_tx_statuses = (

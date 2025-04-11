@@ -18,26 +18,6 @@ class ContractType(Enum):
     AIRDROP = "AIRDROP"
 
 
-class Utils:
-    def __init__(self):
-        self.msg_type = {0: "Info:: ", 1: "Err:: "}
-
-    def report_slack(self, type, slack_message, slack_config):
-        url = slack_config["hostname"] + slack_config["path"]
-        prefix = self.msg_type.get(type, "")
-        slack_channel = slack_config.get("channel", SLACK_HOOK['channel_name'])
-        print(url)
-        payload = {
-            "channel": f"#{slack_channel}",
-            "username": "webhookbot",
-            "text": prefix + slack_message,
-            "icon_emoji": ":ghost:",
-        }
-
-        resp = requests.post(url=url, data=json.dumps(payload))
-        print(resp.status_code, resp.text)
-
-
 def request(event) -> dict | None:
     try:
         inputs = event["body"] or None

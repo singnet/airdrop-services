@@ -20,7 +20,7 @@ from airdrop.constants import PROCESSOR_PATH
 from airdrop.job.repository import Repository
 from common.exception_handler import exception_handler
 from common.utils import generate_lambda_response
-from airdrop.config import BALANCE_DB_CONFIG, NETWORK, SLACK_HOOK
+from airdrop.config import BALANCE_DB_CONFIG, MATTERMOST_CONFIG, NETWORK
 from common.logger import get_logger
 from pydoc import locate
 from decimal import Decimal
@@ -141,7 +141,7 @@ class EligibilityProcessor:
             self.__process_reward(processor_name, airdrop_id, window, self._snapshot_guid, False)
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, logger=logger)
 def process_eligibility(event, context):
     logger.info(f"Processing eligibility")
 
@@ -158,7 +158,7 @@ def process_eligibility(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, logger=logger)
 def process_loyalty_airdrop_reward_eligibility(event, context):
     logger.info(f"Processing loyalty airdrop reward with the event={json.dumps(event)}")
 
@@ -188,7 +188,7 @@ def process_loyalty_airdrop_reward_eligibility(event, context):
     )
 
 
-@exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, logger=logger)
 def process_rejuve_airdrop_reward(event, context):
     # TODO: response format and data (depending on exception_handler)
     logger.info(f"Processing Rejuve airdrop reward with the event={json.dumps(event)}")
@@ -207,7 +207,7 @@ def process_rejuve_airdrop_reward(event, context):
 
 
 # Use for RJV Airdrop ONLY
-@exception_handler(SLACK_HOOK=SLACK_HOOK, logger=logger)
+@exception_handler(PROCESSOR_CONFIG=MATTERMOST_CONFIG, logger=logger)
 def manual_rejuve_processes(event, context):
     logger.info(f"Proccesing for the event={json.dumps(event)}")
 
