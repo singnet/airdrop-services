@@ -4,6 +4,7 @@ import traceback
 
 from common.alerts import MattermostProcessor
 from common.constant import ResponseStatus, StatusCode
+from common.exceptions import BlockConfirmationException
 from common.utils import generate_lambda_response
 
 
@@ -40,7 +41,8 @@ def exception_handler(*decorator_args, **decorator_kwargs):
     logger: Logger = decorator_kwargs["logger"]
     network_id: int | None = decorator_kwargs.get("NETWORK_ID", None)
     processor_config: dict = decorator_kwargs.get("PROCESSOR_CONFIG", {})
-    exceptions: tuple = decorator_kwargs.get("EXCEPTIONS", ())
+    not_raised_exceptions: tuple = decorator_kwargs.get("NOT_RAISED_EXCEPTIONS", ())
+    raised_exceptions: tuple = decorator_kwargs.get("RAISED_EXCEPTIONS", ())
     raise_exception: bool = decorator_kwargs.get("RAISE_EXCEPTION", False)
 
     alert_processor = MattermostProcessor(config=processor_config)
@@ -53,7 +55,7 @@ def exception_handler(*decorator_args, **decorator_kwargs):
             error_description = ""
             try:
                 return func(*args, **kwargs)
-            except exceptions as e:
+            except not_raised_exceptions as e:
                 error_description = get_error_description(e)
                 error_message = alert_processor.prepare_error_message(network_id=network_id,
                                                                       query_string_parameters=query_string_parameters,
@@ -67,6 +69,17 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                 response_message = prepare_response_message(ResponseStatus.FAILED, error_message=e.error_message,
                                                             error_details=e.error_details)
                 return generate_lambda_response(StatusCode.INTERNAL_SERVER_ERROR, response_message, cors_enabled=True)
+            except raised_exceptions as e:
+                error_description = get_error_description(e)
+                error_message = alert_processor.prepare_error_message(network_id=network_id,
+                                                                      query_string_parameters=query_string_parameters,
+                                                                      path=path,
+                                                                      handler_name=handler_name,
+                                                                      path_parameters=path_parameters,
+                                                                      body=body,
+                                                                      error_description=error_description)
+                logger.exception(error_message)
+                raise e
             except Exception as e:
                 error_description = get_error_description(e)
                 error_message = alert_processor.prepare_error_message(network_id=network_id,

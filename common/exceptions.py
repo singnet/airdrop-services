@@ -22,3 +22,7 @@ class RequiredDataNotFound(CustomException):
 
 class TransactionNotFound(Exception):
     pass
+
+
+class BlockConfirmationException(Exception):
+    pass

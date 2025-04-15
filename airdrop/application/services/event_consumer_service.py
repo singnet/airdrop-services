@@ -10,7 +10,7 @@ from airdrop.constants import BlockFrostAPI, DEPOSIT_EVENT_TX_METADATA
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.user_registration_repo import UserRegistrationRepository
-from common.exceptions import ValidationFailedException
+from common.exceptions import BlockConfirmationException, ValidationFailedException
 from common.logger import get_logger
 
 user_registration_repo = UserRegistrationRepository()
@@ -51,7 +51,7 @@ class EventConsumerService:
         current_block_no = EventConsumerService.get_current_block_no()
         if current_block_no > (transaction_block_no + MIN_BLOCK_CONFIRMATION_REQUIRED):
             return None
-        raise Exception(f"Block confirmation is not enough for event {self.event}")
+        raise BlockConfirmationException(f"Block confirmation is not enough for event {self.event}")
 
     @staticmethod
     def get_stake_key_address(address):
