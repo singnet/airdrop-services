@@ -64,21 +64,14 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                                                                       path_parameters=path_parameters,
                                                                       body=body,
                                                                       error_description=error_description)
-                logger.exception(error_message)
+                logger.exception(error_description)
                 alert_processor.send(type=1, message=error_message)
                 response_message = prepare_response_message(ResponseStatus.FAILED, error_message=e.error_message,
                                                             error_details=e.error_details)
                 return generate_lambda_response(StatusCode.INTERNAL_SERVER_ERROR, response_message, cors_enabled=True)
             except raised_exceptions as e:
                 error_description = get_error_description(e)
-                error_message = alert_processor.prepare_error_message(network_id=network_id,
-                                                                      query_string_parameters=query_string_parameters,
-                                                                      path=path,
-                                                                      handler_name=handler_name,
-                                                                      path_parameters=path_parameters,
-                                                                      body=body,
-                                                                      error_description=error_description)
-                logger.exception(error_message)
+                logger.exception(error_description)
                 raise e
             except Exception as e:
                 error_description = get_error_description(e)
@@ -89,7 +82,7 @@ def exception_handler(*decorator_args, **decorator_kwargs):
                                                                       path_parameters=path_parameters,
                                                                       body=body,
                                                                       error_description=error_description)
-                logger.exception(error_message)
+                logger.exception(error_description)
                 alert_processor.send(type=1, message=error_message)
                 response_message = prepare_response_message(ResponseStatus.FAILED, error_details=repr(e))
                 if raise_exception:
