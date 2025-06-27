@@ -147,14 +147,14 @@ class UserRegistrationRepository(BaseRepository):
     def get_user_registration_details(
         self,
         address: Optional[str] = None,
-        payment_part: str | None = None,
-        staking_part: str | None = None,
+        payment_part: Optional[str] = None,
+        staking_part: Optional[str] = None,
         airdrop_window_id: Optional[int] = None,
         registration_id: Optional[str] = None
     ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
         try:
-            if not payment_part and not staking_part and not address:
-                raise ValueError("At least one of payment_part / staking_part / address arguments must be provided")
+            query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
+
             or_clause = list()
             if payment_part:
                 or_clause.append(UserRegistration.payment_part == payment_part)
@@ -162,17 +162,14 @@ class UserRegistrationRepository(BaseRepository):
                 or_clause.append(UserRegistration.staking_part == staking_part)
             if address:
                 or_clause.append(UserRegistration.address == address)
-            query = (
-                self.session.query(UserRegistration)
-                .filter(
-                    UserRegistration.registered_at != None,
-                    or_(*or_clause)
-                )
-            )
+            if or_clause:
+                query.filter(or_(*or_clause))
+
             if airdrop_window_id:
                 query = query.filter(UserRegistration.airdrop_window_id == airdrop_window_id)
             if registration_id:
                 query = query.filter(UserRegistration.receipt_generated == registration_id)
+
             user_registrations = query.all()
             registration_count = len(user_registrations)
             if registration_count:
@@ -213,9 +210,9 @@ class UserRegistrationRepository(BaseRepository):
     def get_registration_by_staking_payment_parts_for_airdrop(
         self,
         airdrop_window_id: int,
-        payment_part: str | None = None,
-        staking_part: str | None = None,
-    ) -> UserRegistration | None:
+        payment_part: Optional[str] = None,
+        staking_part: Optional[str] = None,
+    ) -> Optional[UserRegistration]:
         if not payment_part and not staking_part:
             raise ValueError("At least one of payment_part / staking_part arguments must be provided")
         or_clause = list()

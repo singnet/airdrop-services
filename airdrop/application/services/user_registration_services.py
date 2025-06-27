@@ -1,6 +1,6 @@
 from datetime import datetime
 from http import HTTPStatus
-from typing import List, Optional, Tuple, Union
+from typing import List
 
 
 from blockfrost import BlockFrostApi
@@ -9,6 +9,7 @@ from jsonschema import validate, ValidationError
 from pycardano import Address
 
 from airdrop.application.services.airdrop_services import AirdropServices
+from airdrop.application.services.common_logic_service import CommonLogicService
 from airdrop.config import BlockFrostAPIBaseURL, BlockFrostAccountDetails
 from airdrop.constants import (
     CARDANO_ADDRESS_PREFIXES,
@@ -20,7 +21,7 @@ from airdrop.constants import (
     UserClaimStatus
 )
 from airdrop.application.types.windows import WindowRegistrationData, RegistrationDetails
-from airdrop.infrastructure.models import PendingTransaction, UserRegistration
+from airdrop.infrastructure.models import PendingTransaction
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.pending_transaction_repo import PendingTransactionRepository
@@ -68,8 +69,10 @@ class UserRegistrationServices:
 
     @staticmethod
     def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
-        is_registered, user_registration = UserRegistrationServices. \
-                get_user_registration_details(address, airdrop_window_id)
+        is_registered, user_registration = CommonLogicService.get_user_registration_details(
+            address,
+            airdrop_window_id
+        )
 
         if isinstance(user_registration, list):
             logger.error(f"Find multiple registrations for {address=}, {airdrop_window_id=}")
@@ -202,8 +205,10 @@ class UserRegistrationServices:
 
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
-            is_registered, user_registration = UserRegistrationServices. \
-                get_user_registration_details(address, airdrop_window_id)
+            is_registered, user_registration = CommonLogicService.get_user_registration_details(
+                address,
+                airdrop_window_id
+            )
 
             is_airdrop_window_claimed = False
             is_claimable = False
@@ -315,7 +320,7 @@ class UserRegistrationServices:
 
                 registration_repo = UserRegistrationRepository()
                 logger.info(f"Found tx {registration.tx_hash}: block={tx_data.block_height} index={tx_data.index}")
-                is_registered, _ = UserRegistrationServices.get_user_registration_details(registration.address)
+                is_registered, _ = CommonLogicService.get_user_registration_details(registration.address)
                 if is_registered:
                     logger.error("Address is already registered for this airdrop window")
                     raise Exception("Address is already registered for this airdrop window")
@@ -370,22 +375,3 @@ class UserRegistrationServices:
 
         logger.info(f"Amount of registrations to delete: {len(to_delete)}")
         pending_registration_repo.delete_pending_registrations(to_delete)
-
-    @staticmethod
-    def get_user_registration_details(
-            address: str,
-            airdrop_window_id: int
-    ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
-        registration_repo = UserRegistrationRepository()
-        network = Utils.recognize_blockchain_network(address)
-        if network == "Ethereum" or address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.BYRON])):
-            return registration_repo.get_user_registration_details(
-                address, airdrop_window_id
-            )
-        elif network == "Cardano":
-            payment_part, staking_part = Utils.get_payment_staking_parts(address)
-            return registration_repo.get_user_registration_details(
-                payment_part=payment_part,
-                staking_part=staking_part,
-                airdrop_window_id=airdrop_window_id
-            )
