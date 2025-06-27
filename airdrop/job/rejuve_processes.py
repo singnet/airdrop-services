@@ -5,6 +5,7 @@ import pycardano
 from sqlalchemy import or_, select
 from web3 import Web3
 
+from airdrop.application.services.user_registration_services import UserRegistrationServices
 from airdrop.constants import CARDANO_ADDRESS_PREFIXES, Blockchain, CardanoEra
 from airdrop.infrastructure.models import UserBalanceSnapshot, UserRegistration
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
@@ -32,8 +33,7 @@ class ConverterFromStrToJSON:
         logger.info("Processing the receiving all registrations for the "
                     f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
         if self.address:
-            _, registration = UserRegistrationRepository().get_user_registration_details(address=self.address,
-                                                                                         airdrop_window_id=self._window_id)
+            _, registration = UserRegistrationServices().get_user_registration_details(self.address, self._window_id)
             registrations = [registration]
         else:
             _, registrations = UserRegistrationRepository().get_user_registration_details(airdrop_window_id=self._window_id)
@@ -81,8 +81,7 @@ class ChangerAddressFormat:
         logger.info("Processing the receiving all registrations for the "
                     f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
         if self.address:
-            _, registration = UserRegistrationRepository().get_user_registration_details(address=self.address,
-                                                                                         airdrop_window_id=self._window_id)
+            _, registration = UserRegistrationServices().get_user_registration_details(self.address, self._window_id)
             registrations = [registration]
         else:
             _, registrations = UserRegistrationRepository().get_user_registration_details(airdrop_window_id=self._window_id)

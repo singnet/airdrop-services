@@ -1,6 +1,6 @@
 from base64 import b64encode
 import json
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from blockfrost import BlockFrostApi
 from blockfrost.utils import ApiError as BlockFrostApiError
@@ -42,7 +42,7 @@ class RejuveAirdrop(DefaultAirdrop):
         self.claim_address = RejuveAirdropConfig.claim_address.value
 
     def check_user_eligibility(self, address: str) -> bool:
-        if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+        if address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY])):
             formatted_address = Address.from_primitive(address)
 
             if formatted_address.payment_part is not None and formatted_address.staking_part is not None:
@@ -230,14 +230,14 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Address is not eligible for this airdrop")
             raise Exception("Address is not eligible for this airdrop")
 
-        is_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
+        is_registered, _ = self.get_user_registration_details(address, self.window_id)
         if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
 
         payment_part: str | None = None
         staking_part: str | None = None
-        if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+        if address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY])):
             formatted_address = Address.from_primitive(address)
             payment_part = str(formatted_address.payment_part) if formatted_address.payment_part else None
             staking_part = str(formatted_address.staking_part) if formatted_address.staking_part else None
@@ -298,14 +298,14 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Address is not eligible for this airdrop")
             raise Exception("Address is not eligible for this airdrop")
 
-        is_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
+        is_registered, _ = self.get_user_registration_details(address, self.window_id)
         if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
 
         payment_part: str | None = None
         staking_part: str | None = None
-        if any(address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+        if address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY])):
             formatted_address = Address.from_primitive(address)
             payment_part = str(formatted_address.payment_part) if formatted_address.payment_part else None
             staking_part = str(formatted_address.staking_part) if formatted_address.staking_part else None
@@ -410,7 +410,7 @@ class RejuveAirdrop(DefaultAirdrop):
             reward_address=reward_address
         )
 
-        is_registered, _ = registration_repo.get_user_registration_details(address, self.window_id)
+        is_registered, _ = self.get_user_registration_details(address, self.window_id)
         if not is_registered:
             logger.error(f"Address {address} is not registered for window {self.window_id}")
             raise Exception("Address is not registered for this airdrop window.")
@@ -486,7 +486,7 @@ class RejuveAirdrop(DefaultAirdrop):
             raise Exception("It is forbidden to update the data because a claim "
                             "transaction has already been created for it")
 
-        is_registered, registration = registration_repo.get_user_registration_details(address, self.window_id)
+        is_registered, registration = self.get_user_registration_details(address, self.window_id)
         if not is_registered:
             logger.error(f"Address {address} is not registered for window {self.window_id}")
             raise Exception("Address is not registered for this airdrop window.")
@@ -753,3 +753,21 @@ class RejuveAirdrop(DefaultAirdrop):
         }
 
         return formatted_message
+
+    def get_user_registration_details(
+            address: str,
+            airdrop_window_id: int
+    ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
+        registration_repo = UserRegistrationRepository()
+        network = Utils.recognize_blockchain_network(address)
+        if network == "Ethereum" or address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.BYRON])):
+            return registration_repo.get_user_registration_details(
+                address, airdrop_window_id
+            )
+        elif network == "Cardano":
+            payment_part, staking_part = Utils.get_payment_staking_parts(address)
+            return registration_repo.get_user_registration_details(
+                payment_part=payment_part,
+                staking_part=staking_part,
+                airdrop_window_id=airdrop_window_id
+            )

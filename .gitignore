@@ -147,6 +147,7 @@ external_packages/**
 
 */config.py
 config.local.json
+config.dev.json
 /package.json
 /requirements.txt
 /serverless.yml
