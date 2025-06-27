@@ -4,8 +4,7 @@ from sqlalchemy import or_, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.constants import AirdropClaimStatus
-from airdrop.domain.factory.airdrop_factory import AirdropFactory
-from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
+from airdrop.infrastructure.models import UserRegistration, UserReward, UserNotifications
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
 from airdrop.utils import datetime_in_utcnow
 
