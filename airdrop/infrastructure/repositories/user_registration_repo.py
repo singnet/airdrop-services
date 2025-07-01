@@ -4,8 +4,7 @@ from sqlalchemy import or_, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from airdrop.constants import AirdropClaimStatus
-from airdrop.domain.factory.airdrop_factory import AirdropFactory
-from airdrop.infrastructure.models import AirdropWindow, UserRegistration, UserReward, UserNotifications
+from airdrop.infrastructure.models import UserRegistration, UserReward, UserNotifications
 from airdrop.infrastructure.repositories.base_repository import BaseRepository
 from airdrop.utils import datetime_in_utcnow
 
@@ -26,27 +25,6 @@ class UserRegistrationRepository(BaseRepository):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-
-    def airdrop_window_user_details(self, airdrop_window_id, address):
-        user_data = (
-            self.session.query(UserRegistration)
-            .join(
-                AirdropWindow,
-                AirdropWindow.id == UserRegistration.airdrop_window_id,
-            )
-            .filter(UserRegistration.airdrop_window_id == airdrop_window_id)
-            .filter(UserRegistration.address == address)
-            .filter(UserRegistration.registered_at != None)
-            .first()
-        )
-
-        user_details = None
-
-        if user_data is not None:
-            user_details = AirdropFactory.convert_airdrop_window_user_model_to_entity_model(
-                user_data)
-
-        return user_details
 
     def get_reject_reason(self, airdrop_window_id, address):
         registration = (
@@ -147,17 +125,29 @@ class UserRegistrationRepository(BaseRepository):
     def get_user_registration_details(
         self,
         address: Optional[str] = None,
+        payment_part: Optional[str] = None,
+        staking_part: Optional[str] = None,
         airdrop_window_id: Optional[int] = None,
         registration_id: Optional[str] = None
     ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
         try:
             query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
+
+            or_clause = list()
+            if payment_part:
+                or_clause.append(UserRegistration.payment_part == payment_part)
+            if staking_part:
+                or_clause.append(UserRegistration.staking_part == staking_part)
             if address:
-                query = query.filter(UserRegistration.address == address)
+                or_clause.append(UserRegistration.address == address)
+            if or_clause:
+                query.filter(or_(*or_clause))
+
             if airdrop_window_id:
                 query = query.filter(UserRegistration.airdrop_window_id == airdrop_window_id)
             if registration_id:
                 query = query.filter(UserRegistration.receipt_generated == registration_id)
+
             user_registrations = query.all()
             registration_count = len(user_registrations)
             if registration_count:
@@ -198,9 +188,9 @@ class UserRegistrationRepository(BaseRepository):
     def get_registration_by_staking_payment_parts_for_airdrop(
         self,
         airdrop_window_id: int,
-        payment_part: str | None = None,
-        staking_part: str | None = None,
-    ) -> UserRegistration | None:
+        payment_part: Optional[str] = None,
+        staking_part: Optional[str] = None,
+    ) -> Optional[UserRegistration]:
         if not payment_part and not staking_part:
             raise ValueError("At least one of payment_part / staking_part arguments must be provided")
         or_clause = list()
@@ -214,6 +204,9 @@ class UserRegistrationRepository(BaseRepository):
                 .filter(
                     UserRegistration.airdrop_window_id == airdrop_window_id,
                     or_(*or_clause)
+                )
+                .filter(
+                    UserRegistration.registered_at != None
                 )
             ).first()
 

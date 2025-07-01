@@ -2,13 +2,14 @@ import datetime
 from http import HTTPStatus
 from typing import List
 
-from jsonschema import validate, ValidationError
 
 from blockfrost import BlockFrostApi
 from blockfrost.utils import ApiError as BlockFrostApiError
+from jsonschema import validate, ValidationError
 from pycardano import Address
 
 from airdrop.application.services.airdrop_services import AirdropServices
+from airdrop.application.services.common_logic_service import CommonLogicService
 from airdrop.config import BlockFrostAPIBaseURL, BlockFrostAccountDetails
 from airdrop.constants import (
     CARDANO_ADDRESS_PREFIXES,
@@ -72,8 +73,9 @@ class UserRegistrationServices:
 
     @staticmethod
     def __get_registration_data(address: str, airdrop_window: AirdropWindow) -> WindowRegistrationData:
-        is_registered, user_registration = UserRegistrationRepository().get_user_registration_details(
-            address, airdrop_window.id
+        is_registered, user_registration = CommonLogicService.get_user_registration_details(
+            address=address,
+            airdrop_window_id=airdrop_window.id
         )
 
         if isinstance(user_registration, list):
@@ -220,8 +222,10 @@ class UserRegistrationServices:
 
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
-            is_registered, user_registration = UserRegistrationRepository(). \
-                get_user_registration_details(address, airdrop_window_id)
+            is_registered, user_registration = CommonLogicService.get_user_registration_details(
+                address,
+                airdrop_window_id
+            )
 
             is_airdrop_window_claimed = False
             is_claimable = False
@@ -333,8 +337,7 @@ class UserRegistrationServices:
 
                 registration_repo = UserRegistrationRepository()
                 logger.info(f"Found tx {registration.tx_hash}: block={tx_data.block_height} index={tx_data.index}")
-                is_registered, _ = registration_repo.get_user_registration_details(registration.address,
-                                                                                   registration.airdrop_window_id)
+                is_registered, _ = CommonLogicService.get_user_registration_details(registration.address)
                 if is_registered:
                     logger.error("Address is already registered for this airdrop window")
                     raise Exception("Address is already registered for this airdrop window")
@@ -370,7 +373,7 @@ class UserRegistrationServices:
         for registration in to_save:
             payment_part: str | None = None
             staking_part: str | None = None
-            if any(registration.address.startswith(prefix) for prefix in CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY]):
+            if registration.address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY])):
                 formatted_address = Address.from_primitive(registration.address)
                 payment_part = str(formatted_address.payment_part) if formatted_address.payment_part else None
                 staking_part = str(formatted_address.staking_part) if formatted_address.staking_part else None

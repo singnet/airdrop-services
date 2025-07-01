@@ -5,6 +5,7 @@ import json
 import cbor2
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from eth_account.messages import encode_defunct, encode_typed_data
+from pycardano import Address
 import requests
 from web3 import Web3
 
@@ -130,3 +131,13 @@ class Utils:
         if registration_message == tx_value:
             return True, tx_value
         return False, None
+
+    @staticmethod
+    def get_payment_staking_parts(address: str) -> tuple[str | None, str | None]:
+        payment_part: str | None = None
+        staking_part: str | None = None
+        if address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY])):
+            formatted_address = Address.from_primitive(address)
+            payment_part = str(formatted_address.payment_part) if formatted_address.payment_part else None
+            staking_part = str(formatted_address.staking_part) if formatted_address.staking_part else None
+        return payment_part, staking_part
