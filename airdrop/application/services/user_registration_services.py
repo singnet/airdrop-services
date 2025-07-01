@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from http import HTTPStatus
 from typing import List
 
@@ -17,11 +17,12 @@ from airdrop.constants import (
     ADDRESS_ELIGIBILITY_SCHEMA,
     USER_REGISTRATION_SCHEMA,
     AirdropClaimStatus,
+    AirdropEvents,
     CardanoEra,
     UserClaimStatus
 )
 from airdrop.application.types.windows import WindowRegistrationData, RegistrationDetails
-from airdrop.infrastructure.models import PendingTransaction
+from airdrop.infrastructure.models import AirdropWindow, PendingTransaction
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.airdrop_window_repository import AirdropWindowRepository
 from airdrop.infrastructure.repositories.pending_transaction_repo import PendingTransactionRepository
@@ -40,6 +41,7 @@ class UserRegistrationServices:
     def __generate_user_claim_status(
         is_registered: bool,
         airdrop_claim_status: AirdropClaimStatus | None,
+        airdrop_state_status: AirdropEvents
     ) -> UserClaimStatus:
         logger.debug(
             f"Generate user claim status"
@@ -58,6 +60,8 @@ class UserRegistrationServices:
             return UserClaimStatus.PENDING
         elif airdrop_claim_status == AirdropClaimStatus.NOT_STARTED:
             return UserClaimStatus.NOT_STARTED
+        elif airdrop_claim_status is None and airdrop_state_status == AirdropEvents.AIRDROP_WINDOW_OPEN:
+            return UserClaimStatus.REGISTERED
         elif airdrop_claim_status in (
             AirdropClaimStatus.FAILED,
             None
@@ -68,24 +72,24 @@ class UserRegistrationServices:
             raise Exception(f"Unexpected aidrop_claim_status: {airdrop_claim_status}")
 
     @staticmethod
-    def __get_registration_data(address: str, airdrop_window_id: int) -> WindowRegistrationData:
+    def __get_registration_data(address: str, airdrop_window: AirdropWindow) -> WindowRegistrationData:
         is_registered, user_registration = CommonLogicService.get_user_registration_details(
-            address,
-            airdrop_window_id
+            address=address,
+            airdrop_window_id=airdrop_window.id
         )
 
         if isinstance(user_registration, list):
-            logger.error(f"Find multiple registrations for {address=}, {airdrop_window_id=}")
+            logger.error(f"Find multiple registrations for {address=}, {airdrop_window.id=}")
             raise BadRequestException("Something wrong with user registration")
 
         last_claim = ClaimHistoryRepository().get_last_claim_history(
-            airdrop_window_id=airdrop_window_id,
+            airdrop_window_id=airdrop_window.id,
             address=address,
             blockchain_method="token_transfer"
         )
 
         last_ada_transfer = ClaimHistoryRepository().get_last_claim_history(
-            airdrop_window_id=airdrop_window_id,
+            airdrop_window_id=airdrop_window.id,
             address=address,
             blockchain_method="ada_transfer"
         )
@@ -96,7 +100,20 @@ class UserRegistrationServices:
         elif last_ada_transfer is not None:
             airdrop_claim_status = AirdropClaimStatus(last_ada_transfer.transaction_status)
 
-        user_claim_status = UserRegistrationServices.__generate_user_claim_status(is_registered, airdrop_claim_status)
+        now = datetime_in_utcnow()
+        claim_start_period = airdrop_window.claim_start_period.replace(tzinfo=datetime.timezone.utc)
+
+        airdrop_state_status = None
+        if now < claim_start_period:
+            airdrop_state_status = AirdropEvents.AIRDROP_WINDOW_OPEN
+        elif now >= claim_start_period:
+            airdrop_state_status = AirdropEvents.AIRDROP_CLAIM
+        
+        user_claim_status = UserRegistrationServices.__generate_user_claim_status(
+            is_registered=is_registered,
+            airdrop_claim_status=airdrop_claim_status,
+            airdrop_state_status=airdrop_state_status
+        )
 
         registration_details = RegistrationDetails(
             registration_id = str(user_registration.receipt_generated),
@@ -106,7 +123,7 @@ class UserRegistrationServices:
         ) if is_registered and user_registration is not None else None
 
         window_registration_data = WindowRegistrationData(
-            window_id=airdrop_window_id,
+            window_id=airdrop_window.id,
             airdrop_window_claim_status=airdrop_claim_status,
             claim_status=user_claim_status,
             registration_details=registration_details
@@ -161,7 +178,7 @@ class UserRegistrationServices:
                 windows_registration_data.append(
                     UserRegistrationServices.__get_registration_data(
                         address=address,
-                        airdrop_window_id=window.id,
+                        airdrop_window=window,
                     )
                 )
 

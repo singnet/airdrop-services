@@ -131,6 +131,7 @@ class UserClaimStatus(Enum):
     NOT_REGISTERED = "NOT_REGISTERED"
     NOT_STARTED = "NOT_STARTED"
     PENDING = "PENDING"
+    REGISTERED = "REGISTERED"
 
 
 class AirdropClaimStatus(Enum):
