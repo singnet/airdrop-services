@@ -10,8 +10,7 @@ url = URL.create(
     password=NETWORK['db']["DB_PASSWORD"],
     host=NETWORK['db']['DB_HOST'],
     port=NETWORK['db']["DB_PORT"],
-    database=NETWORK['db']["DB_NAME"],
-    query={"timezone": "+00:00"}
+    database=NETWORK['db']["DB_NAME"]
 )
 engine = create_engine(url, pool_pre_ping=True, echo=False, isolation_level="READ COMMITTED")
 
