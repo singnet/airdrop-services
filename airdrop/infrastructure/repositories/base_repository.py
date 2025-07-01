@@ -1,16 +1,19 @@
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 from airdrop.config import NETWORK
 
-driver=NETWORK['db']['DB_DRIVER']
-host=NETWORK['db']['DB_HOST']
-user=NETWORK['db']["DB_USER"]
-db_name=NETWORK['db']["DB_NAME"]
-password=NETWORK['db']["DB_PASSWORD"]
-port=NETWORK['db']["DB_PORT"]
 
-connection_string = f"{driver}://{user}:{password}@{host}:{port}/{db_name}"
-engine = create_engine(connection_string, pool_pre_ping=True, echo=False, isolation_level="READ COMMITTED")
+url = URL.create(
+    drivername=NETWORK['db']['DB_DRIVER'],
+    username=NETWORK['db']["DB_USER"],
+    password=NETWORK['db']["DB_PASSWORD"],
+    host=NETWORK['db']['DB_HOST'],
+    port=NETWORK['db']["DB_PORT"],
+    database=NETWORK['db']["DB_NAME"],
+    query={"timezone": "+00:00"}
+)
+engine = create_engine(url, pool_pre_ping=True, echo=False, isolation_level="READ COMMITTED")
 
 Session = sessionmaker(bind=engine)
 default_session = Session()

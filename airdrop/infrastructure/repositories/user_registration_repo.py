@@ -131,8 +131,6 @@ class UserRegistrationRepository(BaseRepository):
         registration_id: Optional[str] = None
     ) -> Tuple[bool, Optional[Union[UserRegistration, list[UserRegistration]]]]:
         try:
-            query = self.session.query(UserRegistration).filter(UserRegistration.registered_at != None)
-
             or_clause = list()
             if payment_part:
                 or_clause.append(UserRegistration.payment_part == payment_part)
@@ -140,8 +138,14 @@ class UserRegistrationRepository(BaseRepository):
                 or_clause.append(UserRegistration.staking_part == staking_part)
             if address:
                 or_clause.append(UserRegistration.address == address)
-            if or_clause:
-                query.filter(or_(*or_clause))
+
+            query = (
+                self.session.query(UserRegistration)
+                .filter(
+                    UserRegistration.registered_at != None,
+                    or_(*or_clause)
+                )
+            )
 
             if airdrop_window_id:
                 query = query.filter(UserRegistration.airdrop_window_id == airdrop_window_id)
