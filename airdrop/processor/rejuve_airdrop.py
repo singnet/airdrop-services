@@ -46,6 +46,7 @@ class RejuveAirdrop(DefaultAirdrop):
         if address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY])):
             formatted_address = Address.from_primitive(address)
 
+            # TODO (Potential Error): Cardano address without staking part won't pass it
             if formatted_address.payment_part is not None and formatted_address.staking_part is not None:
                 balances = UserBalanceSnapshotRepository().get_balances_by_staking_payment_parts_for_airdrop(
                     payment_part=str(formatted_address.payment_part),
@@ -53,6 +54,7 @@ class RejuveAirdrop(DefaultAirdrop):
                     airdrop_id=self.id
                 )
 
+                # TODO: Zero balance checker for existing rows
                 return bool(balances and len(balances) > 0)
 
             logger.error(f"Staking and payment part not found for address: {address}")
@@ -344,153 +346,133 @@ class RejuveAirdrop(DefaultAirdrop):
         return receipt
 
     def update_registration(self, data: dict):
-        logger.info(f"Starting registration update process for {self.__class__.__name__}")
-
-        if "tx_hash" in data:
-            return self.update_registration_trezor(data)
-        else:
-            return self.update_registration_regular_wallet(data)
-
-    def update_registration_regular_wallet(self, data: dict):
         """
         Update the user's registration details for a specific airdrop window.
 
         Steps:
-        1. Validate the airdrop window exists.
-        2. Check if claim phase is open.
-        3. Check if the user is eligible for the airdrop.
-        4. Match the provided signature to confirm identity.
-        5. Ensure the user is already registered.
-        6. Generate new receipt.
-        7. Update the registration with new signature details.
+        1. Check whether airdrop claim phase is open
+        2. Check whether the user is eligible for the airdrop
+        3. Select registered & claimable airdrop window for update
+        3.1 Validate that requested airdrop window exists
+        3.2 Validate that there is claimable window for the user in this airdrop
+        4. Validate signature data (4.1 OR 4.2)
+        4.1 Validate transaction for trezor wallet type
+        4.2 Match the provided signature to confirm identity
+        5. Generate new receipt
+        6. Update the registration with new signature details
+        7. Calculate current claimable amount for the user
         """
-        logger.info(f"Starting regular wallet registration update process for {self.__class__.__name__}")
+        logger.info(f"Starting registration update process for {self.__class__.__name__}")
 
         address = data["address"]
-        signature = data["signature"]
         reward_address = data["reward_address"]
         timestamp = data["timestamp"]
         wallet_name = data["wallet_name"]
+        signature = data.get("signature")
         key = data.get("key")
-
-        if self.window_id is None:
-            raise Exception("Window ID is None")
+        tx_hash = data.get("tx_hash")
 
         registration_repo = UserRegistrationRepository()
         airdrop_window_repo = AirdropWindowRepository()
+        claim_history_repo = ClaimHistoryRepository()
 
         address = self.to_checksum_address_if_ethereum(address)
 
-        airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
-        if not airdrop_window:
-            raise Exception(f"Airdrop window does not exist: {self.window_id}")
+        # Check whether airdrop claim phase is open
+        now = datetime_in_utcnow()
+        if not airdrop_window_repo.is_claimable_airdrop(airdrop_id=self.id, date_time=now):
+            raise Exception("Claim is not available at this moment")
 
-        if not self.is_phase_window_open(
-            airdrop_window.claim_start_period,
-            airdrop_window.claim_end_period
-        ):
-            raise Exception("Airdrop window is not accepting claim at this moment")
-
+        # Check whether the user is eligible for the airdrop
         if not self.check_user_eligibility(address=address):
-            logger.error(f"Address {address} is not eligible for airdrop in window {self.window_id}")
-            raise Exception("Address is not eligible for this airdrop.")
+            logger.error(f"Address {address} is not eligible for airdrop {self.id}")
+            raise Exception("Address is not eligible for this airdrop")
 
-        claim_history_obj = ClaimHistoryRepository().get_claim_history(self.window_id, address, "ada_transfer")
-        if claim_history_obj:
-            logger.error(f"Claim transaction already created for {address = }, "
-                         f"window_id = {self.window_id} and blockchain_method = ada_transfer")
-            raise Exception("It is forbidden to update the data because a claim "
-                            "transaction has already been created for it")
+        # Select registered & claimable airdrop window for update
+        requested_airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
+        if not requested_airdrop_window:
+            raise Exception(f"Airdrop window does not exist: {requested_airdrop_window.id}")
+        claimable_airdrop_window = None
+        airdrop_windows = airdrop_window_repo.get_airdrop_windows(self.id)
+        for airdrop_window_ in airdrop_windows:
+            is_registered, _ = CommonLogicService.get_user_registration_details(address, airdrop_window_.id)
+            claim_history_obj = claim_history_repo.get_claim_history(airdrop_window_.id, address, "ada_transfer")
+            is_claimed = claim_history_obj is not None
+            is_after_requested = airdrop_window_.airdrop_window_order > requested_airdrop_window.airdrop_window_order
+            logger.debug(f"Airdrop window id={airdrop_window_.id} is_registered={is_registered}, "
+                         f"is_claimed={is_claimed}, is_after_requested={is_after_requested}")
+            if is_registered and not is_claimed and not is_after_requested:
+                claimable_airdrop_window = airdrop_window_
+            elif is_registered and is_claimed:
+                claimable_airdrop_window = None
+        logger.info(f"Selected claimable window id={claimable_airdrop_window.id}")
+        if not claimable_airdrop_window:
+            raise Exception(f"Claimable window not found for the requested window: {requested_airdrop_window.id}")
 
-        signature_details = self.match_signature(
-            address=address,
-            signature=signature,
-            timestamp=timestamp,
-            wallet_name=wallet_name,
-            key=key,
-            reward_address=reward_address
-        )
+        if tx_hash:
+            # Validate transaction for trezor wallet type
+            signature_details = self.validate_update_registration_trezor(
+                window_id=claimable_airdrop_window.id,
+                address=address,
+                reward_address=reward_address,
+                timestamp=timestamp,
+                wallet_name=wallet_name,
+                tx_hash=tx_hash
+            )
+        elif signature:
+            # Match the provided signature to confirm identity
+            signature_details = self.match_signature(
+                address=address,
+                signature=signature,
+                timestamp=timestamp,
+                wallet_name=wallet_name,
+                key=key,
+                reward_address=reward_address
+            )
+        else:
+            raise Exception("Validation data not provided (required either a signature or a tx_hash)")
 
-        is_registered, _ = CommonLogicService.get_user_registration_details(address, self.window_id)
-        if not is_registered:
-            logger.error(f"Address {address} is not registered for window {self.window_id}")
-            raise Exception("Address is not registered for this airdrop window.")
-
+        # Generate new receipt
         receipt = self.get_receipt(address=address, timestamp=timestamp)
 
+        # Update the registration with new signature details
         registration_repo.update_registration(
-            airdrop_window_id=self.window_id,
+            airdrop_window_id=claimable_airdrop_window.id,
             address=address,
-            signature=signature,
+            signature=signature if signature and not tx_hash else None,
             signature_details=signature_details,
+            tx_hash=tx_hash if tx_hash else None,
             receipt=receipt
         )
 
+        # Calculate current claimable amount for the user
         claimable_amount, total_eligible_amount = self.get_claimable_amount(user_address=address)
 
         return {
             "airdrop_id": str(self.id),
-            "airdrop_window_id": str(airdrop_window.id),
+            "airdrop_window_id": str(claimable_airdrop_window.id),
             "claimable_amount": str(claimable_amount),
             "total_eligibility_amount": str(total_eligible_amount),
             "chain_context": self.chain_context,
             "registration_id": receipt
         }
 
-    def update_registration_trezor(self, data: dict):
+    def validate_update_registration_trezor(self, window_id, address, reward_address, timestamp, wallet_name, tx_hash):
         """
-        Update the user's registration details for a specific airdrop window.
+        Validate update registration process for trezor wallet type.
 
         Steps:
-        1. Validate the airdrop window exists.
-        2. Check if claim phase is open.
-        3. Check if the user is eligible for the airdrop.
-        4. Ensure the user is already registered.
-        5. Transaction address, transaction metadata and timestamp checks
-        6. Generate new receipt.
-        7. Update the registration with new signature details.
+        1. Transaction address check
+        2. Transaction metadata check
+        3. Transaction timestamp from metadata check
         """
-        logger.info(f"Starting trezor wallet registration update process for {self.__class__.__name__}")
+        logger.info(f"Starting validation for trezor wallet registration update process")
 
-        address = data["address"]
-        reward_address = data["reward_address"]
-        timestamp = data["timestamp"]
-        wallet_name = data["wallet_name"]
-        tx_hash = data["tx_hash"]
-
-        if self.window_id is None:
-            raise Exception("Window ID is None")
-
-        registration_repo = UserRegistrationRepository()
-        airdrop_window_repo = AirdropWindowRepository()
-
-        address = self.to_checksum_address_if_ethereum(address)
-
-        airdrop_window: AirdropWindow = airdrop_window_repo.get_airdrop_window_by_id(self.window_id)
-        if not airdrop_window:
-            raise Exception(f"Airdrop window does not exist: {self.window_id}")
-
-        if not self.is_phase_window_open(
-            airdrop_window.claim_start_period,
-            airdrop_window.claim_end_period
-        ):
-            raise Exception("Airdrop window is not accepting claim at this moment")
-
-        if not self.check_user_eligibility(address=address):
-            logger.error(f"Address {address} is not eligible for airdrop in window {self.window_id}")
-            raise Exception("Address is not eligible for this airdrop.")
-
-        claim_history_obj = ClaimHistoryRepository().get_claim_history(self.window_id, address, "ada_transfer")
-        if claim_history_obj:
-            logger.error(f"Claim transaction already created for {address = }, "
-                         f"window_id = {self.window_id} and blockchain_method = ada_transfer")
-            raise Exception("It is forbidden to update the data because a claim "
-                            "transaction has already been created for it")
-
-        is_registered, registration = CommonLogicService.get_user_registration_details(address, self.window_id)
-        if not is_registered:
-            logger.error(f"Address {address} is not registered for window {self.window_id}")
-            raise Exception("Address is not registered for this airdrop window.")
+        signature_details = self.format_trezor_user_registration_signature_message(
+            timestamp=timestamp,
+            wallet_name=wallet_name,
+        )
+        signature_details["walletAddress"] = reward_address.lower()
 
         blockfrost = BlockFrostApi(project_id=BlockFrostAccountDetails.project_id,
                                    base_url=BlockFrostAPIBaseURL)
@@ -501,7 +483,7 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.info(f"Found tx {tx_hash}: block={tx_data.block_height} index={tx_data.index}")
         except BlockFrostApiError as error:
             logger.exception(f"BlockFrostApiError: {error}")
-            raise TransactionNotFound(f"Transaction with {tx_hash = } not found in blockchain")
+            raise TransactionNotFound(f"Transaction with {tx_hash=} not found in the blockchain")
 
         # Transaction address check
         is_address_match = False
@@ -512,46 +494,23 @@ class RejuveAirdrop(DefaultAirdrop):
         if not is_address_match:
             raise Exception("Transaction address is not valid")
 
-        formatted_message = self.format_trezor_user_registration_signature_message(
-            timestamp=timestamp,
-            wallet_name=wallet_name,
-        )
-        # Metadata check
+        # Transaction metadata check
         is_metadata_match, metadata = Utils.compare_data_from_db_and_metadata(
-            formatted_message,
+            signature_details,
             tx_metadata
         )
         if not is_metadata_match:
             raise Exception("Transaction metadata is not valid")
 
-        # Timestamp from metadata check
+        # Transaction timestamp from metadata check
         is_transaction_newest = False
+        _, registration = CommonLogicService.get_user_registration_details(address, window_id)
         if metadata["timestamp"] > registration.signature_details["timestamp"]:
             is_transaction_newest = True
         if not is_transaction_newest:
             raise Exception("The transaction you passed is older than the one you used previously")
 
-        formatted_message["walletAddress"] = reward_address.lower()
-        receipt = self.get_receipt(address=address, timestamp=timestamp)
-
-        registration_repo.update_registration(
-            airdrop_window_id=self.window_id,
-            address=address,
-            signature_details=formatted_message,
-            tx_hash=tx_hash,
-            receipt=receipt
-        )
-
-        claimable_amount, total_eligible_amount = self.get_claimable_amount(user_address=address)
-
-        return {
-            "airdrop_id": str(self.id),
-            "airdrop_window_id": str(airdrop_window.id),
-            "claimable_amount": str(claimable_amount),
-            "total_eligibility_amount": str(total_eligible_amount),
-            "chain_context": self.chain_context,
-            "registration_id": receipt
-        }
+        return signature_details
 
     def generate_multiple_windows_eligibility_response(
         self,
