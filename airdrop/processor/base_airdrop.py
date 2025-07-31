@@ -43,9 +43,7 @@ class BaseAirdrop(ABC):
         if end_period.tzinfo is None:
             end_period = end_period.replace(tzinfo=timezone.utc)
 
-        if now > start_period and now < end_period:
-            return True
-        return False
+        return start_period <= now <= end_period
 
     def to_checksum_address_if_ethereum(self, address: str) -> str:
         if Utils.recognize_blockchain_network(address) == Blockchain.ETHEREUM.value:

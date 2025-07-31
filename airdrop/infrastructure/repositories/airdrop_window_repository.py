@@ -37,6 +37,18 @@ class AirdropWindowRepository(BaseRepository):
             .first()
         )
 
+    def is_claimable_airdrop(self, airdrop_id, date_time):
+        """
+        Rejuve Airdrop specific repository method
+        Indicates whether there is any airdrop window with an open claim period
+        """
+        claimable_windows = self.session.query(AirdropWindow) \
+            .filter(AirdropWindow.airdrop_id == airdrop_id,
+                    AirdropWindow.claim_start_period <= date_time,
+                    AirdropWindow.claim_end_period >= date_time) \
+            .all()
+        return len(claimable_windows) > 0
+
     def get_airdrop_windows(self, airdrop_id: int) -> List[AirdropWindow]:
         return self.session.query(AirdropWindow) \
                    .filter(AirdropWindow.airdrop_id == airdrop_id) \
