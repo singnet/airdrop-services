@@ -405,8 +405,9 @@ class RejuveAirdrop(DefaultAirdrop):
                 claimable_airdrop_window = airdrop_window_
             elif is_registered and is_claimed:
                 claimable_airdrop_window = None
-        logger.info(f"Selected claimable window id={claimable_airdrop_window.id}")
-        if not claimable_airdrop_window:
+        if isinstance(claimable_airdrop_window, AirdropWindow):
+            logger.info(f"Selected claimable window id={claimable_airdrop_window.id}")
+        else:
             raise Exception(f"Claimable window not found for the requested window: {requested_airdrop_window.id}")
 
         if tx_hash:
