@@ -5,16 +5,16 @@ from uuid import uuid4
 import requests
 
 from airdrop.application.services.airdrop_services import AirdropServices
-from airdrop.config import TokenTransferCardanoService, SLACK_HOOK, MIN_BLOCK_CONFIRMATION_REQUIRED
+from airdrop.config import MATTERMOST_CONFIG, TokenTransferCardanoService, MIN_BLOCK_CONFIRMATION_REQUIRED
 from airdrop.constants import AirdropClaimStatus
 from airdrop.infrastructure.repositories.airdrop_repository import AirdropRepository
 from airdrop.infrastructure.repositories.claim_history_repo import ClaimHistoryRepository
 from airdrop.application.services.event_consumer_service import EventConsumerService
+from common.alerts import MattermostProcessor
 from common.logger import get_logger
-from common.utils import Utils
 
+alert_processor = MattermostProcessor(config=MATTERMOST_CONFIG)
 logger = get_logger(__name__)
-utils = Utils()
 
 
 class UserClaimService:
@@ -54,7 +54,7 @@ class UserClaimService:
                             f'{response_body.get("error", {}).get("message", "")}\nDetails  ' \
                             f'{response_body.get("error", {}).get("details", "")}.'
             logger.exception(error_message)
-            utils.report_slack(type=1, slack_message=error_message, slack_config=SLACK_HOOK)
+            alert_processor.send(type=1, message=error_message)
             return {}
         return response_body
 
@@ -86,7 +86,7 @@ class UserClaimService:
             transaction_status = AirdropClaimStatus.CLAIM_SUBMITTED.value
         else:
             transaction_status = AirdropClaimStatus.CLAIM_FAILED.value
-            utils.report_slack(type=0, slack_message="Token Transfer Cardano Service Failed!", slack_config=SLACK_HOOK)
+            alert_processor.send(type=1, message="Token Transfer Cardano Service Failed!")
             transaction_id = None
 
         # Update claim status as CLAIM_FAILED/CLAIM_SUBMITTED

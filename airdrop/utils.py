@@ -5,11 +5,13 @@ import json
 import cbor2
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from eth_account.messages import encode_defunct, encode_typed_data
+from pycardano import Address
 import requests
 from web3 import Web3
 
 from airdrop.config import BlockFrostAccountDetails
-from airdrop.constants import BlockFrostAPI
+from airdrop.constants import (CARDANO_ADDRESS_PREFIXES, BlockFrostAPI,
+                               Blockchain, CardanoEra)
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,10 +24,10 @@ def datetime_in_utcnow():
 class Utils:
     @staticmethod
     def recognize_blockchain_network(address: str) -> str:
-        if address[:2] == "0x":
-            return "Ethereum"
-        elif address[:4] == "addr":
-            return "Cardano"
+        if address.startswith("0x"):
+            return Blockchain.ETHEREUM.value
+        elif address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.ANY])):
+            return Blockchain.CARDANO.value
         else:
             return "Unknown"
 
@@ -129,3 +131,13 @@ class Utils:
         if registration_message == tx_value:
             return True, tx_value
         return False, None
+
+    @staticmethod
+    def get_payment_staking_parts(address: str) -> tuple[str | None, str | None]:
+        payment_part: str | None = None
+        staking_part: str | None = None
+        if address.startswith(tuple(CARDANO_ADDRESS_PREFIXES[CardanoEra.SHELLEY])):
+            formatted_address = Address.from_primitive(address)
+            payment_part = str(formatted_address.payment_part) if formatted_address.payment_part else None
+            staking_part = str(formatted_address.staking_part) if formatted_address.staking_part else None
+        return payment_part, staking_part

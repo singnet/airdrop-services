@@ -2,8 +2,11 @@ from abc import ABC, abstractmethod
 from datetime import timezone
 from typing import Tuple, Optional
 
+from web3 import Web3
+
 from airdrop.config import AIRDROP_RECEIPT_SECRET_KEY, AIRDROP_RECEIPT_SECRET_KEY_STORAGE_REGION
-from airdrop.utils import datetime_in_utcnow
+from airdrop.constants import Blockchain
+from airdrop.utils import Utils, datetime_in_utcnow
 from common.boto_utils import BotoUtils
 from common.logger import get_logger
 from common.utils import get_registration_receipt_ethereum
@@ -40,9 +43,12 @@ class BaseAirdrop(ABC):
         if end_period.tzinfo is None:
             end_period = end_period.replace(tzinfo=timezone.utc)
 
-        if now > start_period and now < end_period:
-            return True
-        return False
+        return start_period <= now <= end_period
+
+    def to_checksum_address_if_ethereum(self, address: str) -> str:
+        if Utils.recognize_blockchain_network(address) == Blockchain.ETHEREUM.value:
+            address = Web3.to_checksum_address(address)
+        return address
 
     def generate_user_registration_receipt(self, airdrop_id: int,
                                            window_id: int, address: str) -> str:

@@ -10,7 +10,7 @@ class ResponseStatus:
     SUCCESS = "success"
 
 
-SLACK_ERROR_MESSAGE_FORMAT = (
+ERROR_MESSAGE_FORMAT = (
     "Error Reported! \n"
     "network_id: {network_id}\n"
     "path: {path}, \n"

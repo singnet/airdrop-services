@@ -131,6 +131,7 @@ class UserClaimStatus(Enum):
     NOT_REGISTERED = "NOT_REGISTERED"
     NOT_STARTED = "NOT_STARTED"
     PENDING = "PENDING"
+    REGISTERED = "REGISTERED"
 
 
 class AirdropClaimStatus(Enum):
@@ -159,6 +160,11 @@ class BlockFrostAPI:
 class TransactionType(Enum):
     CLAIM = "Claim"
     REGISTRATION = "Registration"
+
+
+class Blockchain(Enum):
+    CARDANO = "Cardano"
+    ETHEREUM = "Ethereum"
 
 
 class CardanoEra(Enum):
