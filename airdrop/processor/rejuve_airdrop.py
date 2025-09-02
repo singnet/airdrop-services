@@ -233,7 +233,8 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Address is not eligible for this airdrop")
             raise Exception("Address is not eligible for this airdrop")
 
-        is_registered, _ = CommonLogicService.get_user_registration_details(address, self.window_id)
+        is_registered, _ = CommonLogicService.get_user_registration_details(address=address,
+                                                                            airdrop_window_id=self.window_id)
         if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
@@ -301,7 +302,8 @@ class RejuveAirdrop(DefaultAirdrop):
             logger.error("Address is not eligible for this airdrop")
             raise Exception("Address is not eligible for this airdrop")
 
-        is_registered, _ = CommonLogicService.get_user_registration_details(address, self.window_id)
+        is_registered, _ = CommonLogicService.get_user_registration_details(address=address,
+                                                                            airdrop_window_id=self.window_id)
         if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
@@ -395,7 +397,8 @@ class RejuveAirdrop(DefaultAirdrop):
         claimable_airdrop_window = None
         airdrop_windows = airdrop_window_repo.get_airdrop_windows(self.id)
         for airdrop_window_ in airdrop_windows:
-            is_registered, _ = CommonLogicService.get_user_registration_details(address, airdrop_window_.id)
+            is_registered, _ = CommonLogicService.get_user_registration_details(address=address,
+                                                                                airdrop_window_id=airdrop_window_.id)
             claim_history_obj = claim_history_repo.get_claim_history(airdrop_window_.id, address, "ada_transfer")
             is_claimed = claim_history_obj is not None
             is_after_requested = airdrop_window_.airdrop_window_order > requested_airdrop_window.airdrop_window_order
@@ -505,7 +508,8 @@ class RejuveAirdrop(DefaultAirdrop):
 
         # Transaction timestamp from metadata check
         is_transaction_newest = False
-        _, registration = CommonLogicService.get_user_registration_details(address, window_id)
+        _, registration = CommonLogicService.get_user_registration_details(address=address,
+                                                                           airdrop_window_id=window_id)
         if metadata["timestamp"] > registration.signature_details["timestamp"]:
             is_transaction_newest = True
         if not is_transaction_newest:

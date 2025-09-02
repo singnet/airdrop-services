@@ -223,8 +223,8 @@ class UserRegistrationServices:
             rewards_awarded = AirdropRepository().fetch_total_rewards_amount(airdrop_id, address)
 
             is_registered, user_registration = CommonLogicService.get_user_registration_details(
-                address,
-                airdrop_window_id
+                address=address,
+                airdrop_window_id=airdrop_window_id
             )
 
             is_airdrop_window_claimed = False
@@ -337,7 +337,7 @@ class UserRegistrationServices:
 
                 registration_repo = UserRegistrationRepository()
                 logger.info(f"Found tx {registration.tx_hash}: block={tx_data.block_height} index={tx_data.index}")
-                is_registered, _ = CommonLogicService.get_user_registration_details(registration.address)
+                is_registered, _ = CommonLogicService.get_user_registration_details(address=registration.address)
                 if is_registered:
                     logger.error("Address is already registered for this airdrop window")
                     raise Exception("Address is already registered for this airdrop window")

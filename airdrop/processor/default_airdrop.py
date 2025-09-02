@@ -157,7 +157,7 @@ class DefaultAirdrop(BaseAirdrop):
             raise Exception("Address is not eligible for this airdrop")
 
         is_registered, _ = registration_repo. \
-            get_user_registration_details(address, self.window_id)
+            get_user_registration_details(address=address, airdrop_window_id=self.window_id)
         if is_registered:
             logger.error("Address is already registered for this airdrop window")
             raise Exception("Address is already registered for this airdrop window")
