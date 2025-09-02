@@ -33,7 +33,8 @@ class ConverterFromStrToJSON:
         logger.info("Processing the receiving all registrations for the "
                     f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
         if self.address:
-            _, registration = CommonLogicService.get_user_registration_details(self.address, self._window_id)
+            _, registration = CommonLogicService.get_user_registration_details(address=self.address,
+                                                                               airdrop_window_id=self._window_id)
             registrations = [registration]
         else:
             _, registrations = UserRegistrationRepository().get_user_registration_details(airdrop_window_id=self._window_id)
@@ -81,7 +82,8 @@ class ChangerAddressFormat:
         logger.info("Processing the receiving all registrations for the "
                     f"airdrop_id = {self._airdrop_id}, window_id = {self._window_id}")
         if self.address:
-            _, registration = CommonLogicService.get_user_registration_details(self.address, self._window_id)
+            _, registration = CommonLogicService.get_user_registration_details(address=self.address,
+                                                                               airdrop_window_id=self._window_id)
             registrations = [registration]
         else:
             _, registrations = UserRegistrationRepository().get_user_registration_details(airdrop_window_id=self._window_id)
