@@ -182,6 +182,15 @@ class UserRegistrationServices:
                     )
                 )
 
+            is_claimed = False
+            for i in range(len(windows_registration_data) - 1, -1, -1):
+                window_data = windows_registration_data[i]
+                if window_data.claim_status == UserClaimStatus.RECEIVED:
+                    is_claimed = True
+                    continue
+                if window_data.claim_status == UserClaimStatus.READY_TO_CLAIM and is_claimed:
+                    window_data.claim_status = UserClaimStatus.RECEIVED
+
             response = airdrop_object.generate_multiple_windows_eligibility_response(
                 is_user_eligible=is_user_eligible,
                 airdrop_id=airdrop_id,
