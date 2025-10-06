@@ -182,9 +182,9 @@ class UserRegistrationServices:
                     )
                 )
 
+            # Temporary fix
             is_claimed = False
-            for i in range(len(windows_registration_data) - 1, -1, -1):
-                window_data = windows_registration_data[i]
+            for window_data in windows_registration_data[::-1]:
                 if window_data.claim_status == UserClaimStatus.RECEIVED:
                     is_claimed = True
                     continue
