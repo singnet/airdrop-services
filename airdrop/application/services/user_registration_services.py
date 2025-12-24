@@ -150,9 +150,9 @@ class UserRegistrationServices:
                 raise Exception("Airdrop id is not valid")
 
             airdrop_windows = AirdropWindowRepository().get_airdrop_windows(airdrop_id)
-            if airdrop_windows is None:
-                logger.error(f"No windows for aidrop: {airdrop_id}")
-                raise Exception(f"No windows for aidrop: {airdrop_id}")
+            if not airdrop_windows:
+                logger.error(f"No windows for airdrop: {airdrop_id}")
+                raise Exception(f"No windows for airdrop: {airdrop_id}")
 
             airdrop_class = AirdropServices.load_airdrop_class(airdrop)
             airdrop_object = airdrop_class(airdrop_id)
@@ -182,20 +182,20 @@ class UserRegistrationServices:
                     )
                 )
 
-            # Temporary fix
-            is_claimed = False
+            # Temporary fix for READY_TO_CLAIM windows which were claimed in one of the next windows
+            latest_claim_status = None
             for window_data in windows_registration_data[::-1]:
-                if window_data.claim_status == UserClaimStatus.RECEIVED:
-                    is_claimed = True
+                if window_data.claim_status in (UserClaimStatus.PENDING, UserClaimStatus.RECEIVED):
+                    latest_claim_status = window_data.claim_status
                     continue
-                if window_data.claim_status == UserClaimStatus.READY_TO_CLAIM and is_claimed:
-                    window_data.claim_status = UserClaimStatus.RECEIVED
+                if window_data.claim_status == UserClaimStatus.READY_TO_CLAIM and latest_claim_status is not None:
+                    window_data.claim_status = latest_claim_status
 
             response = airdrop_object.generate_multiple_windows_eligibility_response(
                 is_user_eligible=is_user_eligible,
                 airdrop_id=airdrop_id,
                 address=address,
-                windows_registration_data = windows_registration_data,
+                windows_registration_data=windows_registration_data,
                 rewards_awarded=rewards_awarded,
                 with_signature=with_signature
             )
