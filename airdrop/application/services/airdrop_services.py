@@ -145,8 +145,15 @@ class AirdropServices:
             staking_contract_address, token_name = AirdropRepository(
             ).get_staking_contract_address(airdrop_id)
 
-            is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_info(
-                staking_contract_address, user_wallet_address, int(airdrop_rewards), int(airdrop_window_id))
+            provider = Web3.HTTPProvider(NETWORK['http_provider'])
+            web3_object = Web3(provider)
+            if web3_object.is_address(staking_contract_address):
+                is_stakable, stakable_amount, tranfer_to_wallet = self.get_stake_info(
+                    staking_contract_address, user_wallet_address, int(airdrop_rewards), int(airdrop_window_id))
+            else:
+                is_stakable = False
+                stakable_amount = 0
+                tranfer_to_wallet = int(airdrop_rewards)
             stakable_tokens = stakable_amount
 
             stake_details = AirdropFactory.convert_stake_claim_details_to_model(
@@ -168,8 +175,7 @@ class AirdropServices:
         try:
 
             is_stake_window_is_open, max_stake_amount, max_window_stake_amount, total_window_amount_staked \
-                = self.get_stake_window_details(
-                contract_address)
+                = self.get_stake_window_details(contract_address)
 
             is_user_can_stake, already_staked_amount = self.get_stake_details_of_address(
                 contract_address, user_wallet_address)
