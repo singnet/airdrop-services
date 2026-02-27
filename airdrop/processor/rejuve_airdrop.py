@@ -476,7 +476,6 @@ class RejuveAirdrop(DefaultAirdrop):
             timestamp=timestamp,
             wallet_name=wallet_name,
         )
-        signature_details["walletAddress"] = reward_address.lower()
 
         blockfrost = BlockFrostApi(project_id=BlockFrostAccountDetails.project_id,
                                    base_url=BlockFrostAPIBaseURL)
