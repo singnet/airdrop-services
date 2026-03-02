@@ -141,7 +141,7 @@ class RejuveAirdrop(DefaultAirdrop):
         self,
         address: str,
         timestamp: int,
-        secret_key: str,           
+        secret_key: str,
     ) -> str:
         logger.info("Generate user registration receipt")
 
@@ -176,7 +176,7 @@ class RejuveAirdrop(DefaultAirdrop):
         secret_key = self.get_secret_key_for_receipt()
         if secret_key is None:
             raise Exception("Secret key is not set")
-        
+
         receipt = self.generate_user_registration_receipt(
             address=address,
             timestamp=timestamp,
@@ -505,6 +505,8 @@ class RejuveAirdrop(DefaultAirdrop):
         if not is_metadata_match:
             raise Exception("Transaction metadata is not valid")
 
+        signature_details["walletAddress"] = reward_address.lower()
+
         # Transaction timestamp from metadata check
         is_transaction_newest = False
         _, registration = CommonLogicService.get_user_registration_details(address=address,
@@ -627,7 +629,7 @@ class RejuveAirdrop(DefaultAirdrop):
         )
 
         if self.window_id is None:
-            raise Exception("Window ID is None") 
+            raise Exception("Window ID is None")
 
         input_addresses = transaction_details["input_addresses"]
         first_input_address = input_addresses[0]
