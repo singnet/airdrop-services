@@ -320,8 +320,8 @@ class RejuveAirdrop(DefaultAirdrop):
                 payment_part,
                 staking_part
             )):
-                logger.error("Address with same staking part or pyament part is already exist")
-                raise Exception("Address with same staking part or pyament part is already exist")
+                logger.error("Address with same staking part or payment part is already exist")
+                raise Exception("Address with same staking part or payment part is already exist")
 
         is_pending_registered = pending_registration_repo.is_pending_user_registration_exist(address, self.window_id)
         if is_pending_registered:
