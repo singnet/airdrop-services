@@ -346,7 +346,9 @@ class UserRegistrationServices:
 
                 registration_repo = UserRegistrationRepository()
                 logger.info(f"Found tx {registration.tx_hash}: block={tx_data.block_height} index={tx_data.index}")
-                is_registered, _ = CommonLogicService.get_user_registration_details(address=registration.address)
+                is_registered, _ = CommonLogicService.get_user_registration_details(
+                    address=registration.address,
+                    airdrop_window_id=registration.airdrop_window_id)
                 if is_registered:
                     logger.error("Address is already registered for this airdrop window")
                     raise Exception("Address is already registered for this airdrop window")
